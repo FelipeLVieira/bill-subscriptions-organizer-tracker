@@ -1,50 +1,45 @@
-# Welcome to your Expo app 👋
+# Bill Subscriptions Organizer Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A local-first, offline-capable mobile application for tracking and organizing bill subscriptions. Built with React Native, Expo, and SQLite.
 
-## Get started
+## Features
+- **Subscription Tracking**: Add and manage recurring bills (monthly, yearly, weekly, daily).
+- **Offline First**: All data is stored locally on the device using SQLite. No cloud account required.
+- **Smart Reminders**: Get notified before your bills are due.
+- **Analytics**: Visualize your spending habits with intuitive charts.
+- **Search & Filter**: Easily find specific subscriptions.
+- **Dark/Light Mode**: Automatic theme switching based on device settings.
+- **Multi-language**: Supports English and Portuguese (and easily extensible).
 
-1. Install dependencies
+## Tech Stack
+- **Framework**: React Native (Expo SDK 52)
+- **Language**: TypeScript
+- **Navigation**: Expo Router v4
+- **State Management**: Zustand
+- **Database**: Expo SQLite + Drizzle ORM
+- **UI Components**: Custom Design System
+- **Charts**: react-native-gifted-charts
 
+## Getting Started
+
+### Prerequisites
+- Node.js
+- npm or yarn
+
+### Installation
+1. Clone the repository.
+2. Install dependencies:
    ```bash
    npm install
    ```
-
-2. Start the app
-
+3. Run the development server:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Development
+- **Database**: Schema is defined in `src/db/schema.ts`. Run `npx drizzle-kit generate` to create migrations after changes.
+- **Localization**: Add new languages in `src/i18n/locales/`.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Screenshots
+(Add screenshots here)
