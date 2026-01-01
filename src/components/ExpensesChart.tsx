@@ -1,8 +1,12 @@
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Card } from '@/components/ui/Card';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Subscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { View } from 'react-native';
+import i18n from '@/i18n';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 
 interface ExpensesChartProps {
@@ -12,13 +16,56 @@ interface ExpensesChartProps {
 export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
     const primaryColor = useThemeColor({}, 'primary');
     const textColor = useThemeColor({}, 'text');
+    const cardColor = useThemeColor({}, 'card');
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.9)).current;
+    useLanguage(); // Re-render on locale change
+    const { formatAmount, getCurrencyByCode } = useCurrency();
+
+    // Get unique currencies from subscriptions
+    const availableCurrencies = useMemo(() => {
+        const currencies = new Set(subscriptions.map(sub => sub.currency || 'USD'));
+        return Array.from(currencies);
+    }, [subscriptions]);
+
+    const [selectedCurrency, setSelectedCurrency] = useState<string>(availableCurrencies[0] || 'USD');
+
+    // Update selected currency if it's no longer available
+    useEffect(() => {
+        if (!availableCurrencies.includes(selectedCurrency) && availableCurrencies.length > 0) {
+            setSelectedCurrency(availableCurrencies[0]);
+        }
+    }, [availableCurrencies, selectedCurrency]);
+
+    useEffect(() => {
+        fadeAnim.setValue(0);
+        scaleAnim.setValue(0.9);
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 8,
+                tension: 40,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [subscriptions.length, selectedCurrency, fadeAnim, scaleAnim]);
 
     if (!subscriptions || subscriptions.length === 0) return null;
 
-    const total = subscriptions.reduce((sum, sub) => sum + sub.amount, 0);
+    // Filter subscriptions by selected currency
+    const filteredSubscriptions = subscriptions.filter(
+        sub => (sub.currency || 'USD') === selectedCurrency
+    );
+
+    const total = filteredSubscriptions.reduce((sum, sub) => sum + sub.amount, 0);
 
     // Group by category
-    const byCategory = subscriptions.reduce((acc, sub) => {
+    const byCategory = filteredSubscriptions.reduce((acc, sub) => {
         const category = sub.categoryGroup || 'Uncategorized';
         acc[category] = (acc[category] || 0) + sub.amount;
         return acc;
@@ -39,41 +86,156 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
         value: byCategory[category],
         text: `${((byCategory[category] / total) * 100).toFixed(0)}%`,
         color: colors[index % colors.length],
-        label: category,
+        textColor: '#FFFFFF',
+        label: i18n.t(`cat_${category.toLowerCase().replace(' ', '_')}`, { defaultValue: category }),
     }));
 
     if (total === 0) return null;
 
     return (
-        <ThemedView style={{ padding: 16, alignItems: 'center', backgroundColor: 'transparent' }}>
-            <ThemedText type="subtitle" style={{ marginBottom: 10 }}>Spend by Category</ThemedText>
-            <PieChart
-                data={data}
-                donut
-                showGradient
-                sectionAutoFocus
-                radius={70}
-                innerRadius={50}
-                innerCircleColor={'transparent'}
-                centerLabelComponent={() => {
-                    return (
-                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <ThemedText style={{ fontSize: 22, color: textColor, fontWeight: 'bold' }}>
-                                {total.toFixed(0)}
-                            </ThemedText>
-                            <ThemedText style={{ fontSize: 10, color: textColor }}>Total</ThemedText>
-                        </View>
-                    );
-                }}
-            />
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {data.map((d, i) => (
-                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: d.color }} />
-                        <ThemedText style={{ fontSize: 12 }}>{d.label} ({d.value.toFixed(2)})</ThemedText>
-                    </View>
-                ))}
-            </View>
-        </ThemedView>
+        <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+            <Card style={styles.card}>
+                <ThemedText type="subtitle" style={styles.title}>{i18n.t('spendByCategory')}</ThemedText>
+
+                {/* Currency Tabs */}
+                {availableCurrencies.length > 1 && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.currencyTabs}
+                        contentContainerStyle={styles.currencyTabsContent}
+                    >
+                        {availableCurrencies.map(currCode => {
+                            const currInfo = getCurrencyByCode(currCode);
+                            const isSelected = currCode === selectedCurrency;
+                            return (
+                                <TouchableOpacity
+                                    key={currCode}
+                                    style={[
+                                        styles.currencyTab,
+                                        isSelected && { backgroundColor: primaryColor }
+                                    ]}
+                                    onPress={() => setSelectedCurrency(currCode)}
+                                >
+                                    <ThemedText
+                                        style={[
+                                            styles.currencyTabText,
+                                            isSelected && { color: '#FFFFFF' }
+                                        ]}
+                                    >
+                                        {currInfo?.symbol || currCode} {currCode}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                )}
+
+                <View style={styles.chartContainer}>
+                    <PieChart
+                        data={data}
+                        donut
+                        showGradient
+                        sectionAutoFocus
+                        radius={70}
+                        innerRadius={50}
+                        innerCircleColor={cardColor}
+                        centerLabelComponent={() => (
+                            <View style={styles.centerLabel}>
+                                <ThemedText style={[styles.centerValue, { color: textColor }]}>
+                                    {formatAmount(total, selectedCurrency)}
+                                </ThemedText>
+                                <ThemedText style={[styles.centerText, { color: textColor }]}>{i18n.t('total')}</ThemedText>
+                            </View>
+                        )}
+                    />
+                </View>
+                <View style={styles.legend}>
+                    {data.map((d, i) => (
+                        <Animated.View
+                            key={i}
+                            style={[
+                                styles.legendItem,
+                                {
+                                    opacity: fadeAnim,
+                                    transform: [{ translateX: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }]
+                                }
+                            ]}
+                        >
+                            <View style={[styles.legendDot, { backgroundColor: d.color }]} />
+                            <ThemedText style={styles.legendText}>{d.label}</ThemedText>
+                            <ThemedText style={styles.legendValue}>{formatAmount(d.value, selectedCurrency)}</ThemedText>
+                        </Animated.View>
+                    ))}
+                </View>
+            </Card>
+        </Animated.View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    card: {
+        padding: 16,
+    },
+    title: {
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    currencyTabs: {
+        marginBottom: 16,
+    },
+    currencyTabsContent: {
+        gap: 8,
+    },
+    currencyTab: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(128,128,128,0.15)',
+    },
+    currencyTabText: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    chartContainer: {
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    centerLabel: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    centerValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    centerText: {
+        fontSize: 10,
+        opacity: 0.7,
+    },
+    legend: {
+        gap: 8,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    legendDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+    },
+    legendText: {
+        fontSize: 13,
+        flex: 1,
+    },
+    legendValue: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+});

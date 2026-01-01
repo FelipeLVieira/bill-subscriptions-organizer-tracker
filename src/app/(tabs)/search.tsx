@@ -1,16 +1,41 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/Toast';
 import { Card } from '@/components/ui/Card';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
-import { Subscription, getSubscriptions } from '@/db/actions';
+import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Subscription, deleteSubscription, getSubscriptions, paySubscription } from '@/db/actions';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import i18n from '@/i18n';
+import { Haptic } from '@/utils/haptics';
 
-export default function SearchScreen() {
+type ViewMode = 'list' | 'grouped' | 'currency';
+type CategoryFilter = 'all' | string;
+
+export default function MyBillsScreen() {
+    const router = useRouter();
     const [query, setQuery] = useState('');
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>('currency');
+    const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
+    const primaryColor = useThemeColor({}, 'primary');
+    const textColor = useThemeColor({}, 'text');
+    const cardColor = useThemeColor({}, 'card');
+    const backgroundColor = useThemeColor({}, 'background');
+    const statusOverdue = useThemeColor({}, 'statusOverdue');
+    const statusPaid = useThemeColor({}, 'statusPaid');
+    const dangerColor = useThemeColor({}, 'danger');
+    const { locale } = useLanguage();
+    const { getCurrencyByCode, formatAmount } = useCurrency();
+    const { showSuccess } = useToast();
 
     useFocusEffect(
         useCallback(() => {
@@ -23,48 +48,435 @@ export default function SearchScreen() {
         setSubscriptions(data);
     };
 
-    const filteredData = useMemo(() => {
-        if (!query) return subscriptions;
-        const lower = query.toLowerCase();
-        return subscriptions.filter(s =>
-            s.name.toLowerCase().includes(lower) ||
-            s.notes?.toLowerCase().includes(lower) ||
-            s.amount.toString().includes(lower)
-        );
-    }, [query, subscriptions]);
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadData();
+        setRefreshing(false);
+    };
 
-    const renderItem = ({ item }: { item: Subscription }) => (
-        <Card style={styles.card}>
-            <View style={styles.cardHeader}>
-                <ThemedText type="subtitle">{item.name}</ThemedText>
-                <ThemedText type="defaultSemiBold">{item.currency} {item.amount.toFixed(2)}</ThemedText>
-            </View>
-            <ThemedText style={styles.interval}>{item.billingInterval} • Next: {new Date(item.nextBillingDate).toLocaleDateString()}</ThemedText>
-        </Card>
+    const handleAction = async (item: Subscription) => {
+        await Haptic.medium();
+        Alert.alert(item.name, i18n.t('chooseAction'), [
+            { text: i18n.t('cancel'), style: 'cancel' },
+            {
+                text: i18n.t('markAsPaid'),
+                onPress: async () => {
+                    await paySubscription(item);
+                    await Haptic.success();
+                    showSuccess(i18n.t('subscriptionUpdated'));
+                    loadData();
+                }
+            },
+            {
+                text: i18n.t('delete'),
+                style: 'destructive',
+                onPress: async () => {
+                    await Haptic.heavy();
+                    await deleteSubscription(item.id);
+                    loadData();
+                }
+            }
+        ]);
+    };
+
+    // Get unique categories from subscriptions
+    const categories = useMemo(() => {
+        const cats = new Set<string>();
+        subscriptions.forEach(s => {
+            if (s.categoryGroup) cats.add(s.categoryGroup);
+        });
+        return Array.from(cats).sort();
+    }, [subscriptions]);
+
+    const filteredData = useMemo(() => {
+        let data = subscriptions;
+
+        // Apply category filter
+        if (categoryFilter !== 'all') {
+            data = data.filter(s => s.categoryGroup === categoryFilter);
+        }
+
+        // Apply search filter
+        if (query) {
+            const lower = query.toLowerCase();
+            data = data.filter(s =>
+                s.name.toLowerCase().includes(lower) ||
+                s.notes?.toLowerCase().includes(lower) ||
+                s.categoryGroup?.toLowerCase().includes(lower) ||
+                s.amount.toString().includes(lower)
+            );
+        }
+
+        // Sort: overdue first, then upcoming, then later
+        return [...data].sort((a, b) => {
+            const now = new Date();
+            const dateA = new Date(a.nextBillingDate);
+            const dateB = new Date(b.nextBillingDate);
+            const isOverdueA = dateA < now;
+            const isOverdueB = dateB < now;
+
+            if (isOverdueA && !isOverdueB) return -1;
+            if (!isOverdueA && isOverdueB) return 1;
+            return dateA.getTime() - dateB.getTime();
+        });
+    }, [query, subscriptions, categoryFilter]);
+
+    // Group data by category for grouped view
+    const groupedData = useMemo(() => {
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const groups: { title: string; data: Subscription[] }[] = [];
+        const overdue: Subscription[] = [];
+        const upcoming: Subscription[] = [];
+        const later: Subscription[] = [];
+
+        filteredData.forEach(sub => {
+            const date = new Date(sub.nextBillingDate);
+            if (date < now) {
+                overdue.push(sub);
+            } else if (date <= sevenDaysFromNow) {
+                upcoming.push(sub);
+            } else {
+                later.push(sub);
+            }
+        });
+
+        if (overdue.length > 0) groups.push({ title: i18n.t('overdue'), data: overdue });
+        if (upcoming.length > 0) groups.push({ title: i18n.t('upcoming'), data: upcoming });
+        if (later.length > 0) groups.push({ title: i18n.t('later'), data: later });
+
+        return groups;
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- locale triggers i18n updates for group titles
+    }, [filteredData, locale]);
+
+    // Group data by currency
+    const currencyGroupedData = useMemo(() => {
+        const byCurrency: Record<string, { subs: Subscription[]; subtotal: number }> = {};
+
+        filteredData.forEach(sub => {
+            const curr = sub.currency || 'USD';
+            if (!byCurrency[curr]) {
+                byCurrency[curr] = { subs: [], subtotal: 0 };
+            }
+            byCurrency[curr].subs.push(sub);
+            byCurrency[curr].subtotal += sub.amount;
+        });
+
+        return Object.entries(byCurrency).map(([currency, { subs, subtotal }]) => {
+            const currInfo = getCurrencyByCode(currency);
+            return {
+                title: `${currInfo?.symbol || currency} ${currency}`,
+                data: subs,
+                subtotal,
+                currency,
+            };
+        });
+    }, [filteredData, getCurrencyByCode]);
+
+    // Get overdue bills count for mark all paid button
+    const overdueCount = useMemo(() => {
+        const now = new Date();
+        return filteredData.filter(s => new Date(s.nextBillingDate) < now).length;
+    }, [filteredData]);
+
+    const handleMarkAllPaid = async () => {
+        const now = new Date();
+        const overdueBills = filteredData.filter(s => new Date(s.nextBillingDate) < now);
+
+        if (overdueBills.length === 0) return;
+
+        await Haptic.medium();
+        Alert.alert(
+            i18n.t('markAllPaid'),
+            i18n.t('markAllPaidConfirm'),
+            [
+                { text: i18n.t('cancel'), style: 'cancel' },
+                {
+                    text: i18n.t('markAsPaid'),
+                    onPress: async () => {
+                        for (const bill of overdueBills) {
+                            await paySubscription(bill);
+                        }
+                        await Haptic.success();
+                        showSuccess(i18n.t('allPaidSuccess'));
+                        loadData();
+                    }
+                }
+            ]
+        );
+    };
+
+    const formatCurrency = (amount: number, currency: string) => {
+        return new Intl.NumberFormat(i18n.locale, {
+            style: 'currency',
+            currency: currency || 'USD',
+        }).format(amount);
+    };
+
+    const renderItem = ({ item }: { item: Subscription }) => {
+        const nextDate = new Date(item.nextBillingDate);
+        const now = new Date();
+        const isOverdue = nextDate < now;
+        const dateColor = isOverdue ? statusOverdue : statusPaid;
+        const companyIcon = getCompanyIcon(item.name) || DEFAULT_ICON;
+
+        return (
+            <Card style={styles.card}>
+                <TouchableOpacity
+                    onLongPress={() => handleAction(item)}
+                    onPress={() => router.push(`/subscription/${item.id}`)}
+                    activeOpacity={0.7}
+                >
+                    <View style={styles.cardContent}>
+                        <View style={[styles.cardIcon, { backgroundColor: companyIcon.color + '20' }]}>
+                            <IconSymbol name={companyIcon.icon as any} size={20} color={companyIcon.color} />
+                        </View>
+                        <View style={styles.cardInfo}>
+                            <View style={styles.cardHeader}>
+                                <ThemedText type="subtitle">{item.name}</ThemedText>
+                                <ThemedText type="defaultSemiBold">{formatCurrency(item.amount, item.currency)}</ThemedText>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                                <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                                    {i18n.t(item.billingInterval)} {item.categoryGroup ? `• ${item.categoryGroup}` : ''}
+                                </ThemedText>
+                                <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: dateColor }}>
+                                    {i18n.t('next')}: {nextDate.toLocaleDateString(i18n.locale)}
+                                </ThemedText>
+                            </View>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Card>
+        );
+    };
+
+    const renderSectionHeader = ({ section }: { section: { title: string; subtotal?: number; currency?: string } }) => (
+        <View style={[styles.sectionHeader, { backgroundColor }]}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>{section.title}</ThemedText>
+            {section.subtotal !== undefined && section.currency && (
+                <ThemedText style={[styles.sectionSubtotal, { color: primaryColor }]}>
+                    {formatAmount(section.subtotal, section.currency)}
+                </ThemedText>
+            )}
+        </View>
     );
 
     return (
         <ThemedView style={styles.container}>
             <View style={styles.header}>
-                <Input
-                    placeholder="Search subscriptions..."
-                    value={query}
-                    onChangeText={setQuery}
-                    style={styles.input}
-                />
+                {/* Search bar */}
+                <View style={styles.searchContainer}>
+                    <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
+                    <Input
+                        placeholder={i18n.t('searchBills')}
+                        value={query}
+                        onChangeText={setQuery}
+                        style={styles.input}
+                    />
+                    {query.length > 0 && (
+                        <TouchableOpacity onPress={() => setQuery('')}>
+                            <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Filter and View Controls */}
+                <View style={styles.controlsRow}>
+                    {/* Category Filter */}
+                    <View style={styles.filterContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.filterChip,
+                                { backgroundColor: categoryFilter === 'all' ? primaryColor : cardColor }
+                            ]}
+                            onPress={() => {
+                                Haptic.selection();
+                                setCategoryFilter('all');
+                            }}
+                            accessibilityLabel={i18n.t('allCategories')}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: categoryFilter === 'all' }}
+                        >
+                            <ThemedText style={[
+                                styles.filterChipText,
+                                { color: categoryFilter === 'all' ? '#FFFFFF' : textColor }
+                            ]}>
+                                {i18n.t('allCategories')}
+                            </ThemedText>
+                        </TouchableOpacity>
+                        {categories.map(cat => (
+                            <TouchableOpacity
+                                key={cat}
+                                style={[
+                                    styles.filterChip,
+                                    { backgroundColor: categoryFilter === cat ? primaryColor : cardColor }
+                                ]}
+                                onPress={() => {
+                                    Haptic.selection();
+                                    setCategoryFilter(cat);
+                                }}
+                                accessibilityLabel={cat}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: categoryFilter === cat }}
+                            >
+                                <ThemedText style={[
+                                    styles.filterChipText,
+                                    { color: categoryFilter === cat ? '#FFFFFF' : textColor }
+                                ]}>
+                                    {cat}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* View Toggle and Mark All Paid */}
+                    <View style={styles.actionsRow}>
+                        <View style={styles.viewToggle}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.viewToggleBtn,
+                                    { backgroundColor: viewMode === 'list' ? primaryColor : cardColor }
+                                ]}
+                                onPress={() => {
+                                    Haptic.selection();
+                                    setViewMode('list');
+                                }}
+                                accessibilityLabel={i18n.t('listView')}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: viewMode === 'list' }}
+                            >
+                                <IconSymbol
+                                    name="list.bullet"
+                                    size={16}
+                                    color={viewMode === 'list' ? '#FFFFFF' : textColor}
+                                />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.viewToggleBtn,
+                                    { backgroundColor: viewMode === 'grouped' ? primaryColor : cardColor }
+                                ]}
+                                onPress={() => {
+                                    Haptic.selection();
+                                    setViewMode('grouped');
+                                }}
+                                accessibilityLabel={i18n.t('groupView')}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: viewMode === 'grouped' }}
+                            >
+                                <IconSymbol
+                                    name="rectangle.3.group"
+                                    size={16}
+                                    color={viewMode === 'grouped' ? '#FFFFFF' : textColor}
+                                />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.viewToggleBtn,
+                                    { backgroundColor: viewMode === 'currency' ? primaryColor : cardColor }
+                                ]}
+                                onPress={() => {
+                                    Haptic.selection();
+                                    setViewMode('currency');
+                                }}
+                                accessibilityLabel={i18n.t('currency')}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: viewMode === 'currency' }}
+                            >
+                                <IconSymbol
+                                    name="dollarsign.circle"
+                                    size={16}
+                                    color={viewMode === 'currency' ? '#FFFFFF' : textColor}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {overdueCount > 0 && (
+                            <TouchableOpacity
+                                style={[styles.markAllPaidBtn, { backgroundColor: dangerColor }]}
+                                onPress={handleMarkAllPaid}
+                                accessibilityLabel={`${i18n.t('markAllPaid')}, ${overdueCount} bills`}
+                                accessibilityRole="button"
+                            >
+                                <IconSymbol name="checkmark.circle.fill" size={16} color="#FFFFFF" />
+                                <ThemedText style={styles.markAllPaidText}>
+                                    {i18n.t('markAllPaid')} ({overdueCount})
+                                </ThemedText>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
             </View>
 
-            <FlatList
-                data={filteredData}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={styles.list}
-                ListEmptyComponent={
-                    <View style={styles.empty}>
-                        <ThemedText>{query ? 'No matches found' : 'Type to search'}</ThemedText>
-                    </View>
-                }
-            />
+            {viewMode === 'list' ? (
+                <FlatList
+                    data={filteredData}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderItem}
+                    contentContainerStyle={styles.list}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.empty}>
+                            <IconSymbol name="doc.text.magnifyingglass" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
+                                {categoryFilter !== 'all' ? i18n.t('noBillsInCategory') : (query ? i18n.t('noMatchesFound') : i18n.t('typeToSearch'))}
+                            </ThemedText>
+                        </View>
+                    }
+                />
+            ) : viewMode === 'grouped' ? (
+                <SectionList
+                    sections={groupedData}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderItem}
+                    renderSectionHeader={renderSectionHeader}
+                    contentContainerStyle={styles.list}
+                    stickySectionHeadersEnabled={true}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.empty}>
+                            <IconSymbol name="doc.text.magnifyingglass" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
+                                {categoryFilter !== 'all' ? i18n.t('noBillsInCategory') : (query ? i18n.t('noMatchesFound') : i18n.t('typeToSearch'))}
+                            </ThemedText>
+                        </View>
+                    }
+                />
+            ) : (
+                <SectionList
+                    sections={currencyGroupedData}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderItem}
+                    renderSectionHeader={renderSectionHeader}
+                    contentContainerStyle={styles.list}
+                    stickySectionHeadersEnabled={true}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.empty}>
+                            <IconSymbol name="doc.text.magnifyingglass" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
+                                {categoryFilter !== 'all' ? i18n.t('noBillsInCategory') : (query ? i18n.t('noMatchesFound') : i18n.t('typeToSearch'))}
+                            </ThemedText>
+                        </View>
+                    }
+                />
+            )}
+
+            <TouchableOpacity
+                style={[styles.fab, { backgroundColor: primaryColor }]}
+                onPress={() => router.push('/modal')}
+                activeOpacity={0.8}
+            >
+                <IconSymbol name="plus" size={30} color="#FFFFFF" />
+            </TouchableOpacity>
         </ThemedView>
     );
 }
@@ -75,30 +487,128 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 16,
-        paddingBottom: 0,
+        paddingBottom: 8,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     input: {
+        flex: 1,
         marginBottom: 0,
+    },
+    controlsRow: {
+        marginTop: 12,
+        gap: 12,
+    },
+    filterContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    filterChip: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    filterChipText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    actionsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    viewToggle: {
+        flexDirection: 'row',
+        borderRadius: 8,
+        overflow: 'hidden',
+        gap: 2,
+    },
+    viewToggleBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 6,
+    },
+    markAllPaidBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    markAllPaidText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
     },
     list: {
         padding: 16,
+        paddingTop: 8,
+        paddingBottom: 100,
         gap: 12,
     },
     card: {},
+    cardContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    cardIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    cardInfo: {
+        flex: 1,
+    },
     cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
     },
-    interval: {
+    sectionHeader: {
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        marginTop: 8,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    sectionTitle: {
         fontSize: 14,
+        fontWeight: '700',
+        textTransform: 'uppercase',
         opacity: 0.7,
+    },
+    sectionSubtotal: {
+        fontSize: 14,
+        fontWeight: '700',
     },
     empty: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 50,
+        marginTop: 80,
+    },
+    fab: {
+        position: 'absolute',
+        bottom: 30,
+        right: 24,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
     },
 });

@@ -1,21 +1,41 @@
+import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
+import { ReminderManager } from '@/components/ReminderManager';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
-import { SUBSCRIPTION_CATEGORIES } from '@/constants/categories';
-import { getSubscriptionById, getSubscriptionHistory, Subscription, updateSubscription } from '@/db/actions';
+import { getCategoryLabel, getSubscriptionCategories } from '@/constants/categories';
+import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
+import { Currency } from '@/constants/Currencies';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getSubscriptionById, paySubscription, Subscription, updateSubscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import i18n from '@/i18n';
+import { Haptic } from '@/utils/haptics';
+import {
+    parseReminderSchema,
+    ReminderSchema,
+    scheduleAllReminders,
+    serializeReminderSchema,
+} from '@/utils/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const CUSTOM_CATEGORY_VALUE = '__custom__';
 
 export default function SubscriptionDetails() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const [subscription, setSubscription] = useState<Subscription | null>(null);
-    const [history, setHistory] = useState<any[]>([]);
     const [isEditing, setIsEditing] = useState(false);
 
     // Form state (initialized when subscription loads)
@@ -23,16 +43,37 @@ export default function SubscriptionDetails() {
     const [amount, setAmount] = useState('');
     const [currency, setCurrency] = useState('USD');
     const [interval, setInterval] = useState('monthly');
-    const [category, setCategory] = useState(SUBSCRIPTION_CATEGORIES[0].value);
+    const [category, setCategory] = useState('Entertainment');
     const [nextDate, setNextDate] = useState(new Date());
     const [notes, setNotes] = useState('');
+    const [reminderSchema, setReminderSchema] = useState<ReminderSchema>({ reminders: [] });
+    const [customCategory, setCustomCategory] = useState('');
+    const [showCustomCategoryModal, setShowCustomCategoryModal] = useState(false);
+    const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
+    const { colorScheme } = useTheme();
+    const { locale } = useLanguage();
+    const { getCurrencyByCode } = useCurrency();
+    const { showSuccess, showError } = useToast();
+    const insets = useSafeAreaInsets();
     const textColor = useThemeColor({}, 'text');
+    const backgroundColor = useThemeColor({}, 'background');
+    const pickerTextColor = useThemeColor({}, 'pickerText');
+    const pickerBgColor = useThemeColor({}, 'pickerBg');
+    const borderColor = useThemeColor({}, 'border');
+    const primaryColor = useThemeColor({}, 'primary');
+    const cardColor = useThemeColor({}, 'card');
+    const statusOverdue = useThemeColor({}, 'statusOverdue');
+    const statusPaid = useThemeColor({}, 'statusPaid');
+    const dangerColor = useThemeColor({}, 'danger');
+    const categories = getSubscriptionCategories();
+    const currentCurrency = getCurrencyByCode(currency);
 
     useEffect(() => {
         if (id) {
             loadData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- loadData is stable, only re-run when id changes
     }, [id]);
 
     const loadData = async () => {
@@ -43,100 +84,210 @@ export default function SubscriptionDetails() {
             setAmount(sub.amount.toString());
             setCurrency(sub.currency);
             setInterval(sub.billingInterval);
-            setCategory(sub.categoryGroup || SUBSCRIPTION_CATEGORIES[0].value);
+            setCategory(sub.categoryGroup || 'Entertainment');
             setNextDate(new Date(sub.nextBillingDate));
             setNotes(sub.notes || '');
-
-            const hist = await getSubscriptionHistory(sub.id);
-            setHistory(hist);
+            setReminderSchema(parseReminderSchema(sub.reminderSchema));
         }
+    };
+
+    const handleMarkAsPaid = async () => {
+        if (!subscription) return;
+
+        await Haptic.medium();
+        Alert.alert(
+            subscription.name,
+            i18n.t('chooseAction'),
+            [
+                { text: i18n.t('cancel'), style: 'cancel' },
+                {
+                    text: i18n.t('markAsPaid'),
+                    onPress: async () => {
+                        await paySubscription(subscription);
+                        await Haptic.success();
+                        showSuccess(i18n.t('billMarkedPaid'));
+                        await loadData();
+                    }
+                }
+            ]
+        );
     };
 
     const handleSave = async () => {
         if (!name || !amount) {
-            Alert.alert('Error', 'Name and Amount are required');
+            await Haptic.error();
+            showError(i18n.t('fillRequired'));
             return;
         }
 
         try {
+            const parsedAmount = parseFloat(amount);
+
+            // Schedule reminders
+            const updatedReminderSchema = await scheduleAllReminders(
+                name,
+                parsedAmount,
+                currency,
+                nextDate.toISOString(),
+                reminderSchema,
+                i18n.t.bind(i18n)
+            );
+
             await updateSubscription(Number(id), {
                 name,
-                amount: parseFloat(amount),
+                amount: parsedAmount,
                 currency,
                 billingInterval: interval,
                 categoryGroup: category,
                 nextBillingDate: nextDate.toISOString(),
                 notes,
+                reminderSchema: serializeReminderSchema(updatedReminderSchema),
             });
+            await Haptic.success();
+            showSuccess(i18n.t('billSaved'));
             setIsEditing(false);
             loadData();
-            Alert.alert('Success', 'Subscription updated');
         } catch (e) {
             console.error(e);
-            Alert.alert('Error', 'Failed to update subscription');
+            await Haptic.error();
+            showError(i18n.t('updateError'));
         }
     };
 
+    // Category handlers
+    const handleCategoryChange = (value: string) => {
+        if (value === CUSTOM_CATEGORY_VALUE) {
+            setShowCustomCategoryModal(true);
+        } else {
+            setCategory(value);
+        }
+    };
+
+    const handleCustomCategorySubmit = () => {
+        if (customCategory.trim()) {
+            setCategory(customCategory.trim());
+            setShowCustomCategoryModal(false);
+        }
+    };
+
+    const handleCurrencySelect = (selectedCurrency: Currency) => {
+        setCurrency(selectedCurrency.code);
+    };
+
+    // Build allCategories list with custom option
+    const allCategories = [
+        ...categories,
+        { label: `+ ${i18n.t('customCategory')}`, value: CUSTOM_CATEGORY_VALUE }
+    ];
+
+    // Get company icon
+    const companyIcon = subscription ? getCompanyIcon(subscription.name) || DEFAULT_ICON : DEFAULT_ICON;
+
     if (!subscription) {
         return (
-            <ThemedView style={styles.container}>
-                <ThemedText>Loading...</ThemedText>
+            <ThemedView style={[styles.container, styles.loadingContainer]}>
+                <ActivityIndicator size="large" color={primaryColor} />
             </ThemedView>
         );
     }
 
+    const nextBillingDate = new Date(subscription.nextBillingDate);
+    const isOverdue = nextBillingDate < new Date();
+
     return (
         <ThemedView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scroll}>
-                <View style={styles.header}>
-                    <ThemedText type="title">{isEditing ? 'Edit Subscription' : subscription.name}</ThemedText>
-                    <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-                        <ThemedText style={{ color: '#0a7ea4' }}>{isEditing ? 'Cancel' : 'Edit'}</ThemedText>
-                    </TouchableOpacity>
-                </View>
-
+            {/* Custom header */}
+            <View style={[styles.customHeader, { paddingTop: insets.top + 10, backgroundColor }]}>
+                <TouchableOpacity onPress={() => isEditing ? setIsEditing(false) : router.back()} style={styles.backButton}>
+                    <IconSymbol name="chevron.left" size={24} color={primaryColor} />
+                    <ThemedText style={{ color: primaryColor, marginLeft: 4 }}>
+                        {isEditing ? i18n.t('cancel') : i18n.t('myBills')}
+                    </ThemedText>
+                </TouchableOpacity>
                 {isEditing ? (
+                    <TouchableOpacity onPress={handleSave}>
+                        <ThemedText style={{ color: primaryColor, fontWeight: '600' }}>
+                            {i18n.t('save')}
+                        </ThemedText>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity onPress={() => setIsEditing(true)}>
+                        <ThemedText style={{ color: primaryColor, fontWeight: '600' }}>
+                            {i18n.t('edit')}
+                        </ThemedText>
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            <ScrollView contentContainerStyle={styles.scroll}>
+                {isEditing ? (
+                    // Edit Mode - Form only, no payment history
                     <View style={styles.form}>
-                        <ThemedText>Name</ThemedText>
+                        <View style={styles.header}>
+                            <ThemedText type="title">{i18n.t('editSubscription')}</ThemedText>
+                        </View>
+
+                        <ThemedText>{i18n.t('name')}</ThemedText>
                         <Input value={name} onChangeText={setName} placeholder="Netflix" />
 
-                        <ThemedText>Amount</ThemedText>
-                        <Input value={amount} onChangeText={setAmount} placeholder="15.99" keyboardType="numeric" />
+                        <ThemedText>{`${i18n.t('amount')} (${currency})`}</ThemedText>
+                        <View style={styles.amountInputContainer}>
+                            <TouchableOpacity
+                                style={[styles.currencyButton, { backgroundColor: primaryColor + '15', borderColor: primaryColor + '40' }]}
+                                onPress={() => setShowCurrencyPicker(true)}
+                            >
+                                <ThemedText style={[styles.currencyPrefix, { color: primaryColor }]}>
+                                    {currentCurrency?.symbol || '$'}
+                                </ThemedText>
+                                <IconSymbol name="chevron.down" size={12} color={primaryColor} />
+                            </TouchableOpacity>
+                            <Input value={amount} onChangeText={setAmount} placeholder="0.00" keyboardType="decimal-pad" style={styles.amountInput} />
+                        </View>
 
-                        <ThemedText>Billing Interval</ThemedText>
-                        <View style={[styles.pickerContainer, { borderColor: textColor }]}>
+                        <ThemedText>{i18n.t('billingInterval')}</ThemedText>
+                        <View style={[styles.pickerContainer, { borderColor: borderColor, backgroundColor: pickerBgColor }]}>
                             <Picker
                                 selectedValue={interval}
                                 onValueChange={(itemValue) => setInterval(itemValue)}
-                                style={{ color: textColor }}
-                                dropdownIconColor={textColor}
+                                style={{ color: pickerTextColor }}
+                                dropdownIconColor={pickerTextColor}
+                                itemStyle={{ color: pickerTextColor }}
                             >
-                                <Picker.Item label="Monthly" value="monthly" />
-                                <Picker.Item label="Yearly" value="yearly" />
-                                <Picker.Item label="Weekly" value="weekly" />
-                                <Picker.Item label="Daily" value="daily" />
+                                <Picker.Item label={i18n.t('monthly')} value="monthly" color={pickerTextColor} />
+                                <Picker.Item label={i18n.t('yearly')} value="yearly" color={pickerTextColor} />
+                                <Picker.Item label={i18n.t('weekly')} value="weekly" color={pickerTextColor} />
+                                <Picker.Item label={i18n.t('daily')} value="daily" color={pickerTextColor} />
+                                <Picker.Item label={i18n.t('unique')} value="unique" color={pickerTextColor} />
                             </Picker>
                         </View>
 
-                        <ThemedText>Category</ThemedText>
-                        <View style={[styles.pickerContainer, { borderColor: textColor }]}>
+                        <ThemedText>{i18n.t('category')}</ThemedText>
+                        <View style={[styles.pickerContainer, { borderColor: borderColor, backgroundColor: pickerBgColor }]}>
                             <Picker
-                                selectedValue={category}
-                                onValueChange={(itemValue) => setCategory(itemValue)}
-                                style={{ color: textColor }}
-                                dropdownIconColor={textColor}
+                                selectedValue={allCategories.find(c => c.value === category) ? category : CUSTOM_CATEGORY_VALUE}
+                                onValueChange={handleCategoryChange}
+                                style={{ color: pickerTextColor }}
+                                dropdownIconColor={pickerTextColor}
+                                itemStyle={{ color: pickerTextColor }}
                             >
-                                {SUBSCRIPTION_CATEGORIES.map((cat) => (
-                                    <Picker.Item key={cat.value} label={cat.label} value={cat.value} />
+                                {allCategories.map((cat) => (
+                                    <Picker.Item key={cat.value} label={cat.label} value={cat.value} color={pickerTextColor} />
                                 ))}
                             </Picker>
+                            {!allCategories.find(c => c.value === category && c.value !== CUSTOM_CATEGORY_VALUE) && category && (
+                                <View style={[styles.customCategoryBadge, { backgroundColor: primaryColor + '20' }]}>
+                                    <ThemedText style={{ fontSize: 12, color: primaryColor }}>{category}</ThemedText>
+                                </View>
+                            )}
                         </View>
 
-                        <ThemedText>Next Billing Date</ThemedText>
+                        <ThemedText>{i18n.t('nextBilling')}</ThemedText>
                         <DateTimePicker
                             value={nextDate}
                             mode="date"
                             display="default"
+                            themeVariant={colorScheme}
+                            accentColor={primaryColor}
                             onChange={(event, selectedDate) => {
                                 const currentDate = selectedDate || nextDate;
                                 setNextDate(currentDate);
@@ -144,34 +295,121 @@ export default function SubscriptionDetails() {
                             style={{ alignSelf: 'flex-start', marginVertical: 8 }}
                         />
 
-                        <ThemedText>Notes</ThemedText>
-                        <Input value={notes} onChangeText={setNotes} placeholder="Optional notes" multiline />
+                        <ThemedText>{i18n.t('notes')}</ThemedText>
+                        <Input value={notes} onChangeText={setNotes} placeholder={i18n.t('notesPlaceholder')} multiline />
 
-                        <Button title="Save Changes" onPress={handleSave} />
+                        {/* Reminders - Editable */}
+                        <ReminderManager
+                            schema={reminderSchema}
+                            onUpdate={setReminderSchema}
+                            isEditing={true}
+                        />
                     </View>
                 ) : (
-                    <View style={styles.details}>
-                        <ThemedText type="subtitle">{subscription.currency} {subscription.amount.toFixed(2)} / {subscription.billingInterval}</ThemedText>
-                        <ThemedText>Category: {subscription.categoryGroup || 'Uncategorized'}</ThemedText>
-                        <ThemedText>Next Billing: {new Date(subscription.nextBillingDate).toLocaleDateString()}</ThemedText>
-                        {subscription.notes ? <ThemedText style={styles.notes}>{subscription.notes}</ThemedText> : null}
-                    </View>
-                )}
-
-                <View style={styles.historySection}>
-                    <ThemedText type="subtitle" style={styles.sectionTitle}>Payment History</ThemedText>
-                    {history.length === 0 ? (
-                        <ThemedText>No payments recorded yet.</ThemedText>
-                    ) : (
-                        history.map((record, index) => (
-                            <View key={index} style={[styles.historyItem, { borderColor: textColor }]}>
-                                <ThemedText>{new Date(record.datePaid).toLocaleDateString()}</ThemedText>
-                                <ThemedText type="defaultSemiBold">{subscription.currency} {record.amountPaid.toFixed(2)}</ThemedText>
+                    // View Mode - Show details with icon and payment history
+                    <>
+                        {/* Header with icon */}
+                        <View style={styles.detailHeader}>
+                            <View style={[styles.iconContainer, { backgroundColor: companyIcon.color + '20' }]}>
+                                <IconSymbol name={companyIcon.icon as any} size={40} color={companyIcon.color} />
                             </View>
-                        ))
-                    )}
-                </View>
+                            <ThemedText type="title" style={styles.detailTitle}>{subscription.name}</ThemedText>
+                        </View>
+
+                        {/* Amount Card */}
+                        <Card style={styles.amountCard}>
+                            <ThemedText style={styles.amountLabel}>{i18n.t('amount')}</ThemedText>
+                            <View style={styles.amountValueContainer}>
+                                <ThemedText style={styles.amountCurrency}>{currentCurrency?.symbol || subscription.currency}</ThemedText>
+                                <ThemedText style={styles.amountValue}>{subscription.amount.toFixed(2)}</ThemedText>
+                            </View>
+                            <ThemedText style={styles.intervalText}>/ {i18n.t(subscription.billingInterval)}</ThemedText>
+                        </Card>
+
+                        {/* Mark as Paid Button */}
+                        <TouchableOpacity
+                            style={[
+                                styles.markAsPaidBtn,
+                                { backgroundColor: isOverdue ? dangerColor : primaryColor }
+                            ]}
+                            onPress={handleMarkAsPaid}
+                            accessibilityLabel={i18n.t('markAsPaid')}
+                            accessibilityRole="button"
+                        >
+                            <IconSymbol name="checkmark.circle.fill" size={20} color="#FFFFFF" />
+                            <ThemedText style={styles.markAsPaidText}>{i18n.t('markAsPaid')}</ThemedText>
+                        </TouchableOpacity>
+
+                        {/* Details */}
+                        <View style={styles.details}>
+                            <View style={styles.detailRow}>
+                                <ThemedText style={styles.detailLabel}>{i18n.t('category')}</ThemedText>
+                                <ThemedText style={styles.detailValue}>{getCategoryLabel(subscription.categoryGroup || 'Uncategorized')}</ThemedText>
+                            </View>
+                            <View style={styles.detailRow}>
+                                <ThemedText style={styles.detailLabel}>{i18n.t('nextBilling')}</ThemedText>
+                                <ThemedText style={[styles.detailValue, { color: isOverdue ? statusOverdue : statusPaid }]}>
+                                    {nextBillingDate.toLocaleDateString(locale)}
+                                </ThemedText>
+                            </View>
+                        </View>
+
+                        {/* Notes Section */}
+                        {subscription.notes ? (
+                            <Card style={styles.notesCard}>
+                                <ThemedText style={styles.notesLabel}>{i18n.t('notes')}</ThemedText>
+                                <ThemedText style={styles.notesText}>{subscription.notes}</ThemedText>
+                            </Card>
+                        ) : null}
+
+                        {/* Reminders - View Only */}
+                        <ReminderManager
+                            schema={reminderSchema}
+                            onUpdate={setReminderSchema}
+                            isEditing={false}
+                        />
+                    </>
+                )}
             </ScrollView>
+
+            {/* Custom Category Modal */}
+            <Modal
+                visible={showCustomCategoryModal}
+                animationType="fade"
+                transparent
+                onRequestClose={() => setShowCustomCategoryModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: cardColor }]}>
+                        <View style={styles.modalHeader}>
+                            <ThemedText type="subtitle">{i18n.t('customCategory')}</ThemedText>
+                            <TouchableOpacity onPress={() => setShowCustomCategoryModal(false)}>
+                                <IconSymbol name="xmark.circle.fill" size={24} color={textColor} style={{ opacity: 0.5 }} />
+                            </TouchableOpacity>
+                        </View>
+                        <Input
+                            placeholder={i18n.t('enterCustomCategory')}
+                            value={customCategory}
+                            onChangeText={setCustomCategory}
+                            style={styles.modalInput}
+                            autoFocus
+                        />
+                        <Button
+                            title={i18n.t('save')}
+                            onPress={handleCustomCategorySubmit}
+                            disabled={!customCategory.trim()}
+                        />
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Currency Picker Modal */}
+            <CurrencyPickerModal
+                visible={showCurrencyPicker}
+                onClose={() => setShowCurrencyPicker(false)}
+                onSelect={handleCurrencySelect}
+                mode="select"
+            />
         </ThemedView>
     );
 }
@@ -180,46 +418,172 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    loadingContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    customHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingBottom: 12,
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     scroll: {
         padding: 20,
         paddingBottom: 40,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 20,
     },
     form: {
         gap: 12,
     },
-    details: {
-        gap: 8,
-        marginBottom: 30,
+    amountInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    currencyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        marginRight: 10,
+        gap: 4,
+    },
+    currencyPrefix: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    amountInput: {
+        flex: 1,
     },
     pickerContainer: {
         borderWidth: 1,
         borderRadius: 8,
         overflow: 'hidden',
     },
-    notes: {
-        fontStyle: 'italic',
-        marginTop: 8,
-        opacity: 0.8,
+    // View Mode Styles
+    detailHeader: {
+        alignItems: 'center',
+        marginBottom: 24,
     },
-    historySection: {
-        marginTop: 20,
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
-        paddingTop: 20,
-    },
-    sectionTitle: {
+    iconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: 12,
     },
-    historyItem: {
+    detailTitle: {
+        textAlign: 'center',
+    },
+    amountCard: {
+        padding: 20,
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    markAsPaidBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 14,
+        borderRadius: 12,
+        marginBottom: 20,
+    },
+    markAsPaidText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    amountLabel: {
+        fontSize: 12,
+        opacity: 0.7,
+        marginBottom: 4,
+    },
+    amountValueContainer: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+    },
+    amountCurrency: {
+        fontSize: 24,
+        fontWeight: '600',
+        marginRight: 2,
+    },
+    amountValue: {
+        fontSize: 36,
+        fontWeight: 'bold',
+    },
+    intervalText: {
+        fontSize: 14,
+        opacity: 0.7,
+        marginTop: 4,
+    },
+    details: {
+        gap: 12,
+        marginBottom: 20,
+    },
+    detailRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 12,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-    }
+        alignItems: 'center',
+        paddingVertical: 8,
+    },
+    detailLabel: {
+        opacity: 0.7,
+    },
+    detailValue: {
+        fontWeight: '600',
+    },
+    notesCard: {
+        padding: 16,
+        marginBottom: 20,
+    },
+    notesLabel: {
+        fontSize: 12,
+        opacity: 0.7,
+        marginBottom: 8,
+    },
+    notesText: {
+        fontStyle: 'italic',
+        lineHeight: 20,
+    },
+    customCategoryBadge: {
+        marginTop: 8,
+        marginHorizontal: 12,
+        marginBottom: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        alignSelf: 'flex-start',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        width: '100%',
+        padding: 20,
+        borderRadius: 16,
+        gap: 16,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    modalInput: {
+        marginBottom: 0,
+    },
 });

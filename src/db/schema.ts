@@ -18,5 +18,6 @@ export const billingHistory = sqliteTable('billing_history', {
     subscriptionId: integer('subscription_id').references(() => subscriptions.id),
     datePaid: text('date_paid').notNull(),
     amountPaid: real('amount_paid').notNull(),
+    currency: text('currency').notNull().default('USD'),
     status: text('status').notNull(), // Paid, Skipped
 });

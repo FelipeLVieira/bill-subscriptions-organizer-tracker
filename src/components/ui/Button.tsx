@@ -1,5 +1,5 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 
 type ButtonType = 'primary' | 'secondary' | 'danger';
 
@@ -8,31 +8,61 @@ type Props = TouchableOpacityProps & {
     type?: ButtonType;
 };
 
-export function Button({ title, type = 'primary', style, ...props }: Props) {
+/**
+ * Apple-style Button Component
+ *
+ * Features:
+ * - Solid colors (no gradients - Apple prefers flat design)
+ * - iOS system colors
+ * - Proper touch feedback
+ * - Rounded corners matching iOS HIG
+ */
+export function Button({ title, type = 'primary', style, disabled, ...props }: Props) {
     const primaryColor = useThemeColor({}, 'primary');
     const dangerColor = useThemeColor({}, 'danger');
-    const textColor = '#FFFFFF'; // Always white for primary/danger buttons
+    const cardColor = useThemeColor({}, 'card');
 
-    let backgroundColor = primaryColor;
-    if (type === 'danger') backgroundColor = dangerColor;
+    const backgroundColor = type === 'danger'
+        ? dangerColor
+        : type === 'secondary'
+            ? cardColor
+            : primaryColor;
+
+    const buttonTextColor = type === 'secondary' ? primaryColor : '#FFFFFF';
 
     return (
-        <TouchableOpacity style={[styles.button, { backgroundColor }, style]} activeOpacity={0.8} {...props}>
-            <Text style={[styles.text, { color: textColor }]}>{title}</Text>
+        <TouchableOpacity
+            activeOpacity={0.7}
+            style={[{ opacity: disabled ? 0.5 : 1 }, style]}
+            disabled={disabled}
+            {...props}
+        >
+            <View style={[
+                styles.button,
+                { backgroundColor },
+                type === 'secondary' && styles.secondaryButton
+            ]}>
+                <Text style={[styles.text, { color: buttonTextColor }]}>{title}</Text>
+            </View>
         </TouchableOpacity>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         paddingHorizontal: 24,
-        borderRadius: 8,
+        borderRadius: 12, // iOS standard
         alignItems: 'center',
         justifyContent: 'center',
     },
+    secondaryButton: {
+        borderWidth: 1,
+        borderColor: 'rgba(0,122,255,0.3)',
+    },
     text: {
-        fontSize: 16,
+        fontSize: 17, // iOS standard body size
         fontWeight: '600',
+        letterSpacing: -0.4, // iOS typography
     },
 });

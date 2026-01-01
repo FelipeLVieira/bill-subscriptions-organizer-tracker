@@ -8,6 +8,13 @@
       "when": 1766968241997,
       "tag": "0000_salty_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1735570000000,
+      "tag": "0001_add_currency_to_billing_history",
+      "breakpoints": true
     }
   ]
 }

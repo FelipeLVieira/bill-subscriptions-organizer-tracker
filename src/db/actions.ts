@@ -1,4 +1,11 @@
 import { BillingInterval, calculateNextBillingDate } from '@/utils/date';
+import i18n from '@/i18n';
+import {
+    cancelAllReminders,
+    parseReminderSchema,
+    scheduleAllReminders,
+    serializeReminderSchema,
+} from '@/utils/notifications';
 import { desc, eq } from 'drizzle-orm';
 import { db } from './index';
 import { billingHistory, subscriptions } from './schema';
@@ -14,25 +21,28 @@ export const getSubscriptions = async () => {
     return await db.select().from(subscriptions).orderBy(desc(subscriptions.nextBillingDate));
 };
 
-import { cancelReminder, scheduleReminder } from '@/utils/notifications';
-
-// ...
-
 export const paySubscription = async (sub: Subscription) => {
     const amount = sub.amount;
     const datePaid = new Date().toISOString();
 
-    // Cancel existing notification if present
-    if (sub.reminderSchema) {
-        try {
-            const schema = JSON.parse(sub.reminderSchema);
-            if (schema.notificationId) {
-                await cancelReminder(schema.notificationId);
-            }
-        } catch (e) {
-            console.error('Error parsing reminder schema', e);
-        }
-    }
+    // Parse existing reminder schema
+    const reminderSchema = parseReminderSchema(sub.reminderSchema);
+
+    // Cancel existing notifications
+    await cancelAllReminders(reminderSchema);
+
+    // Calculate next billing date
+    const nextDate = calculateNextBillingDate(sub.nextBillingDate, sub.billingInterval as BillingInterval);
+
+    // Schedule new notifications with the same reminder settings
+    const updatedSchema = await scheduleAllReminders(
+        sub.name,
+        sub.amount,
+        sub.currency,
+        nextDate.toISOString(),
+        reminderSchema,
+        i18n.t.bind(i18n)
+    );
 
     await db.transaction(async (tx) => {
         // Record history
@@ -40,41 +50,25 @@ export const paySubscription = async (sub: Subscription) => {
             subscriptionId: sub.id,
             datePaid,
             amountPaid: amount,
+            currency: sub.currency,
             status: 'paid',
         });
-
-        // Update next billing date based on interval
-        const nextDate = calculateNextBillingDate(sub.nextBillingDate, sub.billingInterval as BillingInterval);
-
-        // Schedule new notification (24h before)
-        const triggerDate = new Date(nextDate);
-        triggerDate.setHours(triggerDate.getHours() - 24);
-
-        const newNotificationId = await scheduleReminder(
-            `Bill due: ${sub.name}`,
-            `Your payment of ${sub.currency} ${sub.amount} is due tomorrow.`,
-            triggerDate
-        );
 
         await tx.update(subscriptions)
             .set({
                 nextBillingDate: nextDate.toISOString(),
-                reminderSchema: JSON.stringify({ notificationId: newNotificationId })
+                reminderSchema: serializeReminderSchema(updatedSchema)
             })
             .where(eq(subscriptions.id, sub.id));
     });
 };
 
 export const deleteSubscription = async (id: number) => {
-    // Get sub to find notification ID
+    // Get sub to find notification IDs
     const sub = await db.select().from(subscriptions).where(eq(subscriptions.id, id)).get();
     if (sub && sub.reminderSchema) {
-        try {
-            const schema = JSON.parse(sub.reminderSchema);
-            if (schema.notificationId) {
-                await cancelReminder(schema.notificationId);
-            }
-        } catch (e) { console.error(e); }
+        const schema = parseReminderSchema(sub.reminderSchema);
+        await cancelAllReminders(schema);
     }
     return await db.delete(subscriptions).where(eq(subscriptions.id, id));
 };
@@ -90,5 +84,17 @@ export const updateSubscription = async (id: number, sub: Partial<NewSubscriptio
 
 export const getSubscriptionHistory = async (id: number) => {
     return await db.select().from(billingHistory).where(eq(billingHistory.subscriptionId, id)).orderBy(desc(billingHistory.datePaid));
+};
+
+export const getPaidThisMonth = async () => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+    const history = await db.select().from(billingHistory);
+
+    return history
+        .filter(h => h.datePaid >= startOfMonth && h.datePaid <= endOfMonth && h.status === 'paid')
+        .reduce((sum, h) => sum + h.amountPaid, 0);
 };
 
