@@ -70,6 +70,7 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
         <View
             style={[styles.container, { backgroundColor: containerBg }]}
             onLayout={onLayout}
+            accessibilityRole="tablist"
         >
             {containerWidth > 0 && (
                 <Animated.View
@@ -88,6 +89,9 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
                     key={period}
                     style={styles.option}
                     onPress={() => onChange(period)}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: value === period }}
+                    accessibilityLabel={i18n.t(period)}
                 >
                     <Text
                         style={[

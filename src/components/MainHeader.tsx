@@ -1,4 +1,5 @@
 import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
+import { GoProButton } from '@/components/GoProButton';
 import { LanguagePickerModal } from '@/components/LanguagePickerModal';
 import { OnboardingModal } from '@/components/OnboardingModal';
 import { ThemedText } from '@/components/themed-text';
@@ -6,6 +7,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SUPPORTED_LANGUAGES } from '@/constants/Languages';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePro } from '@/contexts/ProContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -31,6 +33,7 @@ export function MainHeader({ title }: { title: string }) {
     const { colorScheme, toggleTheme } = useTheme();
     const { locale, setLocale } = useLanguage();
     const { defaultCurrency } = useCurrency();
+    const { isPro } = usePro();
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
 
@@ -67,6 +70,8 @@ export function MainHeader({ title }: { title: string }) {
         <View style={[styles.container, { paddingTop: insets.top }]}>
             <ThemedText type="title" style={styles.title}>{title}</ThemedText>
             <View style={styles.actions}>
+                {/* Go Pro button - only show if not pro */}
+                {!isPro && <GoProButton variant="compact" />}
                 {/* Info button - opens onboarding */}
                 <TouchableOpacity
                     onPress={() => setOnboardingVisible(true)}

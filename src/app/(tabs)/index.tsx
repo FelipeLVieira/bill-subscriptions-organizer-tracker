@@ -1,13 +1,16 @@
 import { ExpensesChart } from '@/components/ExpensesChart';
+import { GoProButton } from '@/components/GoProButton';
 import { Period, PeriodSelector } from '@/components/PeriodSelector';
 import { StatisticsPanel } from '@/components/StatisticsPanel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
-import { Card } from '@/components/ui/Card';
+import { AnimatedCard } from '@/components/ui/AnimatedCard';
+import { AnimatedFAB } from '@/components/ui/AnimatedFAB';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePro } from '@/contexts/ProContext';
 import { Subscription, deleteSubscription, getPaidThisMonth, getSubscriptions, paySubscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -18,7 +21,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CopilotStep, useCopilot, walkthroughable } from 'react-native-copilot';
 
-const WalkthroughableTouchableOpacity = walkthroughable(TouchableOpacity);
 const WalkthroughableView = walkthroughable(View);
 
 export default function HomeScreen() {
@@ -34,6 +36,7 @@ export default function HomeScreen() {
   const { start } = useCopilot();
   const { locale } = useLanguage();
   const { showSuccess } = useToast();
+  const { isPro } = usePro();
 
   useFocusEffect(
     useCallback(() => {
@@ -148,7 +151,7 @@ export default function HomeScreen() {
     }).format(amount);
   };
 
-  const renderItem = ({ item }: { item: Subscription }) => {
+  const renderItem = ({ item, index }: { item: Subscription; index: number }) => {
     const nextDate = new Date(item.nextBillingDate);
     const now = new Date();
     const isOverdue = nextDate < now;
@@ -156,53 +159,51 @@ export default function HomeScreen() {
     const companyIcon = getCompanyIcon(item.name) || DEFAULT_ICON;
 
     return (
-      <Card style={styles.card}>
-        <TouchableOpacity
-          onLongPress={() => handleAction(item)}
-          onPress={() => router.push(`/subscription/${item.id}`)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.cardContent}>
-            <View style={[styles.cardIcon, { backgroundColor: companyIcon.color + '20' }]}>
-              <IconSymbol name={companyIcon.icon as any} size={20} color={companyIcon.color} />
+      <AnimatedCard
+        index={index}
+        onLongPress={() => handleAction(item)}
+        onPress={() => router.push(`/subscription/${item.id}`)}
+      >
+        <View style={styles.cardContent}>
+          <View style={[styles.cardIcon, { backgroundColor: companyIcon.color + '20' }]}>
+            <IconSymbol name={companyIcon.icon as any} size={20} color={companyIcon.color} />
+          </View>
+          <View style={styles.cardInfo}>
+            <View style={styles.cardHeader}>
+              <ThemedText type="subtitle">{item.name}</ThemedText>
+              <ThemedText type="defaultSemiBold">{formatCurrency(item.amount, item.currency)}</ThemedText>
             </View>
-            <View style={styles.cardInfo}>
-              <View style={styles.cardHeader}>
-                <ThemedText type="subtitle">{item.name}</ThemedText>
-                <ThemedText type="defaultSemiBold">{formatCurrency(item.amount, item.currency)}</ThemedText>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                  {i18n.t(item.billingInterval)} {item.categoryGroup ? `• ${item.categoryGroup}` : ''}
-                </ThemedText>
-                <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: dateColor }}>
-                  {i18n.t('next')}: {nextDate.toLocaleDateString(i18n.locale)}
-                </ThemedText>
-              </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+              <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                {i18n.t(item.billingInterval)} {item.categoryGroup ? `• ${item.categoryGroup}` : ''}
+              </ThemedText>
+              <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: dateColor }}>
+                {i18n.t('next')}: {nextDate.toLocaleDateString(i18n.locale)}
+              </ThemedText>
             </View>
           </View>
-        </TouchableOpacity>
-      </Card>
+        </View>
+      </AnimatedCard>
     );
   };
 
   const listHeader = useMemo(
     () => (
       <>
-        <CopilotStep text="Switch between weekly, monthly, and yearly views to see your spending breakdown." order={1} name="period">
+        <CopilotStep text={i18n.t('copilotDashboardPeriod')} order={1} name="period">
           <WalkthroughableView>
             <PeriodSelector value={period} onChange={setPeriod} />
           </WalkthroughableView>
         </CopilotStep>
 
-        <CopilotStep text="View your spending statistics at a glance." order={2} name="stats">
+        <CopilotStep text={i18n.t('copilotDashboardStats')} order={2} name="stats">
           <WalkthroughableView>
             <StatisticsPanel subscriptions={subscriptions} paidThisMonth={paidThisMonth} period={period} />
           </WalkthroughableView>
         </CopilotStep>
 
         {subscriptions.length > 0 && (
-          <CopilotStep text="This chart shows your spending breakdown by category." order={3} name="chart">
+          <CopilotStep text={i18n.t('copilotDashboardChart')} order={3} name="chart">
             <WalkthroughableView>
               <ExpensesChart subscriptions={subscriptions} />
             </WalkthroughableView>
@@ -243,30 +244,34 @@ export default function HomeScreen() {
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         ListHeaderComponent={listHeader}
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        initialNumToRender={6}
+        windowSize={5}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
         }
         ListEmptyComponent={
-          <CopilotStep text="Your active subscriptions will appear here. You can see their details and next billing dates." order={4} name="empty">
+          <CopilotStep text={i18n.t('copilotDashboardList')} order={4} name="empty">
             <WalkthroughableView style={styles.empty}>
-              <IconSymbol name="list.bullet.clipboard" size={50} color={primaryColor} />
-              <ThemedText type="subtitle" style={{ marginTop: 16 }}>{i18n.t('noSubscriptions')}</ThemedText>
-              <ThemedText style={{ textAlign: 'center', marginTop: 8, opacity: 0.6 }}>
-                {i18n.t('addFirstSubscription')}
+              <IconSymbol name="list.bullet.clipboard" size={60} color={primaryColor} style={{ opacity: 0.6 }} />
+              <ThemedText type="subtitle" style={styles.emptyTitle}>{i18n.t('emptyDashboardTitle')}</ThemedText>
+              <ThemedText style={styles.emptyHint}>
+                {i18n.t('emptyDashboardHint')}
               </ThemedText>
+              {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
             </WalkthroughableView>
           </CopilotStep>
         }
       />
 
-      <CopilotStep text="Tap this button to add a new subscription!" order={5} name="fab">
-        <WalkthroughableTouchableOpacity
-          style={[styles.fab, { backgroundColor: primaryColor }]}
-          onPress={() => router.push('/modal')}
-          activeOpacity={0.8}
-        >
-          <IconSymbol name="plus" size={30} color="#FFFFFF" />
-        </WalkthroughableTouchableOpacity>
+      <CopilotStep text={i18n.t('copilotDashboardFab')} order={5} name="fab">
+        <WalkthroughableView>
+          <AnimatedFAB
+            onPress={() => router.push('/modal')}
+            accessibilityLabel={i18n.t('addSubscription')}
+          />
+        </WalkthroughableView>
       </CopilotStep>
     </ThemedView>
   );
@@ -294,14 +299,15 @@ const styles = StyleSheet.create({
   markAllPaidBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    minHeight: 44, // iOS HIG minimum touch target
   },
   markAllPaidText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
   card: {},
@@ -330,22 +336,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 40,
-    padding: 20,
+    padding: 24,
   },
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // iOS-style shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+  emptyTitle: {
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  emptyHint: {
+    textAlign: 'center',
+    marginTop: 12,
+    opacity: 0.6,
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
+  proBanner: {
+    marginTop: 24,
+    width: '100%',
   },
 });

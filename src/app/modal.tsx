@@ -75,15 +75,22 @@ export default function AddSubscriptionScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!name || !amount) {
+    if (!name.trim()) {
       await Haptic.error();
-      showError(i18n.t('fillRequired'));
+      showError(i18n.t('nameRequired'));
+      return;
+    }
+
+    const cleanedAmount = amount.replace(/[^0-9.]/g, '');
+    const parsedAmount = parseFloat(cleanedAmount);
+    if (!cleanedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      await Haptic.error();
+      showError(i18n.t('validAmountRequired'));
       return;
     }
 
     setLoading(true);
     try {
-      const parsedAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
 
       // Create default reminder schema (1 day before at midnight)
       const defaultReminder = createDefaultReminder();

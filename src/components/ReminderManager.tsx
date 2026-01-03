@@ -29,7 +29,8 @@ export function ReminderManager({ schema, onUpdate, isEditing = false }: Reminde
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const borderColor = useThemeColor({}, 'border');
-    const dangerColor = '#D32F2F';
+    const dangerColor = useThemeColor({}, 'danger');
+    const successColor = useThemeColor({}, 'success');
     const pickerTextColor = useThemeColor({}, 'pickerText');
     const pickerBgColor = useThemeColor({}, 'pickerBg');
     const { colorScheme } = useTheme();
@@ -166,7 +167,7 @@ export function ReminderManager({ schema, onUpdate, isEditing = false }: Reminde
                                 <IconSymbol
                                     name={reminder.enabled ? 'checkmark.circle.fill' : 'xmark.circle.fill'}
                                     size={20}
-                                    color={reminder.enabled ? '#388E3C' : dangerColor}
+                                    color={reminder.enabled ? successColor : dangerColor}
                                 />
                             )}
                         </View>

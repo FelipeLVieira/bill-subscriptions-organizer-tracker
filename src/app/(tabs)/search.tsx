@@ -2,15 +2,18 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { GoProButton } from '@/components/GoProButton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
-import { Card } from '@/components/ui/Card';
+import { AnimatedCard } from '@/components/ui/AnimatedCard';
+import { AnimatedFAB } from '@/components/ui/AnimatedFAB';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
 import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePro } from '@/contexts/ProContext';
 import { Subscription, deleteSubscription, getSubscriptions, paySubscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -36,6 +39,7 @@ export default function MyBillsScreen() {
     const { locale } = useLanguage();
     const { getCurrencyByCode, formatAmount } = useCurrency();
     const { showSuccess } = useToast();
+    const { isPro } = usePro();
 
     useFocusEffect(
         useCallback(() => {
@@ -214,7 +218,7 @@ export default function MyBillsScreen() {
         }).format(amount);
     };
 
-    const renderItem = ({ item }: { item: Subscription }) => {
+    const renderItem = ({ item, index }: { item: Subscription; index: number }) => {
         const nextDate = new Date(item.nextBillingDate);
         const now = new Date();
         const isOverdue = nextDate < now;
@@ -222,33 +226,31 @@ export default function MyBillsScreen() {
         const companyIcon = getCompanyIcon(item.name) || DEFAULT_ICON;
 
         return (
-            <Card style={styles.card}>
-                <TouchableOpacity
-                    onLongPress={() => handleAction(item)}
-                    onPress={() => router.push(`/subscription/${item.id}`)}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.cardContent}>
-                        <View style={[styles.cardIcon, { backgroundColor: companyIcon.color + '20' }]}>
-                            <IconSymbol name={companyIcon.icon as any} size={20} color={companyIcon.color} />
+            <AnimatedCard
+                index={index}
+                onLongPress={() => handleAction(item)}
+                onPress={() => router.push(`/subscription/${item.id}`)}
+            >
+                <View style={styles.cardContent}>
+                    <View style={[styles.cardIcon, { backgroundColor: companyIcon.color + '20' }]}>
+                        <IconSymbol name={companyIcon.icon as any} size={20} color={companyIcon.color} />
+                    </View>
+                    <View style={styles.cardInfo}>
+                        <View style={styles.cardHeader}>
+                            <ThemedText type="subtitle">{item.name}</ThemedText>
+                            <ThemedText type="defaultSemiBold">{formatCurrency(item.amount, item.currency)}</ThemedText>
                         </View>
-                        <View style={styles.cardInfo}>
-                            <View style={styles.cardHeader}>
-                                <ThemedText type="subtitle">{item.name}</ThemedText>
-                                <ThemedText type="defaultSemiBold">{formatCurrency(item.amount, item.currency)}</ThemedText>
-                            </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                                <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                                    {i18n.t(item.billingInterval)} {item.categoryGroup ? `• ${item.categoryGroup}` : ''}
-                                </ThemedText>
-                                <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: dateColor }}>
-                                    {i18n.t('next')}: {nextDate.toLocaleDateString(i18n.locale)}
-                                </ThemedText>
-                            </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                            <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                                {i18n.t(item.billingInterval)} {item.categoryGroup ? `• ${item.categoryGroup}` : ''}
+                            </ThemedText>
+                            <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: dateColor }}>
+                                {i18n.t('next')}: {nextDate.toLocaleDateString(i18n.locale)}
+                            </ThemedText>
                         </View>
                     </View>
-                </TouchableOpacity>
-            </Card>
+                </View>
+            </AnimatedCard>
         );
     };
 
@@ -416,15 +418,23 @@ export default function MyBillsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={styles.list}
+                    removeClippedSubviews
+                    maxToRenderPerBatch={10}
+                    initialNumToRender={8}
+                    windowSize={5}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
                     }
                     ListEmptyComponent={
                         <View style={styles.empty}>
-                            <IconSymbol name="doc.text.magnifyingglass" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
-                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
-                                {categoryFilter !== 'all' ? i18n.t('noBillsInCategory') : (query ? i18n.t('noMatchesFound') : i18n.t('typeToSearch'))}
+                            <IconSymbol name="doc.text.magnifyingglass" size={60} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText type="subtitle" style={styles.emptyTitle}>
+                                {query || categoryFilter !== 'all' ? i18n.t('emptySearchTitle') : i18n.t('emptyBillsTitle')}
                             </ThemedText>
+                            <ThemedText style={styles.emptyHint}>
+                                {query || categoryFilter !== 'all' ? i18n.t('emptySearchHint') : i18n.t('emptyBillsHint')}
+                            </ThemedText>
+                            {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
                         </View>
                     }
                 />
@@ -436,14 +446,21 @@ export default function MyBillsScreen() {
                     renderSectionHeader={renderSectionHeader}
                     contentContainerStyle={styles.list}
                     stickySectionHeadersEnabled={true}
+                    removeClippedSubviews
+                    maxToRenderPerBatch={10}
+                    initialNumToRender={8}
+                    windowSize={5}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
                     }
                     ListEmptyComponent={
                         <View style={styles.empty}>
-                            <IconSymbol name="doc.text.magnifyingglass" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
-                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
-                                {categoryFilter !== 'all' ? i18n.t('noBillsInCategory') : (query ? i18n.t('noMatchesFound') : i18n.t('typeToSearch'))}
+                            <IconSymbol name="doc.text.magnifyingglass" size={60} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText type="subtitle" style={styles.emptyTitle}>
+                                {query || categoryFilter !== 'all' ? i18n.t('emptySearchTitle') : i18n.t('emptyBillsTitle')}
+                            </ThemedText>
+                            <ThemedText style={styles.emptyHint}>
+                                {query || categoryFilter !== 'all' ? i18n.t('emptySearchHint') : i18n.t('emptyBillsHint')}
                             </ThemedText>
                         </View>
                     }
@@ -456,27 +473,31 @@ export default function MyBillsScreen() {
                     renderSectionHeader={renderSectionHeader}
                     contentContainerStyle={styles.list}
                     stickySectionHeadersEnabled={true}
+                    removeClippedSubviews
+                    maxToRenderPerBatch={10}
+                    initialNumToRender={8}
+                    windowSize={5}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
                     }
                     ListEmptyComponent={
                         <View style={styles.empty}>
-                            <IconSymbol name="doc.text.magnifyingglass" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
-                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
-                                {categoryFilter !== 'all' ? i18n.t('noBillsInCategory') : (query ? i18n.t('noMatchesFound') : i18n.t('typeToSearch'))}
+                            <IconSymbol name="doc.text.magnifyingglass" size={60} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText type="subtitle" style={styles.emptyTitle}>
+                                {query || categoryFilter !== 'all' ? i18n.t('emptySearchTitle') : i18n.t('emptyBillsTitle')}
+                            </ThemedText>
+                            <ThemedText style={styles.emptyHint}>
+                                {query || categoryFilter !== 'all' ? i18n.t('emptySearchHint') : i18n.t('emptyBillsHint')}
                             </ThemedText>
                         </View>
                     }
                 />
             )}
 
-            <TouchableOpacity
-                style={[styles.fab, { backgroundColor: primaryColor }]}
+            <AnimatedFAB
                 onPress={() => router.push('/modal')}
-                activeOpacity={0.8}
-            >
-                <IconSymbol name="plus" size={30} color="#FFFFFF" />
-            </TouchableOpacity>
+                accessibilityLabel={i18n.t('addSubscription')}
+            />
         </ThemedView>
     );
 }
@@ -505,15 +526,17 @@ const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: 10,
     },
     filterChip: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        minHeight: 44, // iOS HIG minimum touch target
+        justifyContent: 'center',
     },
     filterChipText: {
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: '600',
     },
     actionsRow: {
@@ -523,26 +546,31 @@ const styles = StyleSheet.create({
     },
     viewToggle: {
         flexDirection: 'row',
-        borderRadius: 8,
+        borderRadius: 12,
         overflow: 'hidden',
-        gap: 2,
+        gap: 6,
     },
     viewToggleBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 6,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: 10,
+        minWidth: 52,
+        minHeight: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     markAllPaidBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 8,
+        gap: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderRadius: 10,
+        minHeight: 44, // iOS HIG minimum touch target
     },
     markAllPaidText: {
         color: '#FFFFFF',
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: '600',
     },
     list: {
@@ -594,21 +622,22 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 80,
+        marginTop: 60,
+        padding: 24,
     },
-    fab: {
-        position: 'absolute',
-        bottom: 30,
-        right: 24,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
+    emptyTitle: {
+        marginTop: 20,
+        textAlign: 'center',
+    },
+    emptyHint: {
+        textAlign: 'center',
+        marginTop: 12,
+        opacity: 0.6,
+        lineHeight: 22,
+        paddingHorizontal: 20,
+    },
+    proBanner: {
+        marginTop: 24,
+        width: '100%',
     },
 });

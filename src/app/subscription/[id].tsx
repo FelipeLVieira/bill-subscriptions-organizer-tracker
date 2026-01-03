@@ -13,7 +13,7 @@ import { Currency } from '@/constants/Currencies';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getSubscriptionById, paySubscription, Subscription, updateSubscription } from '@/db/actions';
+import { deleteSubscription, getSubscriptionById, paySubscription, Subscription, updateSubscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Haptic } from '@/utils/haptics';
@@ -50,6 +50,8 @@ export default function SubscriptionDetails() {
     const [customCategory, setCustomCategory] = useState('');
     const [showCustomCategoryModal, setShowCustomCategoryModal] = useState(false);
     const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const { colorScheme } = useTheme();
     const { locale } = useLanguage();
@@ -114,18 +116,24 @@ export default function SubscriptionDetails() {
     };
 
     const handleSave = async () => {
-        if (!name || !amount) {
+        if (!name.trim()) {
             await Haptic.error();
-            showError(i18n.t('fillRequired'));
+            showError(i18n.t('nameRequired'));
             return;
         }
 
-        try {
-            const parsedAmount = parseFloat(amount);
+        const parsedAmount = parseFloat(amount);
+        if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+            await Haptic.error();
+            showError(i18n.t('validAmountRequired'));
+            return;
+        }
 
+        setIsSaving(true);
+        try {
             // Schedule reminders
             const updatedReminderSchema = await scheduleAllReminders(
-                name,
+                name.trim(),
                 parsedAmount,
                 currency,
                 nextDate.toISOString(),
@@ -134,13 +142,13 @@ export default function SubscriptionDetails() {
             );
 
             await updateSubscription(Number(id), {
-                name,
+                name: name.trim(),
                 amount: parsedAmount,
                 currency,
                 billingInterval: interval,
                 categoryGroup: category,
                 nextBillingDate: nextDate.toISOString(),
-                notes,
+                notes: notes.trim(),
                 reminderSchema: serializeReminderSchema(updatedReminderSchema),
             });
             await Haptic.success();
@@ -151,7 +159,40 @@ export default function SubscriptionDetails() {
             console.error(e);
             await Haptic.error();
             showError(i18n.t('updateError'));
+        } finally {
+            setIsSaving(false);
         }
+    };
+
+    const handleDelete = async () => {
+        if (!subscription) return;
+
+        await Haptic.warning();
+        Alert.alert(
+            i18n.t('deleteSubscription'),
+            i18n.t('deleteConfirmation', { name: subscription.name }),
+            [
+                { text: i18n.t('cancel'), style: 'cancel' },
+                {
+                    text: i18n.t('delete'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeleting(true);
+                        try {
+                            await deleteSubscription(Number(id));
+                            await Haptic.success();
+                            showSuccess(i18n.t('billDeleted'));
+                            router.back();
+                        } catch (e) {
+                            console.error(e);
+                            await Haptic.error();
+                            showError(i18n.t('deleteError'));
+                            setIsDeleting(false);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     // Category handlers
@@ -198,20 +239,40 @@ export default function SubscriptionDetails() {
         <ThemedView style={styles.container}>
             {/* Custom header */}
             <View style={[styles.customHeader, { paddingTop: insets.top + 10, backgroundColor }]}>
-                <TouchableOpacity onPress={() => isEditing ? setIsEditing(false) : router.back()} style={styles.backButton}>
-                    <IconSymbol name="chevron.left" size={24} color={primaryColor} />
-                    <ThemedText style={{ color: primaryColor, marginLeft: 4 }}>
+                <TouchableOpacity
+                    onPress={() => isEditing ? setIsEditing(false) : router.back()}
+                    style={styles.backButton}
+                    accessibilityLabel={isEditing ? i18n.t('cancel') : i18n.t('goBack')}
+                    accessibilityRole="button"
+                    disabled={isSaving || isDeleting}
+                >
+                    <IconSymbol name="chevron.left" size={24} color={isSaving || isDeleting ? borderColor : primaryColor} />
+                    <ThemedText style={{ color: isSaving || isDeleting ? borderColor : primaryColor, marginLeft: 4 }}>
                         {isEditing ? i18n.t('cancel') : i18n.t('myBills')}
                     </ThemedText>
                 </TouchableOpacity>
                 {isEditing ? (
-                    <TouchableOpacity onPress={handleSave}>
-                        <ThemedText style={{ color: primaryColor, fontWeight: '600' }}>
-                            {i18n.t('save')}
-                        </ThemedText>
+                    <TouchableOpacity
+                        onPress={handleSave}
+                        disabled={isSaving}
+                        accessibilityLabel={i18n.t('saveChanges')}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: isSaving }}
+                    >
+                        {isSaving ? (
+                            <ActivityIndicator size="small" color={primaryColor} />
+                        ) : (
+                            <ThemedText style={{ color: primaryColor, fontWeight: '600' }}>
+                                {i18n.t('save')}
+                            </ThemedText>
+                        )}
                     </TouchableOpacity>
                 ) : (
-                    <TouchableOpacity onPress={() => setIsEditing(true)}>
+                    <TouchableOpacity
+                        onPress={() => setIsEditing(true)}
+                        accessibilityLabel={i18n.t('editSubscription')}
+                        accessibilityRole="button"
+                    >
                         <ThemedText style={{ color: primaryColor, fontWeight: '600' }}>
                             {i18n.t('edit')}
                         </ThemedText>
@@ -304,6 +365,29 @@ export default function SubscriptionDetails() {
                             onUpdate={setReminderSchema}
                             isEditing={true}
                         />
+
+                        {/* Delete Button */}
+                        <View style={styles.deleteSection}>
+                            <TouchableOpacity
+                                style={[styles.deleteButton, { borderColor: dangerColor }]}
+                                onPress={handleDelete}
+                                disabled={isDeleting}
+                                accessibilityLabel={i18n.t('deleteSubscription')}
+                                accessibilityRole="button"
+                                accessibilityHint={i18n.t('deleteConfirmationHint')}
+                            >
+                                {isDeleting ? (
+                                    <ActivityIndicator size="small" color={dangerColor} />
+                                ) : (
+                                    <>
+                                        <IconSymbol name="trash.fill" size={18} color={dangerColor} />
+                                        <ThemedText style={[styles.deleteButtonText, { color: dangerColor }]}>
+                                            {i18n.t('deleteSubscription')}
+                                        </ThemedText>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 ) : (
                     // View Mode - Show details with icon and payment history
@@ -585,5 +669,24 @@ const styles = StyleSheet.create({
     },
     modalInput: {
         marginBottom: 0,
+    },
+    deleteSection: {
+        marginTop: 24,
+        paddingTop: 24,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(128,128,128,0.2)',
+    },
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 14,
+        borderRadius: 12,
+        borderWidth: 1.5,
+    },
+    deleteButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

@@ -71,7 +71,8 @@ export function LanguagePickerModal({ visible, onClose, onSelect }: LanguagePick
         return SUPPORTED_LANGUAGES.filter(lang =>
             lang.label.toLowerCase().includes(searchLower) ||
             lang.code.toLowerCase().includes(searchLower) ||
-            lang.nativeName?.toLowerCase().includes(searchLower)
+            lang.nativeName?.toLowerCase().includes(searchLower) ||
+            lang.englishName?.toLowerCase().includes(searchLower)
         );
     }, [search]);
 
@@ -80,24 +81,29 @@ export function LanguagePickerModal({ visible, onClose, onSelect }: LanguagePick
         onSelect(code);
     }, [onSelect]);
 
-    const renderLanguageItem = useCallback(({ item }: { item: typeof SUPPORTED_LANGUAGES[0] }) => (
-        <TouchableOpacity
-            style={[styles.item, { borderBottomColor: textColor + '20' }]}
-            onPress={() => handleSelect(item.code)}
-            activeOpacity={0.7}
-        >
-            <ThemedText style={styles.flag}>{item.flag}</ThemedText>
-            <View style={styles.labelContainer}>
-                <ThemedText style={styles.label}>{item.label}</ThemedText>
-                {item.nativeName && item.nativeName !== item.label && (
-                    <ThemedText style={[styles.nativeName, { opacity: 0.6 }]}>{item.nativeName}</ThemedText>
+    const renderLanguageItem = useCallback(({ item }: { item: typeof SUPPORTED_LANGUAGES[0] }) => {
+        // Show native name first (prominent), then English name below for non-native speakers
+        const showEnglishName = item.nativeName !== item.englishName;
+
+        return (
+            <TouchableOpacity
+                style={[styles.item, { borderBottomColor: textColor + '20' }]}
+                onPress={() => handleSelect(item.code)}
+                activeOpacity={0.7}
+            >
+                <ThemedText style={styles.flag}>{item.flag}</ThemedText>
+                <View style={styles.labelContainer}>
+                    <ThemedText style={styles.label}>{item.nativeName}</ThemedText>
+                    {showEnglishName && (
+                        <ThemedText style={[styles.englishName, { opacity: 0.5 }]}>{item.englishName}</ThemedText>
+                    )}
+                </View>
+                {locale === item.code && (
+                    <IconSymbol name="checkmark" size={20} color={primaryColor} />
                 )}
-            </View>
-            {locale === item.code && (
-                <IconSymbol name="checkmark" size={20} color={primaryColor} />
-            )}
-        </TouchableOpacity>
-    ), [textColor, primaryColor, locale, handleSelect]);
+            </TouchableOpacity>
+        );
+    }, [textColor, primaryColor, locale, handleSelect]);
 
     return (
         <Modal
@@ -216,5 +222,10 @@ const styles = StyleSheet.create({
     nativeName: {
         fontSize: 13,
         marginTop: 2,
+    },
+    englishName: {
+        fontSize: 12,
+        marginTop: 2,
+        fontStyle: 'italic',
     },
 });

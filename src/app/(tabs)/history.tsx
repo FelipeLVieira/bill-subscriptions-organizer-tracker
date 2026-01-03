@@ -1,3 +1,4 @@
+import { GoProButton } from '@/components/GoProButton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/ui/Card';
@@ -5,6 +6,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePro } from '@/contexts/ProContext';
 import { getSubscriptions } from '@/db/actions';
 import { billingHistory } from '@/db/schema';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -40,6 +42,7 @@ export default function PaymentHistoryScreen() {
     const backgroundColor = useThemeColor({}, 'background');
     const { locale } = useLanguage();
     const { formatAmount, defaultCurrency } = useCurrency();
+    const { isPro } = usePro();
 
     useFocusEffect(
         useCallback(() => {
@@ -170,7 +173,11 @@ export default function PaymentHistoryScreen() {
                         style={styles.input}
                     />
                     {query.length > 0 && (
-                        <TouchableOpacity onPress={() => setQuery('')}>
+                        <TouchableOpacity
+                            onPress={() => setQuery('')}
+                            accessibilityLabel={i18n.t('cancel')}
+                            accessibilityRole="button"
+                        >
                             <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
                         </TouchableOpacity>
                     )}
@@ -187,16 +194,22 @@ export default function PaymentHistoryScreen() {
                     </ThemedText>
                 </Card>
 
+                {/* Go Pro Banner */}
+                {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
+
                 {/* Controls */}
                 <View style={styles.controlsRow}>
                     {/* View Toggle */}
-                    <View style={styles.viewToggle}>
+                    <View style={styles.viewToggle} accessibilityRole="radiogroup">
                         <TouchableOpacity
                             style={[
                                 styles.viewToggleBtn,
                                 { backgroundColor: viewMode === 'list' ? primaryColor : cardColor }
                             ]}
                             onPress={() => setViewMode('list')}
+                            accessibilityLabel={i18n.t('listView')}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected: viewMode === 'list' }}
                         >
                             <IconSymbol
                                 name="list.bullet"
@@ -210,6 +223,9 @@ export default function PaymentHistoryScreen() {
                                 { backgroundColor: viewMode === 'grouped' ? primaryColor : cardColor }
                             ]}
                             onPress={() => setViewMode('grouped')}
+                            accessibilityLabel={i18n.t('groupView')}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected: viewMode === 'grouped' }}
                         >
                             <IconSymbol
                                 name="rectangle.3.group"
@@ -221,13 +237,16 @@ export default function PaymentHistoryScreen() {
 
                     {/* Group By Toggle (only in grouped mode) */}
                     {viewMode === 'grouped' && (
-                        <View style={styles.groupByToggle}>
+                        <View style={styles.groupByToggle} accessibilityRole="radiogroup">
                             <TouchableOpacity
                                 style={[
                                     styles.groupByBtn,
                                     { backgroundColor: groupBy === 'date' ? primaryColor : cardColor }
                                 ]}
                                 onPress={() => setGroupBy('date')}
+                                accessibilityLabel={i18n.t('byDate')}
+                                accessibilityRole="radio"
+                                accessibilityState={{ selected: groupBy === 'date' }}
                             >
                                 <ThemedText style={[
                                     styles.groupByText,
@@ -242,6 +261,9 @@ export default function PaymentHistoryScreen() {
                                     { backgroundColor: groupBy === 'subscription' ? primaryColor : cardColor }
                                 ]}
                                 onPress={() => setGroupBy('subscription')}
+                                accessibilityLabel={i18n.t('byBill')}
+                                accessibilityRole="radio"
+                                accessibilityState={{ selected: groupBy === 'subscription' }}
                             >
                                 <ThemedText style={[
                                     styles.groupByText,
@@ -261,14 +283,21 @@ export default function PaymentHistoryScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={styles.list}
+                    removeClippedSubviews
+                    maxToRenderPerBatch={15}
+                    initialNumToRender={10}
+                    windowSize={5}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
                     }
                     ListEmptyComponent={
-                        <View style={styles.empty}>
-                            <IconSymbol name="clock.arrow.circlepath" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
-                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
-                                {i18n.t('noPaymentHistory')}
+                        <View style={styles.empty} accessibilityRole="text">
+                            <IconSymbol name="clock.arrow.circlepath" size={60} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText type="subtitle" style={styles.emptyTitle}>
+                                {query ? i18n.t('emptySearchTitle') : i18n.t('emptyHistoryTitle')}
+                            </ThemedText>
+                            <ThemedText style={styles.emptyHint}>
+                                {query ? i18n.t('emptySearchHint') : i18n.t('emptyHistoryHint')}
                             </ThemedText>
                         </View>
                     }
@@ -281,14 +310,21 @@ export default function PaymentHistoryScreen() {
                     renderSectionHeader={renderSectionHeader}
                     contentContainerStyle={styles.list}
                     stickySectionHeadersEnabled={true}
+                    removeClippedSubviews
+                    maxToRenderPerBatch={15}
+                    initialNumToRender={10}
+                    windowSize={5}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
                     }
                     ListEmptyComponent={
-                        <View style={styles.empty}>
-                            <IconSymbol name="clock.arrow.circlepath" size={50} color={primaryColor} style={{ opacity: 0.5 }} />
-                            <ThemedText style={{ marginTop: 16, opacity: 0.6 }}>
-                                {i18n.t('noPaymentHistory')}
+                        <View style={styles.empty} accessibilityRole="text">
+                            <IconSymbol name="clock.arrow.circlepath" size={60} color={primaryColor} style={{ opacity: 0.5 }} />
+                            <ThemedText type="subtitle" style={styles.emptyTitle}>
+                                {query ? i18n.t('emptySearchTitle') : i18n.t('emptyHistoryTitle')}
+                            </ThemedText>
+                            <ThemedText style={styles.emptyHint}>
+                                {query ? i18n.t('emptySearchHint') : i18n.t('emptyHistoryHint')}
                             </ThemedText>
                         </View>
                     }
@@ -331,6 +367,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         opacity: 0.7,
     },
+    proBanner: {
+        marginTop: 12,
+    },
     controlsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -339,26 +378,32 @@ const styles = StyleSheet.create({
     },
     viewToggle: {
         flexDirection: 'row',
-        borderRadius: 8,
-        gap: 2,
+        borderRadius: 12,
+        gap: 6,
     },
     viewToggleBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 6,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: 10,
+        minWidth: 52,
+        minHeight: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     groupByToggle: {
         flexDirection: 'row',
-        borderRadius: 8,
-        gap: 2,
+        borderRadius: 12,
+        gap: 6,
     },
     groupByBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 6,
+        paddingHorizontal: 18,
+        paddingVertical: 14,
+        borderRadius: 10,
+        minHeight: 50,
+        justifyContent: 'center',
     },
     groupByText: {
-        fontSize: 12,
+        fontSize: 15,
         fontWeight: '600',
     },
     list: {
@@ -412,6 +457,18 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 80,
+        marginTop: 60,
+        padding: 24,
+    },
+    emptyTitle: {
+        marginTop: 20,
+        textAlign: 'center',
+    },
+    emptyHint: {
+        textAlign: 'center',
+        marginTop: 12,
+        opacity: 0.6,
+        lineHeight: 22,
+        paddingHorizontal: 20,
     },
 });

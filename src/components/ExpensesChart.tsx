@@ -104,6 +104,7 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
                         showsHorizontalScrollIndicator={false}
                         style={styles.currencyTabs}
                         contentContainerStyle={styles.currencyTabsContent}
+                        accessibilityRole="tablist"
                     >
                         {availableCurrencies.map(currCode => {
                             const currInfo = getCurrencyByCode(currCode);
@@ -116,6 +117,9 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
                                         isSelected && { backgroundColor: primaryColor }
                                     ]}
                                     onPress={() => setSelectedCurrency(currCode)}
+                                    accessibilityRole="tab"
+                                    accessibilityState={{ selected: isSelected }}
+                                    accessibilityLabel={`${currInfo?.name || currCode} ${i18n.t('currency')}`}
                                 >
                                     <ThemedText
                                         style={[
@@ -189,16 +193,18 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     currencyTabsContent: {
-        gap: 8,
+        gap: 10,
     },
     currencyTab: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
+        paddingHorizontal: 18,
+        paddingVertical: 12,
+        borderRadius: 22,
         backgroundColor: 'rgba(128,128,128,0.15)',
+        minHeight: 44, // iOS HIG minimum touch target
+        justifyContent: 'center',
     },
     currencyTabText: {
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '600',
     },
     chartContainer: {

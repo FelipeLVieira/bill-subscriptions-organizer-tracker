@@ -16,6 +16,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fullstackdev1.bill-subscriptions-organizer-tracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
       "splash": {
         "image": "./assets/images/splash-icon.png",
         "resizeMode": "contain",
@@ -52,11 +55,25 @@
       ],
       "expo-sqlite",
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-XXXXXX~XXXXXX",
+          "androidAppId": "ca-app-pub-XXXXXX~XXXXXX"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c544e5d6-38d7-4c9b-9312-a58c3b049288"
+      }
+    },
+    "owner": "fullstackdev1"
   }
 }
