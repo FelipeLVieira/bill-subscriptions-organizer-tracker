@@ -24,7 +24,7 @@ import {
     serializeReminderSchema,
 } from '@/utils/notifications';
 import DateTimePicker from '@/components/ui/DateTimePicker';
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from '@/components/ui/Picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';

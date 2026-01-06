@@ -78,7 +78,7 @@ function DateTimePicker({
     borderRadius: 10,
     padding: '12px 16px',
     fontSize: 16,
-    fontFamily: 'inherit',
+    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     outline: 'none',
     cursor: 'pointer',
     minWidth: 140,

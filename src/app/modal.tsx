@@ -1,6 +1,6 @@
 import { shadows } from '@/utils/shadow';
 import DateTimePicker from '@/components/ui/DateTimePicker';
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from '@/components/ui/Picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
