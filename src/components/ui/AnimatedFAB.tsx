@@ -1,6 +1,8 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
+import { shadows } from '@/utils/shadow';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, ViewStyle } from 'react-native';
 
@@ -25,7 +27,7 @@ export function AnimatedFAB({
     accessibilityLabel,
     style,
 }: AnimatedFABProps) {
-    const primaryColor = useThemeColor({}, 'primary');
+    const interactiveColor = useThemeColor({}, 'interactive');
 
     const entranceValue = useRef(new Animated.Value(0)).current;
     const scaleValue = useRef(new Animated.Value(1)).current;
@@ -38,7 +40,7 @@ export function AnimatedFAB({
             friction: 6,
             tension: 50,
             delay: 300,
-            useNativeDriver: true,
+            useNativeDriver,
         }).start();
     }, [entranceValue]);
 
@@ -48,12 +50,12 @@ export function AnimatedFAB({
                 toValue: 0.9,
                 friction: 8,
                 tension: 100,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(rotateValue, {
                 toValue: 1,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start();
     };
@@ -64,12 +66,12 @@ export function AnimatedFAB({
                 toValue: 1,
                 friction: 5,
                 tension: 40,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(rotateValue, {
                 toValue: 0,
                 duration: 200,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start();
     };
@@ -104,7 +106,7 @@ export function AnimatedFAB({
                 onPress={handlePress}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
-                style={[styles.fab, { backgroundColor: primaryColor }]}
+                style={[styles.fab, { backgroundColor: interactiveColor }]}
                 accessibilityLabel={accessibilityLabel}
                 accessibilityRole="button"
             >
@@ -126,11 +128,6 @@ const styles = StyleSheet.create({
         borderRadius: 28,
         alignItems: 'center',
         justifyContent: 'center',
-        // iOS-style shadow
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        elevation: 8,
+        ...shadows.fab,
     },
 });

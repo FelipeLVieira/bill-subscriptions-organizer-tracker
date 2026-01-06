@@ -1,4 +1,5 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { shadows } from '@/utils/shadow';
+import DateTimePicker from '@/components/ui/DateTimePicker';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -356,12 +357,7 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 14,
     gap: 16,
-    // iOS card shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 10,
+    ...shadows.modal,
   },
   modalHeader: {
     flexDirection: 'row',

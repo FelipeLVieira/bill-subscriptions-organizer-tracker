@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 import { GoProButton } from '@/components/GoProButton';
 import { ThemedText } from '@/components/themed-text';
@@ -19,6 +20,8 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Haptic } from '@/utils/haptics';
 
+const WalkthroughableView = walkthroughable(View);
+
 type ViewMode = 'list' | 'grouped' | 'currency';
 type CategoryFilter = 'all' | string;
 
@@ -30,6 +33,7 @@ export default function MyBillsScreen() {
     const [viewMode, setViewMode] = useState<ViewMode>('currency');
     const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
     const primaryColor = useThemeColor({}, 'primary');
+    const interactiveColor = useThemeColor({}, 'interactive');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const backgroundColor = useThemeColor({}, 'background');
@@ -269,131 +273,146 @@ export default function MyBillsScreen() {
         <ThemedView style={styles.container}>
             <View style={styles.header}>
                 {/* Search bar */}
-                <View style={styles.searchContainer}>
-                    <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
-                    <Input
-                        placeholder={i18n.t('searchBills')}
-                        value={query}
-                        onChangeText={setQuery}
-                        style={styles.input}
-                    />
-                    {query.length > 0 && (
-                        <TouchableOpacity onPress={() => setQuery('')}>
-                            <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
-                        </TouchableOpacity>
-                    )}
-                </View>
+                <CopilotStep text={i18n.t('copilotBillsSearch')} order={1} name="bills-search">
+                    <WalkthroughableView>
+                        <View style={styles.searchContainer}>
+                            <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
+                            <Input
+                                placeholder={i18n.t('searchBills')}
+                                value={query}
+                                onChangeText={setQuery}
+                                style={styles.input}
+                            />
+                            {query.length > 0 && (
+                                <TouchableOpacity onPress={() => setQuery('')}>
+                                    <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </WalkthroughableView>
+                </CopilotStep>
 
                 {/* Filter and View Controls */}
                 <View style={styles.controlsRow}>
                     {/* Category Filter */}
-                    <View style={styles.filterContainer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.filterChip,
-                                { backgroundColor: categoryFilter === 'all' ? primaryColor : cardColor }
-                            ]}
-                            onPress={() => {
-                                Haptic.selection();
-                                setCategoryFilter('all');
-                            }}
-                            accessibilityLabel={i18n.t('allCategories')}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: categoryFilter === 'all' }}
-                        >
-                            <ThemedText style={[
-                                styles.filterChipText,
-                                { color: categoryFilter === 'all' ? '#FFFFFF' : textColor }
-                            ]}>
-                                {i18n.t('allCategories')}
-                            </ThemedText>
-                        </TouchableOpacity>
-                        {categories.map(cat => (
-                            <TouchableOpacity
-                                key={cat}
-                                style={[
-                                    styles.filterChip,
-                                    { backgroundColor: categoryFilter === cat ? primaryColor : cardColor }
-                                ]}
-                                onPress={() => {
-                                    Haptic.selection();
-                                    setCategoryFilter(cat);
-                                }}
-                                accessibilityLabel={cat}
-                                accessibilityRole="button"
-                                accessibilityState={{ selected: categoryFilter === cat }}
-                            >
-                                <ThemedText style={[
-                                    styles.filterChipText,
-                                    { color: categoryFilter === cat ? '#FFFFFF' : textColor }
-                                ]}>
-                                    {cat}
-                                </ThemedText>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                    <CopilotStep text={i18n.t('copilotBillsFilter')} order={2} name="bills-filter">
+                        <WalkthroughableView>
+                            <View style={styles.filterContainer}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.filterChip,
+                                        { backgroundColor: categoryFilter === 'all' ? interactiveColor : cardColor }
+                                    ]}
+                                    onPress={() => {
+                                        Haptic.selection();
+                                        setCategoryFilter('all');
+                                    }}
+                                    accessibilityLabel={i18n.t('allCategories')}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ selected: categoryFilter === 'all' }}
+                                >
+                                    <ThemedText style={[
+                                        styles.filterChipText,
+                                        { color: categoryFilter === 'all' ? '#FFFFFF' : textColor }
+                                    ]}>
+                                        {i18n.t('allCategories')}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                                {categories.map(cat => (
+                                    <TouchableOpacity
+                                        key={cat}
+                                        style={[
+                                            styles.filterChip,
+                                            { backgroundColor: categoryFilter === cat ? interactiveColor : cardColor }
+                                        ]}
+                                        onPress={() => {
+                                            Haptic.selection();
+                                            setCategoryFilter(cat);
+                                        }}
+                                        accessibilityLabel={cat}
+                                        accessibilityRole="button"
+                                        accessibilityState={{ selected: categoryFilter === cat }}
+                                    >
+                                        <ThemedText style={[
+                                            styles.filterChipText,
+                                            { color: categoryFilter === cat ? '#FFFFFF' : textColor }
+                                        ]}>
+                                            {cat}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </WalkthroughableView>
+                    </CopilotStep>
+
+                    {/* Go Pro Banner */}
+                    {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
 
                     {/* View Toggle and Mark All Paid */}
                     <View style={styles.actionsRow}>
-                        <View style={styles.viewToggle}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.viewToggleBtn,
-                                    { backgroundColor: viewMode === 'list' ? primaryColor : cardColor }
-                                ]}
-                                onPress={() => {
-                                    Haptic.selection();
-                                    setViewMode('list');
-                                }}
-                                accessibilityLabel={i18n.t('listView')}
-                                accessibilityRole="button"
-                                accessibilityState={{ selected: viewMode === 'list' }}
-                            >
-                                <IconSymbol
-                                    name="list.bullet"
-                                    size={16}
-                                    color={viewMode === 'list' ? '#FFFFFF' : textColor}
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.viewToggleBtn,
-                                    { backgroundColor: viewMode === 'grouped' ? primaryColor : cardColor }
-                                ]}
-                                onPress={() => {
-                                    Haptic.selection();
-                                    setViewMode('grouped');
-                                }}
-                                accessibilityLabel={i18n.t('groupView')}
-                                accessibilityRole="button"
-                                accessibilityState={{ selected: viewMode === 'grouped' }}
-                            >
-                                <IconSymbol
-                                    name="rectangle.3.group"
-                                    size={16}
-                                    color={viewMode === 'grouped' ? '#FFFFFF' : textColor}
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.viewToggleBtn,
-                                    { backgroundColor: viewMode === 'currency' ? primaryColor : cardColor }
-                                ]}
-                                onPress={() => {
-                                    Haptic.selection();
-                                    setViewMode('currency');
-                                }}
-                                accessibilityLabel={i18n.t('currency')}
-                                accessibilityRole="button"
-                                accessibilityState={{ selected: viewMode === 'currency' }}
-                            >
-                                <IconSymbol
-                                    name="dollarsign.circle"
-                                    size={16}
-                                    color={viewMode === 'currency' ? '#FFFFFF' : textColor}
-                                />
-                            </TouchableOpacity>
-                        </View>
+                        <CopilotStep text={i18n.t('copilotBillsView')} order={3} name="bills-view">
+                            <WalkthroughableView>
+                                <View style={styles.viewToggle}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.viewToggleBtn,
+                                            { backgroundColor: viewMode === 'list' ? interactiveColor : cardColor }
+                                        ]}
+                                        onPress={() => {
+                                            Haptic.selection();
+                                            setViewMode('list');
+                                        }}
+                                        accessibilityLabel={i18n.t('listView')}
+                                        accessibilityRole="button"
+                                        accessibilityState={{ selected: viewMode === 'list' }}
+                                    >
+                                        <IconSymbol
+                                            name="list.bullet"
+                                            size={16}
+                                            color={viewMode === 'list' ? '#FFFFFF' : textColor}
+                                        />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.viewToggleBtn,
+                                            { backgroundColor: viewMode === 'grouped' ? interactiveColor : cardColor }
+                                        ]}
+                                        onPress={() => {
+                                            Haptic.selection();
+                                            setViewMode('grouped');
+                                        }}
+                                        accessibilityLabel={i18n.t('groupView')}
+                                        accessibilityRole="button"
+                                        accessibilityState={{ selected: viewMode === 'grouped' }}
+                                    >
+                                        <IconSymbol
+                                            name="rectangle.3.group"
+                                            size={16}
+                                            color={viewMode === 'grouped' ? '#FFFFFF' : textColor}
+                                        />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.viewToggleBtn,
+                                            { backgroundColor: viewMode === 'currency' ? interactiveColor : cardColor }
+                                        ]}
+                                        onPress={() => {
+                                            Haptic.selection();
+                                            setViewMode('currency');
+                                        }}
+                                        accessibilityLabel={i18n.t('currency')}
+                                        accessibilityRole="button"
+                                        accessibilityState={{ selected: viewMode === 'currency' }}
+                                    >
+                                        <IconSymbol
+                                            name="dollarsign.circle"
+                                            size={16}
+                                            color={viewMode === 'currency' ? '#FFFFFF' : textColor}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </WalkthroughableView>
+                        </CopilotStep>
 
                         {overdueCount > 0 && (
                             <TouchableOpacity
@@ -494,10 +513,14 @@ export default function MyBillsScreen() {
                 />
             )}
 
-            <AnimatedFAB
-                onPress={() => router.push('/modal')}
-                accessibilityLabel={i18n.t('addSubscription')}
-            />
+            <CopilotStep text={i18n.t('copilotBillsItem')} order={4} name="bills-item">
+                <WalkthroughableView>
+                    <AnimatedFAB
+                        onPress={() => router.push('/modal')}
+                        accessibilityLabel={i18n.t('addSubscription')}
+                    />
+                </WalkthroughableView>
+            </CopilotStep>
         </ThemedView>
     );
 }
@@ -619,25 +642,28 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     empty: {
-        flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 60,
-        padding: 24,
+        marginTop: 24,
+        paddingHorizontal: 16,
+        paddingBottom: 120,
     },
     emptyTitle: {
-        marginTop: 20,
+        marginTop: 16,
         textAlign: 'center',
     },
     emptyHint: {
         textAlign: 'center',
-        marginTop: 12,
+        marginTop: 8,
         opacity: 0.6,
-        lineHeight: 22,
-        paddingHorizontal: 20,
+        lineHeight: 20,
+        paddingHorizontal: 16,
     },
     proBanner: {
-        marginTop: 24,
-        width: '100%',
+        marginTop: 16,
+        marginRight: 70,
+    },
+    proBannerHeader: {
+        marginTop: 8,
+        marginBottom: 4,
     },
 });

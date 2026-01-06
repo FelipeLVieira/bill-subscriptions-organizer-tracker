@@ -7,15 +7,15 @@ import { Input } from '@/components/ui/Input';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePro } from '@/contexts/ProContext';
-import { getSubscriptions } from '@/db/actions';
-import { billingHistory } from '@/db/schema';
+import { getAllBillingHistory, getSubscriptions } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { db } from '@/db';
-import { desc } from 'drizzle-orm';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 type ViewMode = 'list' | 'grouped';
 type GroupBy = 'date' | 'subscription';
@@ -37,6 +37,7 @@ export default function PaymentHistoryScreen() {
     const [groupBy, setGroupBy] = useState<GroupBy>('date');
 
     const primaryColor = useThemeColor({}, 'primary');
+    const interactiveColor = useThemeColor({}, 'interactive');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const backgroundColor = useThemeColor({}, 'background');
@@ -53,7 +54,7 @@ export default function PaymentHistoryScreen() {
     const loadData = async () => {
         const subs = await getSubscriptions();
 
-        const history = await db.select().from(billingHistory).orderBy(desc(billingHistory.datePaid));
+        const history = await getAllBillingHistory();
 
         // Map history to include subscription names
         const paymentRecords: PaymentRecord[] = history.map(h => {
@@ -164,24 +165,28 @@ export default function PaymentHistoryScreen() {
         <ThemedView style={styles.container}>
             <View style={styles.header}>
                 {/* Search bar */}
-                <View style={styles.searchContainer}>
-                    <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
-                    <Input
-                        placeholder={i18n.t('searchPayments')}
-                        value={query}
-                        onChangeText={setQuery}
-                        style={styles.input}
-                    />
-                    {query.length > 0 && (
-                        <TouchableOpacity
-                            onPress={() => setQuery('')}
-                            accessibilityLabel={i18n.t('cancel')}
-                            accessibilityRole="button"
-                        >
-                            <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
-                        </TouchableOpacity>
-                    )}
-                </View>
+                <CopilotStep text={i18n.t('copilotHistorySearch')} order={1} name="history-search">
+                    <WalkthroughableView>
+                        <View style={styles.searchContainer}>
+                            <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
+                            <Input
+                                placeholder={i18n.t('searchPayments')}
+                                value={query}
+                                onChangeText={setQuery}
+                                style={styles.input}
+                            />
+                            {query.length > 0 && (
+                                <TouchableOpacity
+                                    onPress={() => setQuery('')}
+                                    accessibilityLabel={i18n.t('cancel')}
+                                    accessibilityRole="button"
+                                >
+                                    <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </WalkthroughableView>
+                </CopilotStep>
 
                 {/* Total Summary */}
                 <Card style={styles.summaryCard}>
@@ -200,79 +205,87 @@ export default function PaymentHistoryScreen() {
                 {/* Controls */}
                 <View style={styles.controlsRow}>
                     {/* View Toggle */}
-                    <View style={styles.viewToggle} accessibilityRole="radiogroup">
-                        <TouchableOpacity
-                            style={[
-                                styles.viewToggleBtn,
-                                { backgroundColor: viewMode === 'list' ? primaryColor : cardColor }
-                            ]}
-                            onPress={() => setViewMode('list')}
-                            accessibilityLabel={i18n.t('listView')}
-                            accessibilityRole="radio"
-                            accessibilityState={{ selected: viewMode === 'list' }}
-                        >
-                            <IconSymbol
-                                name="list.bullet"
-                                size={16}
-                                color={viewMode === 'list' ? '#FFFFFF' : textColor}
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[
-                                styles.viewToggleBtn,
-                                { backgroundColor: viewMode === 'grouped' ? primaryColor : cardColor }
-                            ]}
-                            onPress={() => setViewMode('grouped')}
-                            accessibilityLabel={i18n.t('groupView')}
-                            accessibilityRole="radio"
-                            accessibilityState={{ selected: viewMode === 'grouped' }}
-                        >
-                            <IconSymbol
-                                name="rectangle.3.group"
-                                size={16}
-                                color={viewMode === 'grouped' ? '#FFFFFF' : textColor}
-                            />
-                        </TouchableOpacity>
-                    </View>
+                    <CopilotStep text={i18n.t('copilotHistoryView')} order={2} name="history-view">
+                        <WalkthroughableView>
+                            <View style={styles.viewToggle} accessibilityRole="radiogroup">
+                                <TouchableOpacity
+                                    style={[
+                                        styles.viewToggleBtn,
+                                        { backgroundColor: viewMode === 'list' ? interactiveColor : cardColor }
+                                    ]}
+                                    onPress={() => setViewMode('list')}
+                                    accessibilityLabel={i18n.t('listView')}
+                                    accessibilityRole="radio"
+                                    accessibilityState={{ selected: viewMode === 'list' }}
+                                >
+                                    <IconSymbol
+                                        name="list.bullet"
+                                        size={16}
+                                        color={viewMode === 'list' ? '#FFFFFF' : textColor}
+                                    />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.viewToggleBtn,
+                                        { backgroundColor: viewMode === 'grouped' ? interactiveColor : cardColor }
+                                    ]}
+                                    onPress={() => setViewMode('grouped')}
+                                    accessibilityLabel={i18n.t('groupView')}
+                                    accessibilityRole="radio"
+                                    accessibilityState={{ selected: viewMode === 'grouped' }}
+                                >
+                                    <IconSymbol
+                                        name="rectangle.3.group"
+                                        size={16}
+                                        color={viewMode === 'grouped' ? '#FFFFFF' : textColor}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </WalkthroughableView>
+                    </CopilotStep>
 
                     {/* Group By Toggle (only in grouped mode) */}
                     {viewMode === 'grouped' && (
-                        <View style={styles.groupByToggle} accessibilityRole="radiogroup">
-                            <TouchableOpacity
-                                style={[
-                                    styles.groupByBtn,
-                                    { backgroundColor: groupBy === 'date' ? primaryColor : cardColor }
-                                ]}
-                                onPress={() => setGroupBy('date')}
-                                accessibilityLabel={i18n.t('byDate')}
-                                accessibilityRole="radio"
-                                accessibilityState={{ selected: groupBy === 'date' }}
-                            >
-                                <ThemedText style={[
-                                    styles.groupByText,
-                                    { color: groupBy === 'date' ? '#FFFFFF' : textColor }
-                                ]}>
-                                    {i18n.t('byDate')}
-                                </ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.groupByBtn,
-                                    { backgroundColor: groupBy === 'subscription' ? primaryColor : cardColor }
-                                ]}
-                                onPress={() => setGroupBy('subscription')}
-                                accessibilityLabel={i18n.t('byBill')}
-                                accessibilityRole="radio"
-                                accessibilityState={{ selected: groupBy === 'subscription' }}
-                            >
-                                <ThemedText style={[
-                                    styles.groupByText,
-                                    { color: groupBy === 'subscription' ? '#FFFFFF' : textColor }
-                                ]}>
-                                    {i18n.t('byBill')}
-                                </ThemedText>
-                            </TouchableOpacity>
-                        </View>
+                        <CopilotStep text={i18n.t('copilotHistoryGroup')} order={3} name="history-group">
+                            <WalkthroughableView>
+                                <View style={styles.groupByToggle} accessibilityRole="radiogroup">
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.groupByBtn,
+                                            { backgroundColor: groupBy === 'date' ? interactiveColor : cardColor }
+                                        ]}
+                                        onPress={() => setGroupBy('date')}
+                                        accessibilityLabel={i18n.t('byDate')}
+                                        accessibilityRole="radio"
+                                        accessibilityState={{ selected: groupBy === 'date' }}
+                                    >
+                                        <ThemedText style={[
+                                            styles.groupByText,
+                                            { color: groupBy === 'date' ? '#FFFFFF' : textColor }
+                                        ]}>
+                                            {i18n.t('byDate')}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.groupByBtn,
+                                            { backgroundColor: groupBy === 'subscription' ? interactiveColor : cardColor }
+                                        ]}
+                                        onPress={() => setGroupBy('subscription')}
+                                        accessibilityLabel={i18n.t('byBill')}
+                                        accessibilityRole="radio"
+                                        accessibilityState={{ selected: groupBy === 'subscription' }}
+                                    >
+                                        <ThemedText style={[
+                                            styles.groupByText,
+                                            { color: groupBy === 'subscription' ? '#FFFFFF' : textColor }
+                                        ]}>
+                                            {i18n.t('byBill')}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                </View>
+                            </WalkthroughableView>
+                        </CopilotStep>
                     )}
                 </View>
             </View>
@@ -457,18 +470,18 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 60,
-        padding: 24,
+        marginTop: 20,
+        padding: 16,
     },
     emptyTitle: {
-        marginTop: 20,
+        marginTop: 16,
         textAlign: 'center',
     },
     emptyHint: {
         textAlign: 'center',
-        marginTop: 12,
+        marginTop: 8,
         opacity: 0.6,
-        lineHeight: 22,
-        paddingHorizontal: 20,
+        lineHeight: 20,
+        paddingHorizontal: 16,
     },
 });

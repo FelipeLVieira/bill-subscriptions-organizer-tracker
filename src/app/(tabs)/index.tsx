@@ -15,11 +15,10 @@ import { Subscription, deleteSubscription, getPaidThisMonth, getSubscriptions, p
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Haptic } from '@/utils/haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { CopilotStep, useCopilot, walkthroughable } from 'react-native-copilot';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 const WalkthroughableView = walkthroughable(View);
 
@@ -33,7 +32,6 @@ export default function HomeScreen() {
   const statusOverdue = useThemeColor({}, 'statusOverdue');
   const statusPaid = useThemeColor({}, 'statusPaid');
   const dangerColor = useThemeColor({}, 'danger');
-  const { start } = useCopilot();
   const { locale } = useLanguage();
   const { showSuccess } = useToast();
   const { isPro } = usePro();
@@ -43,20 +41,6 @@ export default function HomeScreen() {
       loadData();
     }, [])
   );
-
-  useEffect(() => {
-    const checkTutorial = async () => {
-      const seen = await AsyncStorage.getItem('HAS_SEEN_TUTORIAL');
-      if (!seen) {
-        setTimeout(() => {
-          start();
-        }, 1000);
-        await AsyncStorage.setItem('HAS_SEEN_TUTORIAL', 'true');
-      }
-    };
-    checkTutorial();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- start should only run once on mount
-  }, []);
 
   const loadData = async () => {
     const data = await getSubscriptions();
@@ -210,6 +194,20 @@ export default function HomeScreen() {
           </CopilotStep>
         )}
 
+        {/* Go Pro Banner - show when user has subscriptions */}
+        {subscriptions.length > 0 && !isPro && (
+          <GoProButton variant="banner" style={styles.proBannerHeader} />
+        )}
+
+        {/* Step 4: List explanation - always render even when list is not empty */}
+        {subscriptions.length > 0 && (
+          <CopilotStep text={i18n.t('copilotDashboardList')} order={4} name="list-hint">
+            <WalkthroughableView>
+              <View />
+            </WalkthroughableView>
+          </CopilotStep>
+        )}
+
         {subscriptions.length > 0 && (
           <View style={styles.subscriptionsHeader}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -233,7 +231,7 @@ export default function HomeScreen() {
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- locale triggers i18n re-renders, handleMarkAllPaid is stable
-    [subscriptions, paidThisMonth, period, locale, overdueCount, dangerColor, handleMarkAllPaid]
+    [subscriptions, paidThisMonth, period, locale, overdueCount, dangerColor, handleMarkAllPaid, isPro]
   );
 
   return (
@@ -252,7 +250,7 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
         }
         ListEmptyComponent={
-          <CopilotStep text={i18n.t('copilotDashboardList')} order={4} name="empty">
+          <CopilotStep text={i18n.t('copilotDashboardList')} order={3} name="empty">
             <WalkthroughableView style={styles.empty}>
               <IconSymbol name="list.bullet.clipboard" size={60} color={primaryColor} style={{ opacity: 0.6 }} />
               <ThemedText type="subtitle" style={styles.emptyTitle}>{i18n.t('emptyDashboardTitle')}</ThemedText>
@@ -265,7 +263,7 @@ export default function HomeScreen() {
         }
       />
 
-      <CopilotStep text={i18n.t('copilotDashboardFab')} order={5} name="fab">
+      <CopilotStep text={i18n.t('copilotDashboardFab')} order={subscriptions.length > 0 ? 5 : 4} name="fab">
         <WalkthroughableView>
           <AnimatedFAB
             onPress={() => router.push('/modal')}
@@ -332,25 +330,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   empty: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 40,
-    padding: 24,
+    marginTop: 24,
+    paddingHorizontal: 16,
+    paddingBottom: 120,
   },
   emptyTitle: {
-    marginTop: 20,
+    marginTop: 16,
     textAlign: 'center',
   },
   emptyHint: {
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 8,
     opacity: 0.6,
-    lineHeight: 22,
-    paddingHorizontal: 20,
+    lineHeight: 20,
+    paddingHorizontal: 16,
   },
   proBanner: {
-    marginTop: 24,
-    width: '100%',
+    marginTop: 16,
+    marginRight: 70,
+  },
+  proBannerHeader: {
+    marginTop: 8,
+    marginBottom: 4,
   },
 });

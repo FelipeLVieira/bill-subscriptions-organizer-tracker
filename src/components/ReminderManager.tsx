@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/Card';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from '@/components/ui/DateTimePicker';
 import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
 import { Alert, Modal, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';

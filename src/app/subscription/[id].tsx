@@ -23,7 +23,7 @@ import {
     scheduleAllReminders,
     serializeReminderSchema,
 } from '@/utils/notifications';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from '@/components/ui/DateTimePicker';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
