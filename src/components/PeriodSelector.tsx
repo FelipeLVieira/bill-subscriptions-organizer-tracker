@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { shadows } from '@/utils/shadow';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -26,14 +27,19 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
     const colorScheme = useColorScheme();
     const textColor = useThemeColor({}, 'text');
 
-    // iOS segmented control colors
+    // iOS segmented control colors - proper contrast
     const containerBg = colorScheme === 'dark'
         ? 'rgba(118, 118, 128, 0.24)'
         : 'rgba(118, 118, 128, 0.12)';
 
     const indicatorBg = colorScheme === 'dark'
-        ? 'rgba(99, 99, 102, 1)'
+        ? '#636366' // Medium gray in dark mode
         : '#FFFFFF';
+
+    // Selected text needs contrast with indicator
+    const selectedTextColor = colorScheme === 'dark'
+        ? '#FFFFFF' // White text on gray indicator
+        : '#000000'; // Black text on white indicator
 
     const [containerWidth, setContainerWidth] = useState(0);
     const slideAnim = useRef(new Animated.Value(PERIODS.indexOf(value))).current;
@@ -96,7 +102,7 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
                     <Text
                         style={[
                             styles.optionText,
-                            { color: textColor },
+                            { color: value === period ? selectedTextColor : textColor },
                             value === period && styles.selectedText,
                         ]}
                     >
@@ -124,12 +130,7 @@ const styles = StyleSheet.create({
         top: PADDING,
         bottom: PADDING,
         borderRadius: 7,
-        // iOS shadow for indicator
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.12,
-        shadowRadius: 4,
-        elevation: 2,
+        ...shadows.indicator,
     },
     option: {
         flex: 1,
