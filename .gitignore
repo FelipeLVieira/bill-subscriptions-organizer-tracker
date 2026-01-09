@@ -48,3 +48,19 @@ app-example
 *.db-wal
 
 build/
+
+# Playwright MCP screenshots and debug files
+.playwright-mcp/
+*.png.tmp
+
+# Backup files
+*.bak
+
+# Editor/IDE generated
+.idea/
+*.swp
+*.swo
+
+# Debug files
+*.log
+debug/

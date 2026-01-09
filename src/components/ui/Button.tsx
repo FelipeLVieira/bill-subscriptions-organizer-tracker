@@ -19,6 +19,7 @@ type Props = TouchableOpacityProps & {
  */
 export function Button({ title, type = 'primary', style, disabled, ...props }: Props) {
     const primaryColor = useThemeColor({}, 'primary');
+    const interactiveColor = useThemeColor({}, 'interactive');
     const dangerColor = useThemeColor({}, 'danger');
     const cardColor = useThemeColor({}, 'card');
 
@@ -26,7 +27,7 @@ export function Button({ title, type = 'primary', style, disabled, ...props }: P
         ? dangerColor
         : type === 'secondary'
             ? cardColor
-            : primaryColor;
+            : interactiveColor;
 
     const buttonTextColor = type === 'secondary' ? primaryColor : '#FFFFFF';
     const secondaryBorderColor = `${primaryColor}4D`; // 30% opacity (4D in hex = 77/255 ≈ 30%)

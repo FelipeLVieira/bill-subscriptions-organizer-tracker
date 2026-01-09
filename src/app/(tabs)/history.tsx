@@ -57,8 +57,8 @@ export default function PaymentHistoryScreen() {
         const history = await getAllBillingHistory();
 
         // Map history to include subscription names
-        const paymentRecords: PaymentRecord[] = history.map(h => {
-            const sub = subs.find(s => s.id === h.subscriptionId);
+        const paymentRecords: PaymentRecord[] = history.map((h: { id: number; subscriptionId: number | null; datePaid: string; amountPaid: number }) => {
+            const sub = subs.find((s: { id: number }) => s.id === h.subscriptionId);
             return {
                 id: h.id,
                 subscriptionId: h.subscriptionId,

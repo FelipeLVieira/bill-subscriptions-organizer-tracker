@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Subscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { useNativeDriver } from '@/utils/animation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
@@ -44,13 +45,13 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: 600,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.spring(scaleAnim, {
                 toValue: 1,
                 friction: 8,
                 tension: 40,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start();
     }, [subscriptions.length, selectedCurrency, fadeAnim, scaleAnim]);

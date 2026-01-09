@@ -1,6 +1,8 @@
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useNativeDriver } from '@/utils/animation';
+import { shadows } from '@/utils/shadow';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 
@@ -24,13 +26,13 @@ export function Tooltip({ text, children }: TooltipProps) {
                 Animated.timing(fadeAnim, {
                     toValue: 1,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
                 Animated.spring(scaleAnim, {
                     toValue: 1,
                     friction: 8,
                     tension: 60,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]).start();
         } else {
@@ -45,12 +47,12 @@ export function Tooltip({ text, children }: TooltipProps) {
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(scaleAnim, {
                 toValue: 0.8,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start(() => {
             setVisible(false);
@@ -115,13 +117,13 @@ export function TooltipLabel({ label, hint }: TooltipLabelProps) {
                 Animated.timing(fadeAnim, {
                     toValue: 1,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
                 Animated.spring(scaleAnim, {
                     toValue: 1,
                     friction: 8,
                     tension: 60,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]).start();
         } else {
@@ -136,12 +138,12 @@ export function TooltipLabel({ label, hint }: TooltipLabelProps) {
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(scaleAnim, {
                 toValue: 0.8,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start(() => {
             setVisible(false);
@@ -213,11 +215,7 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 16,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 8,
+        ...shadows.tooltip,
     },
     iconWrapper: {
         width: 48,

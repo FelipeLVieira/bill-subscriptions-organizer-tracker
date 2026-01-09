@@ -38,7 +38,7 @@ function PickerComponent({
   // Extract items from children
   const items: { label: string; value: string; color?: string }[] = [];
   React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && child.props) {
+    if (React.isValidElement<PickerItemProps>(child) && child.props) {
       items.push({
         label: child.props.label || '',
         value: child.props.value || '',

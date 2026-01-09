@@ -1,5 +1,7 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
+import { shadows } from '@/utils/shadow';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -79,12 +81,12 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
                 toValue: 0,
                 friction: 8,
                 tension: 80,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(opacity, {
                 toValue: 1,
                 duration: 200,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start();
 
@@ -94,12 +96,12 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
                 Animated.timing(translateY, {
                     toValue: -100,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
                 Animated.timing(opacity, {
                     toValue: 0,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]).start(() => {
                 onDismiss(toast.id);
@@ -168,7 +170,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     return (
         <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo }}>
             {children}
-            <View style={[styles.container, { top: insets.top + 10 }]} pointerEvents="none">
+            <View style={[styles.container, { top: insets.top + 10, pointerEvents: 'none' }]}>
                 {toasts.map(toast => (
                     <ToastItem key={toast.id} toast={toast} onDismiss={dismissToast} />
                 ))}
@@ -200,11 +202,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 12,
         marginBottom: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 8,
+        ...shadows.medium,
         borderLeftWidth: 4,
         maxWidth: 400,
         width: '100%',

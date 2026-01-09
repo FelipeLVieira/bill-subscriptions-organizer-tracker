@@ -7,17 +7,31 @@ import {
     serializeReminderSchema,
 } from '@/utils/notifications';
 import { desc, eq } from 'drizzle-orm';
+import { Platform } from 'react-native';
 import { db } from './index';
 import { billingHistory, subscriptions } from './schema';
 
 export type NewSubscription = typeof subscriptions.$inferInsert;
 export type Subscription = typeof subscriptions.$inferSelect;
 
+// Check if running on web (db is null)
+const isWeb = Platform.OS === 'web';
+
+// Mock data for web testing
+const mockSubscriptions: Subscription[] = [];
+const mockHistory: any[] = [];
+
 export const addSubscription = async (sub: NewSubscription) => {
+    if (isWeb) {
+        const newSub = { ...sub, id: mockSubscriptions.length + 1 } as Subscription;
+        mockSubscriptions.push(newSub);
+        return [newSub];
+    }
     return await db.insert(subscriptions).values(sub).returning();
 };
 
 export const getSubscriptions = async () => {
+    if (isWeb) return mockSubscriptions;
     return await db.select().from(subscriptions).orderBy(desc(subscriptions.nextBillingDate));
 };
 
@@ -44,7 +58,24 @@ export const paySubscription = async (sub: Subscription) => {
         i18n.t.bind(i18n)
     );
 
-    await db.transaction(async (tx) => {
+    if (isWeb) {
+        // Mock payment for web
+        mockHistory.push({
+            id: mockHistory.length + 1,
+            subscriptionId: sub.id,
+            datePaid,
+            amountPaid: amount,
+            currency: sub.currency,
+            status: 'paid',
+        });
+        const idx = mockSubscriptions.findIndex(s => s.id === sub.id);
+        if (idx >= 0) {
+            mockSubscriptions[idx] = { ...mockSubscriptions[idx], nextBillingDate: nextDate.toISOString() };
+        }
+        return;
+    }
+
+    await db.transaction(async (tx: typeof db) => {
         // Record history
         await tx.insert(billingHistory).values({
             subscriptionId: sub.id,
@@ -64,6 +95,11 @@ export const paySubscription = async (sub: Subscription) => {
 };
 
 export const deleteSubscription = async (id: number) => {
+    if (isWeb) {
+        const idx = mockSubscriptions.findIndex(s => s.id === id);
+        if (idx >= 0) mockSubscriptions.splice(idx, 1);
+        return;
+    }
     // Get sub to find notification IDs
     const sub = await db.select().from(subscriptions).where(eq(subscriptions.id, id)).get();
     if (sub && sub.reminderSchema) {
@@ -74,16 +110,28 @@ export const deleteSubscription = async (id: number) => {
 };
 
 export const getSubscriptionById = async (id: number) => {
+    if (isWeb) return mockSubscriptions.find(s => s.id === id);
     const result = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
     return result[0];
 };
 
 export const updateSubscription = async (id: number, sub: Partial<NewSubscription>) => {
+    if (isWeb) {
+        const idx = mockSubscriptions.findIndex(s => s.id === id);
+        if (idx >= 0) mockSubscriptions[idx] = { ...mockSubscriptions[idx], ...sub } as Subscription;
+        return;
+    }
     return await db.update(subscriptions).set(sub).where(eq(subscriptions.id, id));
 };
 
 export const getSubscriptionHistory = async (id: number) => {
+    if (isWeb) return mockHistory.filter(h => h.subscriptionId === id);
     return await db.select().from(billingHistory).where(eq(billingHistory.subscriptionId, id)).orderBy(desc(billingHistory.datePaid));
+};
+
+export const getAllBillingHistory = async () => {
+    if (isWeb) return mockHistory;
+    return await db.select().from(billingHistory).orderBy(desc(billingHistory.datePaid));
 };
 
 export const getPaidThisMonth = async () => {
@@ -91,10 +139,16 @@ export const getPaidThisMonth = async () => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
+    if (isWeb) {
+        return mockHistory
+            .filter(h => h.datePaid >= startOfMonth && h.datePaid <= endOfMonth && h.status === 'paid')
+            .reduce((sum, h) => sum + h.amountPaid, 0);
+    }
+
     const history = await db.select().from(billingHistory);
 
     return history
-        .filter(h => h.datePaid >= startOfMonth && h.datePaid <= endOfMonth && h.status === 'paid')
-        .reduce((sum, h) => sum + h.amountPaid, 0);
+        .filter((h: { datePaid: string; status: string }) => h.datePaid >= startOfMonth && h.datePaid <= endOfMonth && h.status === 'paid')
+        .reduce((sum: number, h: { amountPaid: number }) => sum + h.amountPaid, 0);
 };
 

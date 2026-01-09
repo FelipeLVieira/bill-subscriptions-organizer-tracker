@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Subscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { useNativeDriver } from '@/utils/animation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { Period } from './PeriodSelector';
@@ -37,13 +38,13 @@ function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
                 Animated.timing(animatedValue, {
                     toValue: 1,
                     duration: 400,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
                 Animated.spring(scaleValue, {
                     toValue: 1,
                     friction: 8,
                     tension: 40,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]),
         ]).start();
@@ -57,14 +58,14 @@ function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
                 Animated.timing(fadeValue, {
                     toValue: 0,
                     duration: 100,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]).start(() => {
                 setDisplayValue(value);
                 Animated.timing(fadeValue, {
                     toValue: 1,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }).start();
             });
         }
@@ -95,7 +96,7 @@ function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
 }
 
 export function StatisticsPanel({ subscriptions, paidThisMonth, period = 'monthly' }: StatisticsPanelProps) {
-    const primaryColor = useThemeColor({}, 'primary');
+    const infoColor = useThemeColor({}, 'info');
     const successColor = useThemeColor({}, 'success');
     const warningColor = useThemeColor({}, 'warning');
     const dangerColor = useThemeColor({}, 'danger');
@@ -264,7 +265,7 @@ export function StatisticsPanel({ subscriptions, paidThisMonth, period = 'monthl
                     title={i18n.t(`total${period.charAt(0).toUpperCase() + period.slice(1)}`)}
                     value={formatMultiCurrencyTotal()}
                     icon="dollarsign.circle.fill"
-                    color={primaryColor}
+                    color={infoColor}
                     delay={0}
                 />
                 <StatCard
@@ -277,9 +278,9 @@ export function StatisticsPanel({ subscriptions, paidThisMonth, period = 'monthl
             </View>
             <View style={styles.row}>
                 <StatCard
-                    title={getPeriodLabel('pendingThisMonth')}
+                    title={i18n.t('upcoming')}
                     value={formatMultiCurrency(pendingByCurrency)}
-                    icon="clock.fill"
+                    icon="calendar.badge.clock"
                     color={warningColor}
                     delay={200}
                 />

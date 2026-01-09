@@ -3,7 +3,9 @@ import { SUPPORTED_LANGUAGES } from '@/constants/Languages';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
+import { shadows } from '@/utils/shadow';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, FlatList, Modal, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,13 +39,13 @@ export function LanguagePickerModal({ visible, onClose, onSelect }: LanguagePick
                 Animated.timing(fadeAnim, {
                     toValue: 1,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
                 Animated.spring(slideAnim, {
                     toValue: 0,
                     friction: 8,
                     tension: 65,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]).start();
         }
@@ -54,12 +56,12 @@ export function LanguagePickerModal({ visible, onClose, onSelect }: LanguagePick
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(slideAnim, {
                 toValue: 300,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start(() => {
             onClose();
@@ -175,11 +177,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        ...shadows.bottomSheet,
     },
     header: {
         flexDirection: 'row',

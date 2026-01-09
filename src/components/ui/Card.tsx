@@ -1,5 +1,6 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { shadows } from '@/utils/shadow';
 import { StyleSheet, View, ViewProps } from 'react-native';
 
 type Props = ViewProps;
@@ -23,7 +24,7 @@ export function Card({ style, ...props }: Props) {
         : {};
 
     return (
-        <View style={[styles.card, { backgroundColor }, shadowStyle, style]} {...props} />
+        <View style={[styles.card, shadows.card, { backgroundColor }, shadowStyle, style]} {...props} />
     );
 }
 
@@ -31,11 +32,5 @@ const styles = StyleSheet.create({
     card: {
         padding: 16,
         borderRadius: 12,
-        // iOS-style subtle shadow
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 2,
     },
 });

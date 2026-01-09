@@ -5,15 +5,19 @@ import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import { ProProvider } from '@/contexts/ProContext';
 import { ThemeProvider as AppThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { db } from '@/db';
+import { shadows } from '@/utils/shadow';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { CopilotProvider } from 'react-native-copilot';
 import 'react-native-reanimated';
 import migrations from '../../drizzle/migrations';
+
+// Mock migrations hook for web (SQLite doesn't work on web)
+const useMockMigrations = () => ({ success: true, error: null });
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -26,7 +30,10 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 function RootLayoutContent() {
   const { colorScheme } = useTheme();
   const { locale } = useLanguage();
-  const { success, error } = useMigrations(db, migrations);
+  // Always call hooks unconditionally, then use platform check for the result
+  const nativeMigrations = useMigrations(db, migrations);
+  const mockMigrations = useMockMigrations();
+  const { success, error } = Platform.OS === 'web' ? mockMigrations : nativeMigrations;
 
   const bgColor = colorScheme === 'dark' ? '#000' : '#fff';
   const textColorValue = colorScheme === 'dark' ? '#fff' : '#000';
@@ -40,12 +47,7 @@ function RootLayoutContent() {
     paddingHorizontal: 18,
     width: SCREEN_WIDTH - TOOLTIP_MARGIN * 2,
     maxWidth: SCREEN_WIDTH - TOOLTIP_MARGIN * 2,
-    // iOS-style shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    ...shadows.medium,
   }), [colorScheme]);
 
   // Labels not needed since we use custom tooltip component
@@ -85,6 +87,7 @@ function RootLayoutContent() {
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
+            <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
             <Stack.Screen name="subscription/[id]" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

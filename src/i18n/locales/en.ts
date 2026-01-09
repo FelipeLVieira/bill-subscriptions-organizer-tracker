@@ -244,4 +244,11 @@ export default {
     proBenefit2: "Unlimited bill reminders",
     proBenefit3: "Advanced statistics",
     proBenefit4: "Priority support",
+    // Paywall
+    oneTimePurchase: "One-time purchase",
+    removeAdsNow: "Remove Ads Now",
+    alreadyPurchased: "Already Purchased",
+    subscribeNow: "Subscribe Now",
+    cancelAnytime: "Cancel anytime",
+    subscriptionTerms: "Subscription auto-renews monthly. Cancel anytime in Settings.",
 };

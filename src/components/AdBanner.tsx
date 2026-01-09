@@ -1,5 +1,6 @@
 import { AD_UNIT_IDS, usePro } from '@/contexts/ProContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useNativeDriver } from '@/utils/animation';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
 
@@ -34,7 +35,7 @@ export function AdBanner({ style }: AdBannerProps) {
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: 300,
-                useNativeDriver: true,
+                useNativeDriver,
             }).start();
         } else {
             fadeAnim.setValue(0);

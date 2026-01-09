@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
+import { IAPService } from '@/services/IAPService';
 
 const PRO_STATUS_KEY = 'BILLS_TRACKER_PRO_STATUS';
 const LAST_INTERSTITIAL_KEY = 'LAST_INTERSTITIAL_TIMESTAMP';
@@ -10,7 +11,7 @@ interface ProContextType {
     isPro: boolean;
     isLoading: boolean;
     purchasePro: () => Promise<void>;
-    restorePurchases: () => Promise<void>;
+    restorePurchases: () => Promise<boolean>;
     // Ad-related
     showInterstitialAd: () => Promise<void>;
     canShowInterstitialAd: () => boolean;
@@ -49,9 +50,21 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [lastInterstitialTime, setLastInterstitialTime] = useState(0);
 
-    // Load pro status on mount
+    // Load pro status and initialize IAP on mount
     useEffect(() => {
         loadProStatus();
+
+        // Connect IAPService callback to update pro status
+        IAPService.setProStatusCallback((newIsPro: boolean) => {
+            saveProStatus(newIsPro);
+        });
+
+        // Initialize IAP connection
+        IAPService.initialize();
+
+        return () => {
+            IAPService.endConnection();
+        };
     }, []);
 
     const loadProStatus = async () => {
@@ -96,15 +109,17 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const restorePurchases = useCallback(async () => {
-        // In production, implement actual restore logic here
         try {
             setIsLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            // Check if user has purchased before
-            const hasPurchased = await AsyncStorage.getItem(PRO_STATUS_KEY);
-            if (hasPurchased === 'true') {
-                setIsPro(true);
+            const restored = await IAPService.restorePurchases();
+            if (!restored) {
+                // Check local storage as fallback
+                const hasPurchased = await AsyncStorage.getItem(PRO_STATUS_KEY);
+                if (hasPurchased === 'true') {
+                    setIsPro(true);
+                }
             }
+            return restored;
         } catch (error) {
             console.error('Restore failed:', error);
             throw error;

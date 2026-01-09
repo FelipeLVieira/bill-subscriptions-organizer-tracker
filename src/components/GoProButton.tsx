@@ -1,8 +1,11 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { usePro } from '@/contexts/ProContext';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
-import { LinearGradient } from 'expo-linear-gradient';
+import { shadows } from '@/utils/shadow';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from './themed-text';
@@ -14,13 +17,20 @@ interface GoProButtonProps {
 }
 
 export function GoProButton({ variant = 'full', onPress, style }: GoProButtonProps) {
-    const { isPro, purchasePro, isLoading } = usePro();
+    const router = useRouter();
+    const { isPro, isLoading } = usePro();
     const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    // Theme colors for professional look
+    const infoColor = useThemeColor({}, 'info');
+    const cardColor = useThemeColor({}, 'card');
+    const borderColor = useThemeColor({}, 'border');
+    const textSecondary = useThemeColor({}, 'textSecondary');
 
     const handlePressIn = useCallback(() => {
         Animated.spring(scaleAnim, {
-            toValue: 0.96,
-            useNativeDriver: true,
+            toValue: 0.98,
+            useNativeDriver,
             friction: 8,
             tension: 100,
         }).start();
@@ -29,7 +39,7 @@ export function GoProButton({ variant = 'full', onPress, style }: GoProButtonPro
     const handlePressOut = useCallback(() => {
         Animated.spring(scaleAnim, {
             toValue: 1,
-            useNativeDriver: true,
+            useNativeDriver,
             friction: 6,
             tension: 100,
         }).start();
@@ -40,14 +50,9 @@ export function GoProButton({ variant = 'full', onPress, style }: GoProButtonPro
         if (onPress) {
             onPress();
         } else {
-            try {
-                await purchasePro();
-                await Haptic.success();
-            } catch {
-                await Haptic.error();
-            }
+            router.push('/paywall');
         }
-    }, [onPress, purchasePro]);
+    }, [onPress, router]);
 
     // Don't show if already pro
     if (isPro) {
@@ -62,16 +67,11 @@ export function GoProButton({ variant = 'full', onPress, style }: GoProButtonPro
                     onPressIn={handlePressIn}
                     onPressOut={handlePressOut}
                     disabled={isLoading}
-                    style={styles.compactButton}
+                    style={[styles.compactButton, { backgroundColor: infoColor }]}
+                    accessibilityLabel={i18n.t('goPro')}
+                    accessibilityRole="button"
                 >
-                    <LinearGradient
-                        colors={['#FFD700', '#FFA500']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.compactGradient}
-                    >
-                        <IconSymbol name="crown.fill" size={16} color="#FFFFFF" />
-                    </LinearGradient>
+                    <IconSymbol name="sparkles" size={16} color="#FFFFFF" />
                 </Pressable>
             </Animated.View>
         );
@@ -85,30 +85,34 @@ export function GoProButton({ variant = 'full', onPress, style }: GoProButtonPro
                     onPressIn={handlePressIn}
                     onPressOut={handlePressOut}
                     disabled={isLoading}
+                    style={[
+                        styles.bannerContainer,
+                        {
+                            backgroundColor: cardColor,
+                            borderColor: borderColor,
+                        }
+                    ]}
                 >
-                    <LinearGradient
-                        colors={['#5856D6', '#AF52DE']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.bannerGradient}
-                    >
-                        <View style={styles.bannerContent}>
-                            <View style={styles.bannerLeft}>
-                                <IconSymbol name="sparkles" size={20} color="#FFFFFF" />
-                                <View style={styles.bannerTextContainer}>
-                                    <ThemedText style={styles.bannerTitle}>{i18n.t('goPro')}</ThemedText>
-                                    <ThemedText style={styles.bannerSubtitle}>{i18n.t('removeAdsUnlockFeatures')}</ThemedText>
-                                </View>
-                            </View>
-                            <IconSymbol name="chevron.right" size={18} color="#FFFFFF" style={{ opacity: 0.8 }} />
+                    <View style={styles.bannerContent}>
+                        <View style={[styles.bannerIconWrapper, { backgroundColor: infoColor + '12' }]}>
+                            <IconSymbol name="sparkles" size={22} color={infoColor} />
                         </View>
-                    </LinearGradient>
+                        <View style={styles.bannerTextContainer}>
+                            <ThemedText style={styles.bannerTitle}>{i18n.t('goPro')}</ThemedText>
+                            <ThemedText style={[styles.bannerSubtitle, { color: textSecondary }]}>
+                                {i18n.t('removeAdsUnlockFeatures')}
+                            </ThemedText>
+                        </View>
+                        <View style={[styles.bannerArrow, { backgroundColor: infoColor }]}>
+                            <IconSymbol name="chevron.right" size={14} color="#FFFFFF" />
+                        </View>
+                    </View>
                 </Pressable>
             </Animated.View>
         );
     }
 
-    // Full variant (default)
+    // Full variant (default) - Professional card style
     return (
         <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
             <Pressable
@@ -116,22 +120,28 @@ export function GoProButton({ variant = 'full', onPress, style }: GoProButtonPro
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 disabled={isLoading}
+                style={[
+                    styles.fullContainer,
+                    {
+                        backgroundColor: cardColor,
+                        borderColor: borderColor,
+                    }
+                ]}
             >
-                <LinearGradient
-                    colors={['#5856D6', '#AF52DE']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.fullGradient}
-                >
-                    <View style={styles.fullContent}>
-                        <IconSymbol name="crown.fill" size={24} color="#FFD700" />
-                        <View style={styles.fullTextContainer}>
-                            <ThemedText style={styles.fullTitle}>{i18n.t('upgradeToPro')}</ThemedText>
-                            <ThemedText style={styles.fullSubtitle}>{i18n.t('noAdsMoreFeatures')}</ThemedText>
-                        </View>
-                        <IconSymbol name="chevron.right" size={20} color="#FFFFFF" />
+                <View style={styles.fullContent}>
+                    <View style={[styles.fullIconWrapper, { backgroundColor: infoColor + '12' }]}>
+                        <IconSymbol name="sparkles" size={28} color={infoColor} />
                     </View>
-                </LinearGradient>
+                    <View style={styles.fullTextContainer}>
+                        <ThemedText style={styles.fullTitle}>{i18n.t('upgradeToPro')}</ThemedText>
+                        <ThemedText style={[styles.fullSubtitle, { color: textSecondary }]}>
+                            {i18n.t('noAdsMoreFeatures')}
+                        </ThemedText>
+                    </View>
+                    <View style={[styles.fullArrow, { backgroundColor: infoColor }]}>
+                        <IconSymbol name="chevron.right" size={16} color="#FFFFFF" />
+                    </View>
+                </View>
             </Pressable>
         </Animated.View>
     );
@@ -143,63 +153,87 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        overflow: 'hidden',
-    },
-    compactGradient: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
 
-    // Banner variant
-    bannerGradient: {
+    // Banner variant - Clean card style
+    bannerContainer: {
         borderRadius: 12,
-        padding: 14,
+        borderWidth: 1,
+        padding: 12,
+        ...shadows.goProButton,
     },
     bannerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    bannerLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
         gap: 12,
     },
+    bannerIconWrapper: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     bannerTextContainer: {
+        flex: 1,
         gap: 2,
     },
     bannerTitle: {
-        color: '#FFFFFF',
         fontSize: 15,
-        fontWeight: '700',
+        fontWeight: '600',
+        letterSpacing: -0.2,
     },
     bannerSubtitle: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 12,
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    bannerArrow: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
-    // Full variant
-    fullGradient: {
-        borderRadius: 16,
+    // Full variant - Professional card
+    fullContainer: {
+        borderRadius: 14,
+        borderWidth: 1,
         padding: 16,
+        ...shadows.goProCard,
     },
     fullContent: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 14,
     },
+    fullIconWrapper: {
+        width: 52,
+        height: 52,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     fullTextContainer: {
         flex: 1,
-        gap: 2,
+        gap: 3,
     },
     fullTitle: {
-        color: '#FFFFFF',
         fontSize: 17,
-        fontWeight: '700',
+        fontWeight: '600',
+        letterSpacing: -0.3,
     },
     fullSubtitle: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 13,
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    fullArrow: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

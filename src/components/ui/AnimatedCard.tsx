@@ -1,5 +1,7 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useNativeDriver } from '@/utils/animation';
+import { shadows } from '@/utils/shadow';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, ViewProps } from 'react-native';
 
@@ -44,7 +46,7 @@ export function AnimatedCard({
             toValue: 1,
             duration: 350,
             delay: index * 50, // Stagger based on index
-            useNativeDriver: true,
+            useNativeDriver,
         }).start();
     }, [animatedValue, index]);
 
@@ -54,7 +56,7 @@ export function AnimatedCard({
             toValue: 0.97,
             friction: 8,
             tension: 100,
-            useNativeDriver: true,
+            useNativeDriver,
         }).start();
     };
 
@@ -63,7 +65,7 @@ export function AnimatedCard({
             toValue: 1,
             friction: 5,
             tension: 40,
-            useNativeDriver: true,
+            useNativeDriver,
         }).start();
     };
 
@@ -111,12 +113,7 @@ const styles = StyleSheet.create({
     card: {
         padding: 16,
         borderRadius: 12,
-        // iOS-style subtle shadow
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 2,
+        ...shadows.card,
     },
     pressable: {
         flex: 1,

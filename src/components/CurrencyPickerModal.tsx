@@ -3,9 +3,11 @@ import { Currency, PREDEFINED_CURRENCIES, UserCurrency } from '@/constants/Curre
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { useNativeDriver } from '@/utils/animation';
+import { Haptic } from '@/utils/haptics';
+import { shadows } from '@/utils/shadow';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, FlatList, Modal, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { Haptic } from '@/utils/haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
@@ -36,6 +38,7 @@ export function CurrencyPickerModal({
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const primaryColor = useThemeColor({}, 'primary');
+    const interactiveColor = useThemeColor({}, 'interactive');
     const dangerColor = useThemeColor({}, 'danger');
 
     const { userCurrencies, defaultCurrency, addCurrency, removeCurrency, setDefaultCurrency, addCustomCurrency } = useCurrency();
@@ -55,13 +58,13 @@ export function CurrencyPickerModal({
                 Animated.timing(fadeAnim, {
                     toValue: 1,
                     duration: 200,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
                 Animated.spring(slideAnim, {
                     toValue: 0,
                     friction: 8,
                     tension: 65,
-                    useNativeDriver: true,
+                    useNativeDriver,
                 }),
             ]).start();
         }
@@ -72,12 +75,12 @@ export function CurrencyPickerModal({
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
             Animated.timing(slideAnim, {
                 toValue: 300,
                 duration: 150,
-                useNativeDriver: true,
+                useNativeDriver,
             }),
         ]).start(() => {
             onClose();
@@ -281,7 +284,7 @@ export function CurrencyPickerModal({
                             <View style={styles.manageActions}>
                                 {!showAddMode ? (
                                     <TouchableOpacity
-                                        style={[styles.addButton, { backgroundColor: primaryColor }]}
+                                        style={[styles.addButton, { backgroundColor: interactiveColor }]}
                                         onPress={() => setShowAddMode(true)}
                                     >
                                         <IconSymbol name="plus" size={18} color="#fff" />
@@ -355,7 +358,7 @@ export function CurrencyPickerModal({
                                         <ThemedText>{i18n.t('cancel')}</ThemedText>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={[styles.customFormBtn, { backgroundColor: primaryColor, flex: 1 }]}
+                                        style={[styles.customFormBtn, { backgroundColor: interactiveColor, flex: 1 }]}
                                         onPress={handleAddCustom}
                                     >
                                         <ThemedText style={styles.saveCustomText}>{i18n.t('save')}</ThemedText>
@@ -421,11 +424,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        ...shadows.bottomSheet,
     },
     header: {
         flexDirection: 'row',

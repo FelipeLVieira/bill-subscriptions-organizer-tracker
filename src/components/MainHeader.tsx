@@ -1,13 +1,10 @@
 import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
-import { GoProButton } from '@/components/GoProButton';
 import { LanguagePickerModal } from '@/components/LanguagePickerModal';
-import { OnboardingModal } from '@/components/OnboardingModal';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SUPPORTED_LANGUAGES } from '@/constants/Languages';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { usePro } from '@/contexts/ProContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -16,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCopilot } from 'react-native-copilot';
 
 /**
  * Apple-style Navigation Header
@@ -26,55 +24,56 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * - Subtle separator
  * - Clean, minimal design
  */
-const ONBOARDING_KEY = 'HAS_SEEN_ONBOARDING_V2';
+const TUTORIAL_KEY = 'HAS_SEEN_TUTORIAL_V3';
 
 export function MainHeader({ title }: { title: string }) {
     const insets = useSafeAreaInsets();
     const { colorScheme, toggleTheme } = useTheme();
     const { locale, setLocale } = useLanguage();
     const { defaultCurrency } = useCurrency();
-    const { isPro } = usePro();
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
+    const { start: startTutorial } = useCopilot();
 
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
     const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
-    const [onboardingVisible, setOnboardingVisible] = useState(false);
 
     const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === locale) ||
         SUPPORTED_LANGUAGES.find(l => locale.startsWith(l.code.split('-')[0])) ||
         SUPPORTED_LANGUAGES.find(l => l.code === 'en');
 
-    // Show onboarding on first launch
+    // Show Copilot tutorial on first launch
     useEffect(() => {
-        const checkOnboarding = async () => {
-            const seen = await AsyncStorage.getItem(ONBOARDING_KEY);
+        const checkTutorial = async () => {
+            const seen = await AsyncStorage.getItem(TUTORIAL_KEY);
             if (!seen) {
-                setTimeout(() => setOnboardingVisible(true), 500);
+                // Small delay to let the UI settle
+                setTimeout(() => {
+                    startTutorial();
+                }, 800);
+                await AsyncStorage.setItem(TUTORIAL_KEY, 'true');
             }
         };
-        checkOnboarding();
-    }, []);
-
-    const handleOnboardingComplete = async () => {
-        await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-        setOnboardingVisible(false);
-    };
+        checkTutorial();
+    }, [startTutorial]);
 
     const handleLanguageSelect = (code: string) => {
         setLocale(code);
         setLanguageModalVisible(false);
     };
 
+    // Info button starts the tutorial balloons
+    const handleInfoPress = () => {
+        startTutorial();
+    };
+
     const HeaderContent = (
         <View style={[styles.container, { paddingTop: insets.top }]}>
-            <ThemedText type="title" style={styles.title}>{title}</ThemedText>
+            <ThemedText type="subtitle" style={styles.title}>{title}</ThemedText>
             <View style={styles.actions}>
-                {/* Go Pro button - only show if not pro */}
-                {!isPro && <GoProButton variant="compact" />}
-                {/* Info button - opens onboarding */}
+                {/* Info button - starts tutorial balloons */}
                 <TouchableOpacity
-                    onPress={() => setOnboardingVisible(true)}
+                    onPress={handleInfoPress}
                     style={styles.button}
                     activeOpacity={0.6}
                     accessibilityLabel={i18n.t('help')}
@@ -146,10 +145,6 @@ export function MainHeader({ title }: { title: string }) {
                     showManageOptions
                     mode="manage"
                 />
-                <OnboardingModal
-                    visible={onboardingVisible}
-                    onComplete={handleOnboardingComplete}
-                />
             </BlurView>
         );
     }
@@ -167,10 +162,6 @@ export function MainHeader({ title }: { title: string }) {
                 onClose={() => setCurrencyModalVisible(false)}
                 showManageOptions
                 mode="manage"
-            />
-            <OnboardingModal
-                visible={onboardingVisible}
-                onComplete={handleOnboardingComplete}
             />
         </View>
     );
@@ -191,9 +182,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     title: {
-        fontSize: 34,
+        fontSize: 22,
         fontWeight: '700',
-        letterSpacing: 0.4,
+        letterSpacing: -0.3,
     },
     actions: {
         flexDirection: 'row',
