@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { usePro } from '@/contexts/ProContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
-import { IAPService } from '@/services/IAPService';
+import { formatPrice, getSubscriptionPeriod, getMonthlyPackage } from '@/services/purchases';
 import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
 import { useRouter } from 'expo-router';
@@ -18,12 +18,14 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { PurchasesPackage } from 'react-native-purchases';
 
 export default function PaywallScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { isPro } = usePro();
+    const { isPro, purchasePro, restorePurchases, offerings, loadOfferings } = usePro();
     const [loading, setLoading] = useState(false);
+    const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
 
     const cardBg = useThemeColor({}, 'card');
     const infoColor = useThemeColor({}, 'info');
@@ -41,6 +43,21 @@ export default function PaywallScreen() {
     const featureAnims = useRef([
         new Animated.Value(0),
     ]).current;
+
+    // Load offerings on mount
+    useEffect(() => {
+        loadOfferings();
+    }, [loadOfferings]);
+
+    // Set default package when offerings load
+    useEffect(() => {
+        if (offerings && !selectedPackage) {
+            const monthly = getMonthlyPackage(offerings);
+            if (monthly) {
+                setSelectedPackage(monthly);
+            }
+        }
+    }, [offerings, selectedPackage]);
 
     useEffect(() => {
         // Staggered entrance animations
@@ -94,13 +111,17 @@ export default function PaywallScreen() {
         setLoading(true);
         await Haptic.medium();
         try {
-            await IAPService.purchaseRemoveAds();
+            await purchasePro(selectedPackage || undefined);
             await Haptic.success();
             Alert.alert(i18n.t('success'), i18n.t('purchaseSuccess'));
             router.back();
-        } catch {
-            await Haptic.error();
-            Alert.alert(i18n.t('error'), i18n.t('purchaseFailed'));
+        } catch (error) {
+            // Don't show error for cancellation
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            if (errorMessage !== 'CANCELLED') {
+                await Haptic.error();
+                Alert.alert(i18n.t('error'), i18n.t('purchaseFailed'));
+            }
         } finally {
             setLoading(false);
         }
@@ -110,7 +131,7 @@ export default function PaywallScreen() {
         setLoading(true);
         await Haptic.light();
         try {
-            const restored = await IAPService.restorePurchases();
+            const restored = await restorePurchases();
             if (restored) {
                 await Haptic.success();
                 Alert.alert(i18n.t('success'), i18n.t('restoreSuccess'));
@@ -129,6 +150,25 @@ export default function PaywallScreen() {
     const features = [
         { icon: 'xmark.circle.fill', text: i18n.t('proBenefit1') },
     ];
+
+    // Get price display from RevenueCat package or fallback
+    const getPriceDisplay = () => {
+        if (selectedPackage) {
+            const priceString = formatPrice(selectedPackage);
+            const period = getSubscriptionPeriod(selectedPackage);
+            // Parse price string to extract currency and amount
+            const match = priceString.match(/([^\d]*)(\d+(?:[.,]\d+)?)/);
+            if (match) {
+                const currency = match[1] || '$';
+                const amount = match[2];
+                return { currency, amount, period };
+            }
+        }
+        // Fallback
+        return { currency: '$', amount: '4.99', period: '/month' };
+    };
+
+    const { currency, amount, period } = getPriceDisplay();
 
     return (
         <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
@@ -223,9 +263,9 @@ export default function PaywallScreen() {
                     ]}
                 >
                     <View style={styles.priceRow}>
-                        <ThemedText style={[styles.currency, { color: successColor }]}>$</ThemedText>
-                        <ThemedText style={[styles.price, { color: successColor }]}>4.99</ThemedText>
-                        <ThemedText style={[styles.period, { color: secondaryText }]}>/month</ThemedText>
+                        <ThemedText style={[styles.currency, { color: successColor }]}>{currency}</ThemedText>
+                        <ThemedText style={[styles.price, { color: successColor }]}>{amount}</ThemedText>
+                        <ThemedText style={[styles.period, { color: secondaryText }]}>{period}</ThemedText>
                     </View>
                     <ThemedText style={[styles.priceSubtext, { color: secondaryText, opacity: 0.7 }]}>
                         {i18n.t('cancelAnytime')}

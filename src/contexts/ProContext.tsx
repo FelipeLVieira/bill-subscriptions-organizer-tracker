@@ -1,7 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
-import { IAPService } from '@/services/IAPService';
+import {
+    initializePurchases,
+    checkPremiumStatus,
+    restorePurchases as rcRestorePurchases,
+    isPremiumActive,
+    addCustomerInfoUpdateListener,
+    getOfferings,
+    purchasePackage,
+    getMonthlyPackage,
+    ENTITLEMENT_ID,
+} from '@/services/purchases';
+import type { PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 
 const PRO_STATUS_KEY = 'BILLS_TRACKER_PRO_STATUS';
 const LAST_INTERSTITIAL_KEY = 'LAST_INTERSTITIAL_TIMESTAMP';
@@ -10,7 +21,7 @@ const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes between interstitia
 interface ProContextType {
     isPro: boolean;
     isLoading: boolean;
-    purchasePro: () => Promise<void>;
+    purchasePro: (pkg?: PurchasesPackage) => Promise<void>;
     restorePurchases: () => Promise<boolean>;
     // Ad-related
     showInterstitialAd: () => Promise<void>;
@@ -18,6 +29,9 @@ interface ProContextType {
     shouldShowBannerAd: boolean;
     // For testing
     toggleProStatus: () => void;
+    // RevenueCat offerings
+    offerings: PurchasesOffering | null;
+    loadOfferings: () => Promise<void>;
 }
 
 const ProContext = createContext<ProContextType | undefined>(undefined);
@@ -36,52 +50,67 @@ export const AD_UNIT_IDS = {
     }),
 } as const;
 
-// Product IDs for in-app purchases
-export const PRODUCT_IDS = {
-    proPurchase: Platform.select({
-        ios: 'com.fullstackdev1.billstracker.pro',
-        android: 'com.fullstackdev1.billstracker.pro',
-        default: 'com.fullstackdev1.billstracker.pro',
-    }),
-} as const;
+// RevenueCat Entitlement ID
+export { ENTITLEMENT_ID };
 
 export function ProProvider({ children }: { children: React.ReactNode }) {
     const [isPro, setIsPro] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [lastInterstitialTime, setLastInterstitialTime] = useState(0);
+    const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
 
-    // Load pro status and initialize IAP on mount
+    // Initialize RevenueCat and load pro status on mount
     useEffect(() => {
-        loadProStatus();
+        const init = async () => {
+            try {
+                // Load cached pro status first for quick UI
+                const cachedStatus = await AsyncStorage.getItem(PRO_STATUS_KEY);
+                if (cachedStatus === 'true') {
+                    setIsPro(true);
+                }
 
-        // Connect IAPService callback to update pro status
-        IAPService.setProStatusCallback((newIsPro: boolean) => {
-            saveProStatus(newIsPro);
-        });
+                // Load last interstitial time
+                const lastAdTime = await AsyncStorage.getItem(LAST_INTERSTITIAL_KEY);
+                if (lastAdTime) {
+                    setLastInterstitialTime(parseInt(lastAdTime, 10));
+                }
 
-        // Initialize IAP connection
-        IAPService.initialize();
+                // Initialize RevenueCat (only on native platforms)
+                if (Platform.OS !== 'web') {
+                    await initializePurchases();
 
-        return () => {
-            IAPService.endConnection();
+                    // Check actual premium status from RevenueCat
+                    const hasPremium = await checkPremiumStatus();
+                    setIsPro(hasPremium);
+                    await AsyncStorage.setItem(PRO_STATUS_KEY, hasPremium.toString());
+
+                    // Listen for customer info updates
+                    addCustomerInfoUpdateListener((customerInfo) => {
+                        const isActive = isPremiumActive(customerInfo);
+                        setIsPro(isActive);
+                        AsyncStorage.setItem(PRO_STATUS_KEY, isActive.toString());
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to initialize purchases:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
+
+        init();
     }, []);
 
-    const loadProStatus = async () => {
-        try {
-            const status = await AsyncStorage.getItem(PRO_STATUS_KEY);
-            setIsPro(status === 'true');
+    const loadOfferings = useCallback(async () => {
+        if (Platform.OS === 'web') return;
 
-            const lastAdTime = await AsyncStorage.getItem(LAST_INTERSTITIAL_KEY);
-            if (lastAdTime) {
-                setLastInterstitialTime(parseInt(lastAdTime, 10));
-            }
+        try {
+            const currentOfferings = await getOfferings();
+            setOfferings(currentOfferings);
         } catch (error) {
-            console.error('Failed to load pro status:', error);
-        } finally {
-            setIsLoading(false);
+            console.error('Failed to load offerings:', error);
         }
-    };
+    }, []);
 
     const saveProStatus = async (status: boolean) => {
         try {
@@ -92,34 +121,65 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const purchasePro = useCallback(async () => {
-        // In production, implement actual IAP logic here
-        // For now, this is a placeholder that simulates a purchase
+    const purchasePro = useCallback(async (pkg?: PurchasesPackage) => {
+        if (Platform.OS === 'web') {
+            // Simulate purchase on web for testing
+            await saveProStatus(true);
+            return;
+        }
+
         try {
             setIsLoading(true);
-            // Simulate purchase delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await saveProStatus(true);
+
+            // If no package provided, get the default monthly package
+            let packageToPurchase = pkg;
+            if (!packageToPurchase) {
+                const currentOfferings = offerings || await getOfferings();
+                if (currentOfferings) {
+                    packageToPurchase = getMonthlyPackage(currentOfferings) || undefined;
+                }
+            }
+
+            if (!packageToPurchase) {
+                throw new Error('No package available for purchase');
+            }
+
+            const customerInfo = await purchasePackage(packageToPurchase);
+            const isActive = isPremiumActive(customerInfo);
+            await saveProStatus(isActive);
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+            // Don't throw for user-initiated cancellation
+            if (errorMessage === 'CANCELLED') {
+                console.log('[Purchases] User cancelled purchase');
+                return;
+            }
+
             console.error('Purchase failed:', error);
             throw error;
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [offerings]);
 
     const restorePurchases = useCallback(async () => {
+        if (Platform.OS === 'web') {
+            // Check local storage for web testing
+            const status = await AsyncStorage.getItem(PRO_STATUS_KEY);
+            if (status === 'true') {
+                setIsPro(true);
+                return true;
+            }
+            return false;
+        }
+
         try {
             setIsLoading(true);
-            const restored = await IAPService.restorePurchases();
-            if (!restored) {
-                // Check local storage as fallback
-                const hasPurchased = await AsyncStorage.getItem(PRO_STATUS_KEY);
-                if (hasPurchased === 'true') {
-                    setIsPro(true);
-                }
-            }
-            return restored;
+            const customerInfo = await rcRestorePurchases();
+            const isActive = isPremiumActive(customerInfo);
+            await saveProStatus(isActive);
+            return isActive;
         } catch (error) {
             console.error('Restore failed:', error);
             throw error;
@@ -163,6 +223,8 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         canShowInterstitialAd,
         shouldShowBannerAd,
         toggleProStatus,
+        offerings,
+        loadOfferings,
     }), [
         isPro,
         isLoading,
@@ -172,6 +234,8 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         canShowInterstitialAd,
         shouldShowBannerAd,
         toggleProStatus,
+        offerings,
+        loadOfferings,
     ]);
 
     return (
