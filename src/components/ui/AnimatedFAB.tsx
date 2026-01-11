@@ -1,10 +1,15 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { usePro } from '@/contexts/ProContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
 import { shadows } from '@/utils/shadow';
 import { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, ViewStyle } from 'react-native';
+
+// Tab bar height + safe area
+const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
+const AD_BANNER_HEIGHT = 60; // Approximate banner ad height
 
 interface AnimatedFABProps {
     onPress: () => void;
@@ -28,6 +33,10 @@ export function AnimatedFAB({
     style,
 }: AnimatedFABProps) {
     const interactiveColor = useThemeColor({}, 'interactive');
+    const { shouldShowBannerAd } = usePro();
+
+    // Calculate bottom offset based on tab bar and ad banner
+    const bottomOffset = TAB_BAR_HEIGHT + (shouldShowBannerAd ? AD_BANNER_HEIGHT : 0) + 16;
 
     const entranceValue = useRef(new Animated.Value(0)).current;
     const scaleValue = useRef(new Animated.Value(1)).current;
@@ -85,6 +94,7 @@ export function AnimatedFAB({
         <Animated.View
             style={[
                 styles.container,
+                { bottom: bottomOffset },
                 style,
                 {
                     transform: [
@@ -119,8 +129,8 @@ export function AnimatedFAB({
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 30,
         right: 24,
+        zIndex: 100,
     },
     fab: {
         width: 56,

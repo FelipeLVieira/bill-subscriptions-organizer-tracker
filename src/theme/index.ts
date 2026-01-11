@@ -73,9 +73,9 @@ export const theme = {
         textSecondary: '#8E8E93', // Medium gray
 
         // Brand colors - Keep charcoal for interactive elements in dark mode
-        primary: '#E5E5EA', // Light gray primary for text emphasis
-        accent: '#AEAEB2', // Medium gray accent
-        interactive: '#3A3A3C', // For buttons, toggles, FAB - dark gray in dark mode
+        primary: '#F5F5F7', // Light gray primary for text emphasis (improved contrast)
+        accent: '#C7C7CC', // Brighter gray accent (improved contrast)
+        interactive: '#636366', // For buttons, toggles, FAB - brighter gray for visibility
 
         // Semantic colors
         border: 'rgba(84, 84, 88, 0.65)',

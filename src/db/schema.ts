@@ -10,6 +10,7 @@ export const subscriptions = sqliteTable('subscriptions', {
     reminderSchema: text('reminder_schema'), // JSON string
     categoryGroup: text('category_group'),
     notes: text('notes'),
+    attachments: text('attachments'), // JSON string array of file URIs (images/PDFs)
     active: integer('active', { mode: 'boolean' }).notNull().default(true),
 });
 

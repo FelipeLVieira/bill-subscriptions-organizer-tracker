@@ -2,10 +2,11 @@ import { shadows } from '@/utils/shadow';
 import DateTimePicker from '@/components/ui/DateTimePicker';
 import { Picker } from '@/components/ui/Picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Attachment, AttachmentPicker } from '@/components/AttachmentPicker';
 import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -44,7 +45,23 @@ export default function AddSubscriptionScreen() {
   const [selectedCurrency, setSelectedCurrency] = useState<string>(defaultCurrency?.code || 'USD');
   const [date, setDate] = useState(new Date());
   const [notes, setNotes] = useState('');
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Form validation state
+  const [touched, setTouched] = useState({ name: false, amount: false });
+
+  // Validation errors
+  const errors = useMemo(() => {
+    const cleanedAmount = amount.replace(/[^0-9.]/g, '');
+    const parsedAmount = parseFloat(cleanedAmount);
+    return {
+      name: !name.trim() ? i18n.t('nameRequired') : undefined,
+      amount: (!cleanedAmount || isNaN(parsedAmount) || parsedAmount <= 0)
+        ? i18n.t('validAmountRequired')
+        : undefined,
+    };
+  }, [name, amount]);
 
   const categories = getSubscriptionCategories();
   const currentCurrency = getCurrencyByCode(selectedCurrency);
@@ -76,19 +93,17 @@ export default function AddSubscriptionScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
+    // Mark all fields as touched to show validation errors
+    setTouched({ name: true, amount: true });
+
+    // Check for validation errors
+    if (errors.name || errors.amount) {
       await Haptic.error();
-      showError(i18n.t('nameRequired'));
       return;
     }
 
     const cleanedAmount = amount.replace(/[^0-9.]/g, '');
     const parsedAmount = parseFloat(cleanedAmount);
-    if (!cleanedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-      await Haptic.error();
-      showError(i18n.t('validAmountRequired'));
-      return;
-    }
 
     setLoading(true);
     try {
@@ -107,6 +122,11 @@ export default function AddSubscriptionScreen() {
         i18n.t.bind(i18n)
       );
 
+      // Serialize attachments to JSON
+      const attachmentsJson = attachments.length > 0
+        ? JSON.stringify(attachments)
+        : undefined;
+
       await addSubscription({
         name,
         amount: parsedAmount,
@@ -115,6 +135,7 @@ export default function AddSubscriptionScreen() {
         nextBillingDate: date.toISOString(),
         categoryGroup: category,
         notes,
+        attachments: attachmentsJson,
         reminderSchema: serializeReminderSchema(reminderSchema),
         active: true,
       });
@@ -147,7 +168,15 @@ export default function AddSubscriptionScreen() {
           <ThemedText type="title" style={styles.title}>{i18n.t('addSubscription')}</ThemedText>
 
           <TooltipLabel label={i18n.t('name')} hint={i18n.t('hintServiceName')} />
-          <Input placeholder={i18n.t('serviceNamePlaceholder')} value={name} onChangeText={setName} style={styles.input} />
+          <Input
+            placeholder={i18n.t('serviceNamePlaceholder')}
+            value={name}
+            onChangeText={setName}
+            onBlur={() => setTouched(t => ({ ...t, name: true }))}
+            error={errors.name}
+            touched={touched.name}
+            style={styles.input}
+          />
 
           <TooltipLabel label={`${i18n.t('amount')} (${selectedCurrency})`} hint={i18n.t('hintAmount')} />
           <View style={styles.amountInputContainer}>
@@ -164,6 +193,9 @@ export default function AddSubscriptionScreen() {
               placeholder="0.00"
               value={amount}
               onChangeText={setAmount}
+              onBlur={() => setTouched(t => ({ ...t, amount: true }))}
+              error={errors.amount}
+              touched={touched.amount}
               keyboardType="decimal-pad"
               style={[styles.input, styles.amountInput]}
             />
@@ -232,6 +264,13 @@ export default function AddSubscriptionScreen() {
             onChangeText={setNotes}
             multiline
             style={[styles.input, { height: 80 }]}
+          />
+
+          {/* Attachments Section */}
+          <AttachmentPicker
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+            maxAttachments={5}
           />
 
           <View style={{ marginBottom: 40 }}>

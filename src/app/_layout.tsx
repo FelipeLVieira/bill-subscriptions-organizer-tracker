@@ -1,4 +1,5 @@
 import { CopilotStepNumber, CopilotTooltip } from '@/components/CopilotTooltip';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ToastProvider } from '@/components/Toast';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
@@ -99,15 +100,17 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <AppThemeProvider>
-      <LanguageProvider>
-        <CurrencyProvider>
-          <ProProvider>
-            <RootLayoutContent />
-          </ProProvider>
-        </CurrencyProvider>
-      </LanguageProvider>
-    </AppThemeProvider>
+    <ErrorBoundary>
+      <AppThemeProvider>
+        <LanguageProvider>
+          <CurrencyProvider>
+            <ProProvider>
+              <RootLayoutContent />
+            </ProProvider>
+          </CurrencyProvider>
+        </LanguageProvider>
+      </AppThemeProvider>
+    </ErrorBoundary>
   );
 }
 

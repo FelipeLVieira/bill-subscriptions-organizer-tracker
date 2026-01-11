@@ -36,6 +36,9 @@ export default {
     noSubscriptions: "Nenhum pagamento recorrente",
     addFirstSubscription: "Toque no botão + para adicionar sua primeira conta.",
     spendByCategory: "Gastos por Categoria",
+    spendByBill: "Gastos por Conta",
+    byCategory: "Por Categoria",
+    byBill: "Por Conta",
     // New keys
     error: "Erro",
     fillRequired: "Por favor, preencha Nome e Valor",
@@ -123,7 +126,6 @@ export default {
     totalPaid: "Total Pago",
     payments: "pagamentos",
     byDate: "Por Data",
-    byBill: "Por Conta",
     noPaymentHistory: "Marque uma conta como paga para ver seu histórico aqui",
     noPaymentsMatchSearch: "Nenhum pagamento corresponde à busca",
     // Billing intervals
@@ -252,4 +254,22 @@ export default {
     subscribeNow: "Assinar Agora",
     cancelAnytime: "Cancele quando quiser",
     subscriptionTerms: "A assinatura renova mensalmente. Cancele quando quiser nas Configurações.",
+    // Attachments
+    attachments: "Anexos",
+    addAttachment: "Adicionar",
+    takePhoto: "Tirar Foto",
+    chooseFromLibrary: "Escolher da Biblioteca",
+    choosePDF: "Escolher PDF",
+    chooseAttachmentSource: "Escolha a fonte do anexo",
+    removeAttachment: "Remover Anexo",
+    removeAttachmentConfirm: "Tem certeza que deseja remover este anexo?",
+    maxAttachmentsReached: "Número máximo de anexos atingido",
+    cameraPermissionRequired: "Permissão da câmera necessária para tirar fotos",
+    libraryPermissionRequired: "Permissão da biblioteca de fotos necessária",
+    attachmentSaveError: "Falha ao salvar anexo",
+    viewAttachment: "Ver Anexo",
+    // Error handling
+    somethingWentWrong: "Algo Deu Errado",
+    errorOccurred: "Ocorreu um erro inesperado. Por favor, tente novamente.",
+    tryAgain: "Tentar Novamente",
 };

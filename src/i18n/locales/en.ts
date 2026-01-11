@@ -42,6 +42,9 @@ export default {
     noSubscriptions: "No bills yet",
     addFirstSubscription: "Track your first bill by tapping the + button below!",
     spendByCategory: "Spend by Category",
+    spendByBill: "Spend by Bill",
+    byCategory: "By Category",
+    byBill: "By Bill",
     // New keys
     error: "Error",
     fillRequired: "Please fill in Name and Amount",
@@ -129,7 +132,6 @@ export default {
     totalPaid: "Total Paid",
     payments: "payments",
     byDate: "By Date",
-    byBill: "By Bill",
     noPaymentHistory: "Mark a bill as paid to see your history here",
     noPaymentsMatchSearch: "No payments match your search",
     // Billing intervals
@@ -251,4 +253,22 @@ export default {
     subscribeNow: "Subscribe Now",
     cancelAnytime: "Cancel anytime",
     subscriptionTerms: "Subscription auto-renews monthly. Cancel anytime in Settings.",
+    // Attachments
+    attachments: "Attachments",
+    addAttachment: "Add",
+    takePhoto: "Take Photo",
+    chooseFromLibrary: "Choose from Library",
+    choosePDF: "Choose PDF",
+    chooseAttachmentSource: "Choose attachment source",
+    removeAttachment: "Remove Attachment",
+    removeAttachmentConfirm: "Are you sure you want to remove this attachment?",
+    maxAttachmentsReached: "Maximum number of attachments reached",
+    cameraPermissionRequired: "Camera permission is required to take photos",
+    libraryPermissionRequired: "Photo library permission is required",
+    attachmentSaveError: "Failed to save attachment",
+    viewAttachment: "View Attachment",
+    // Error handling
+    somethingWentWrong: "Something Went Wrong",
+    errorOccurred: "An unexpected error occurred. Please try again.",
+    tryAgain: "Try Again",
 };

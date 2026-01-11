@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/Card';
+import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Subscription } from '@/db/actions';
@@ -9,6 +10,8 @@ import { useNativeDriver } from '@/utils/animation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
+
+type ViewMode = 'category' | 'bill';
 
 interface ExpensesChartProps {
     subscriptions: Subscription[];
@@ -30,6 +33,7 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
     }, [subscriptions]);
 
     const [selectedCurrency, setSelectedCurrency] = useState<string>(availableCurrencies[0] || 'USD');
+    const [viewMode, setViewMode] = useState<ViewMode>('category');
 
     // Update selected currency if it's no longer available
     useEffect(() => {
@@ -37,6 +41,65 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
             setSelectedCurrency(availableCurrencies[0]);
         }
     }, [availableCurrencies, selectedCurrency]);
+
+    const defaultColors = useMemo(() => [
+        primaryColor,
+        '#FFB300', // Amber
+        '#FF5722', // Deep Orange
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#9C27B0', // Purple
+        '#E91E63', // Pink
+        '#795548', // Brown
+    ], [primaryColor]);
+
+    // Filter subscriptions by selected currency
+    const filteredSubscriptions = useMemo(() =>
+        subscriptions.filter(sub => (sub.currency || 'USD') === selectedCurrency),
+        [subscriptions, selectedCurrency]
+    );
+
+    const total = useMemo(() =>
+        filteredSubscriptions.reduce((sum, sub) => sum + sub.amount, 0),
+        [filteredSubscriptions]
+    );
+
+    // Group by category
+    const byCategory = useMemo(() =>
+        filteredSubscriptions.reduce((acc, sub) => {
+            const category = sub.categoryGroup || 'Uncategorized';
+            acc[category] = (acc[category] || 0) + sub.amount;
+            return acc;
+        }, {} as Record<string, number>),
+        [filteredSubscriptions]
+    );
+
+    // Generate chart data based on view mode
+    const data = useMemo(() => {
+        if (total === 0) return [];
+
+        if (viewMode === 'category') {
+            return Object.keys(byCategory).map((category, index) => ({
+                value: byCategory[category],
+                text: `${((byCategory[category] / total) * 100).toFixed(0)}%`,
+                color: defaultColors[index % defaultColors.length],
+                textColor: '#FFFFFF',
+                label: i18n.t(`cat_${category.toLowerCase().replace(' ', '_')}`, { defaultValue: category }),
+            }));
+        } else {
+            // By individual bill
+            return filteredSubscriptions.map((sub, index) => {
+                const companyIcon = getCompanyIcon(sub.name) || DEFAULT_ICON;
+                return {
+                    value: sub.amount,
+                    text: `${((sub.amount / total) * 100).toFixed(0)}%`,
+                    color: companyIcon.color || defaultColors[index % defaultColors.length],
+                    textColor: '#FFFFFF',
+                    label: sub.name,
+                };
+            });
+        }
+    }, [viewMode, byCategory, filteredSubscriptions, total, defaultColors]);
 
     useEffect(() => {
         fadeAnim.setValue(0);
@@ -54,49 +117,60 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
                 useNativeDriver,
             }),
         ]).start();
-    }, [subscriptions.length, selectedCurrency, fadeAnim, scaleAnim]);
+    }, [subscriptions.length, selectedCurrency, viewMode, fadeAnim, scaleAnim]);
 
+    // Early returns after all hooks
     if (!subscriptions || subscriptions.length === 0) return null;
-
-    // Filter subscriptions by selected currency
-    const filteredSubscriptions = subscriptions.filter(
-        sub => (sub.currency || 'USD') === selectedCurrency
-    );
-
-    const total = filteredSubscriptions.reduce((sum, sub) => sum + sub.amount, 0);
-
-    // Group by category
-    const byCategory = filteredSubscriptions.reduce((acc, sub) => {
-        const category = sub.categoryGroup || 'Uncategorized';
-        acc[category] = (acc[category] || 0) + sub.amount;
-        return acc;
-    }, {} as Record<string, number>);
-
-    const colors = [
-        primaryColor,
-        '#FFB300', // Amber
-        '#FF5722', // Deep Orange
-        '#4CAF50', // Green
-        '#2196F3', // Blue
-        '#9C27B0', // Purple
-        '#E91E63', // Pink
-        '#795548', // Brown
-    ];
-
-    const data = Object.keys(byCategory).map((category, index) => ({
-        value: byCategory[category],
-        text: `${((byCategory[category] / total) * 100).toFixed(0)}%`,
-        color: colors[index % colors.length],
-        textColor: '#FFFFFF',
-        label: i18n.t(`cat_${category.toLowerCase().replace(' ', '_')}`, { defaultValue: category }),
-    }));
-
     if (total === 0) return null;
+
+    const chartTitle = viewMode === 'category' ? i18n.t('spendByCategory') : i18n.t('spendByBill');
 
     return (
         <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
             <Card style={styles.card}>
-                <ThemedText type="subtitle" style={styles.title}>{i18n.t('spendByCategory')}</ThemedText>
+                {/* View Mode Toggle */}
+                <View style={styles.viewModeContainer}>
+                    <TouchableOpacity
+                        style={[
+                            styles.viewModeTab,
+                            viewMode === 'category' && { backgroundColor: primaryColor }
+                        ]}
+                        onPress={() => setViewMode('category')}
+                        accessibilityRole="tab"
+                        accessibilityState={{ selected: viewMode === 'category' }}
+                        accessibilityLabel={i18n.t('spendByCategory')}
+                    >
+                        <ThemedText
+                            style={[
+                                styles.viewModeText,
+                                viewMode === 'category' && { color: '#FFFFFF' }
+                            ]}
+                        >
+                            {i18n.t('byCategory')}
+                        </ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            styles.viewModeTab,
+                            viewMode === 'bill' && { backgroundColor: primaryColor }
+                        ]}
+                        onPress={() => setViewMode('bill')}
+                        accessibilityRole="tab"
+                        accessibilityState={{ selected: viewMode === 'bill' }}
+                        accessibilityLabel={i18n.t('spendByBill')}
+                    >
+                        <ThemedText
+                            style={[
+                                styles.viewModeText,
+                                viewMode === 'bill' && { color: '#FFFFFF' }
+                            ]}
+                        >
+                            {i18n.t('byBill')}
+                        </ThemedText>
+                    </TouchableOpacity>
+                </View>
+
+                <ThemedText type="subtitle" style={styles.title}>{chartTitle}</ThemedText>
 
                 {/* Currency Tabs */}
                 {availableCurrencies.length > 1 && (
@@ -185,6 +259,26 @@ const styles = StyleSheet.create({
     },
     card: {
         padding: 16,
+    },
+    viewModeContainer: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(128,128,128,0.1)',
+        borderRadius: 10,
+        padding: 4,
+        marginBottom: 12,
+    },
+    viewModeTab: {
+        flex: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 40,
+    },
+    viewModeText: {
+        fontSize: 13,
+        fontWeight: '600',
     },
     title: {
         marginBottom: 16,
