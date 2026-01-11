@@ -348,7 +348,6 @@ const styles = StyleSheet.create({
   },
   proBanner: {
     marginTop: 16,
-    marginRight: 70,
   },
   proBannerHeader: {
     marginTop: 8,

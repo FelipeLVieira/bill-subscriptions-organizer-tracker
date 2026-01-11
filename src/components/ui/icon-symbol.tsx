@@ -1,7 +1,7 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
@@ -119,6 +119,7 @@ const MAPPING = {
   // Time & History
   'clock.fill': 'schedule',
   'clock.arrow.circlepath': 'history',
+  'calendar.badge.clock': 'event',
 
   // Info & Help
   'questionmark.circle': 'help-outline',
@@ -128,6 +129,10 @@ const MAPPING = {
   // Finance
   'creditcard.fill': 'credit-card',
   'g.circle.fill': 'g-mobiledata',
+  'dollarsign.circle.fill': 'monetization-on',
+
+  // Alerts
+  'exclamationmark.triangle.fill': 'warning',
 
   // Misc
   'paintbrush.fill': 'brush',

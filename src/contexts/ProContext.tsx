@@ -36,16 +36,16 @@ interface ProContextType {
 
 const ProContext = createContext<ProContextType | undefined>(undefined);
 
-// Ad Unit IDs (replace with your actual IDs in production)
+// Ad Unit IDs - uses test IDs in development, production IDs in release builds
 export const AD_UNIT_IDS = {
     banner: Platform.select({
-        ios: __DEV__ ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-XXXXXX/XXXXXX',
-        android: __DEV__ ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-XXXXXX/XXXXXX',
+        ios: __DEV__ ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-9370146634701252/3389574843',
+        android: __DEV__ ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-9370146634701252/4698787086',
         default: 'ca-app-pub-3940256099942544/6300978111',
     }),
     interstitial: Platform.select({
-        ios: __DEV__ ? 'ca-app-pub-3940256099942544/4411468910' : 'ca-app-pub-XXXXXX/XXXXXX',
-        android: __DEV__ ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-XXXXXX/XXXXXX',
+        ios: __DEV__ ? 'ca-app-pub-3940256099942544/4411468910' : 'ca-app-pub-9370146634701252/3577277104',
+        android: __DEV__ ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-9370146634701252/8925629096',
         default: 'ca-app-pub-3940256099942544/1033173712',
     }),
 } as const;
