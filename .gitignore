@@ -61,6 +61,12 @@ build/
 *.swp
 *.swo
 
+# Claude Code local settings
+.claude/
+
+# Development screenshots
+screenshots/
+
 # Debug files
 *.log
 debug/
