@@ -1,28 +1,35 @@
+import { Platform } from 'react-native';
 import Purchases, {
-    PurchasesOffering,
-    PurchasesPackage,
     CustomerInfo,
     LOG_LEVEL,
-    PurchasesError,
-    PURCHASES_ERROR_CODE,
     PACKAGE_TYPE,
+    PURCHASES_ERROR_CODE,
+    PurchasesError,
+    PurchasesOffering,
+    PurchasesPackage,
 } from 'react-native-purchases';
-import { Platform } from 'react-native';
 
 // RevenueCat API Keys - Platform specific
 // These are unique to the Bills & Subscriptions Tracker project
 // iOS: Will use production key when App Store is configured
 // Android: Will use production key when Play Store is configured
 const API_KEYS = {
-    // Test key for development - replace with production keys when configured
-    ios: 'test_bdRFynvtUGigIKscAKmUlzJdopC',
-    android: 'test_bdRFynvtUGigIKscAKmUlzJdopC',
+    ios: {
+        test: 'test_bdRFynvtUGigIKscAKmUlzJdopC',
+        // TODO: Replace with your actual RevenueCat Production API Key for iOS
+        prod: 'appl_FrHdSApEttuEOWhUHtimeaNsziT',
+    },
+    android: {
+        test: 'test_bdRFynvtUGigIKscAKmUlzJdopC',
+        // TODO: Replace with your actual RevenueCat Production API Key for Android (if different)
+        prod: 'goog_REPLACE_WITH_YOUR_PROD_KEY',
+    },
 };
 
 const API_KEY = Platform.select({
-    ios: API_KEYS.ios,
-    android: API_KEYS.android,
-}) || API_KEYS.ios;
+    ios: __DEV__ ? API_KEYS.ios.test : API_KEYS.ios.prod,
+    android: __DEV__ ? API_KEYS.android.test : API_KEYS.android.prod,
+}) || API_KEYS.ios.test;
 
 // Entitlement ID configured in RevenueCat dashboard
 export const ENTITLEMENT_ID = 'Bills & Subscriptions Tracker Pro';
@@ -105,18 +112,29 @@ export const getMonthlyPackage = (offering: PurchasesOffering): PurchasesPackage
 };
 
 /**
- * Get the yearly package from an offering
+ * Get yearly package from offerings
  */
 export const getYearlyPackage = (offering: PurchasesOffering): PurchasesPackage | null => {
-    return offering.annual || null;
+    if (offering.annual) return offering.annual;
+    return (
+        offering.availablePackages.find(
+            (pkg) => pkg.packageType === PACKAGE_TYPE.ANNUAL
+        ) || null
+    );
 };
 
 /**
- * Get the lifetime package from an offering
+ * Get lifetime package from offerings
  */
 export const getLifetimePackage = (offering: PurchasesOffering): PurchasesPackage | null => {
-    return offering.lifetime || null;
+    if (offering.lifetime) return offering.lifetime;
+    return (
+        offering.availablePackages.find(
+            (pkg) => pkg.packageType === PACKAGE_TYPE.LIFETIME
+        ) || null
+    );
 };
+
 
 /**
  * Purchase a package
@@ -205,12 +223,12 @@ export const addCustomerInfoUpdateListener = (
     callback: (customerInfo: CustomerInfo) => void
 ): (() => void) => {
     if (Platform.OS === 'web') {
-        return () => {};
+        return () => { };
     }
 
     Purchases.addCustomerInfoUpdateListener(callback);
     // Return a no-op cleanup function for compatibility
-    return () => {};
+    return () => { };
 };
 
 /**

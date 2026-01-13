@@ -1,12 +1,13 @@
+import { ThemedText } from '@/components/themed-text';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { StyleSheet, TextInput, TextInputProps, View, Animated, Platform } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
 import { useEffect, useRef } from 'react';
+import { Animated, Platform, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
 interface InputProps extends TextInputProps {
     error?: string;
     touched?: boolean;
+    containerStyle?: any;
 }
 
 /**
@@ -46,7 +47,7 @@ export function Input({ style, multiline, error, touched, ...props }: InputProps
     }, [hasError, shakeAnim]);
 
     return (
-        <View>
+        <View style={props.containerStyle}>
             <Animated.View style={Platform.OS !== 'web' ? { transform: [{ translateX: shakeAnim }] } : undefined}>
                 <TextInput
                     style={[

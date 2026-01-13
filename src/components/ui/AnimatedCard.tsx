@@ -37,7 +37,7 @@ export function AnimatedCard({
 
     // iOS uses subtle shadows in light mode, subtle borders in dark mode
     const shadowStyle = colorScheme === 'dark'
-        ? { borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.1)' }
+        ? { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }
         : {};
 
     useEffect(() => {

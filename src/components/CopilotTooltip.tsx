@@ -94,13 +94,13 @@ export function CopilotTooltip() {
                         activeOpacity={0.8}
                         hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
                     >
-                        <ThemedText style={styles.nextText}>
+                        <ThemedText style={[styles.nextText, { color: useThemeColor({}, 'background') }]}>
                             {isLastStep ? i18n.t('done') : i18n.t('next')}
                         </ThemedText>
                         <IconSymbol
                             name={isLastStep ? 'checkmark' : 'chevron.right'}
                             size={16}
-                            color="#FFFFFF"
+                            color={useThemeColor({}, 'background')}
                         />
                     </TouchableOpacity>
                 </View>
@@ -117,10 +117,13 @@ export function CopilotTooltip() {
 export function CopilotStepNumber() {
     const { currentStepNumber } = useCopilot();
     const primaryColor = useThemeColor({}, 'primary');
+    // In dark mode: primary is white -> text should be black
+    // In light mode: primary is black -> text should be white
+    const contrastColor = useThemeColor({}, 'background');
 
     return (
         <View style={[styles.stepNumber, { backgroundColor: primaryColor }]}>
-            <ThemedText style={styles.stepNumberText}>
+            <ThemedText style={[styles.stepNumberText, { color: contrastColor }]}>
                 {currentStepNumber}
             </ThemedText>
         </View>

@@ -271,4 +271,33 @@ export default {
     somethingWentWrong: "Something Went Wrong",
     errorOccurred: "An unexpected error occurred. Please try again.",
     tryAgain: "Try Again",
+    // Standardized Premium Keys (Ported)
+    premium: {
+        title: "Upgrade to Pro",
+        subtitle: "Unlock all features and remove ads",
+        removeAds: "Remove ads & unlock all features",
+        alreadyPremium: "You are already a Premium member!",
+        thankYou: "Thank you for your support!",
+        manageSubscription: "Manage Subscription",
+        subscribe: "Subscribe",
+        restore: "Restore Purchases",
+        loadingProducts: "Loading products...",
+        terms: "Subscription auto-renews monthly. Cancel anytime in Settings.",
+        yearly: "Yearly",
+        monthly: "Monthly",
+        lifetime: "Lifetime",
+        bestDeal: "Best Deal",
+        feature1: "Remove all advertisements",
+        feature2: "Unlimited bill reminders",
+        feature3: "Advanced statistics",
+        save: "Save {{percent}}%",
+        purchaseSuccess: "Purchase successful! Enjoy Pro features.",
+        purchaseFailed: "Purchase failed. Please try again.",
+        restoreSuccess: "Purchases restored successfully.",
+        restoreFailed: "No previous purchases found.",
+    },
+    // Common keys
+    common: {
+        close: "Close",
+    },
 };

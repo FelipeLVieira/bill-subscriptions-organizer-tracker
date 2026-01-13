@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import i18n from '@/i18n';
 import { Component, ErrorInfo, ReactNode } from 'react';

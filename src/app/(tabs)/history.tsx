@@ -164,6 +164,9 @@ export default function PaymentHistoryScreen() {
     return (
         <ThemedView style={styles.container}>
             <View style={styles.header}>
+                {/* Go Pro Banner - always show at top if not pro */}
+                {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
+
                 {/* Search bar */}
                 <CopilotStep text={i18n.t('copilotHistorySearch')} order={1} name="history-search">
                     <WalkthroughableView>
@@ -173,7 +176,7 @@ export default function PaymentHistoryScreen() {
                                 placeholder={i18n.t('searchPayments')}
                                 value={query}
                                 onChangeText={setQuery}
-                                style={styles.input}
+                                containerStyle={styles.input}
                             />
                             {query.length > 0 && (
                                 <TouchableOpacity
@@ -199,8 +202,7 @@ export default function PaymentHistoryScreen() {
                     </ThemedText>
                 </Card>
 
-                {/* Go Pro Banner */}
-                {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
+
 
                 {/* Controls */}
                 <View style={styles.controlsRow}>
@@ -343,6 +345,7 @@ export default function PaymentHistoryScreen() {
                     }
                 />
             )}
+
         </ThemedView>
     );
 }
@@ -358,7 +361,8 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
+        marginBottom: 12,
     },
     input: {
         flex: 1,
@@ -380,8 +384,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         opacity: 0.7,
     },
-    proBanner: {
-        marginTop: 12,
+    proBannerHeader: {
+        marginTop: 8,
+        marginBottom: 24,
     },
     controlsRow: {
         flexDirection: 'row',
@@ -420,7 +425,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     list: {
-        padding: 16,
+        paddingHorizontal: 20,
         paddingTop: 8,
         paddingBottom: 100,
         gap: 8,

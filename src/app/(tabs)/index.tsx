@@ -6,7 +6,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
 import { AnimatedCard } from '@/components/ui/AnimatedCard';
-import { AnimatedFAB } from '@/components/ui/AnimatedFAB';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -174,6 +173,23 @@ export default function HomeScreen() {
   const listHeader = useMemo(
     () => (
       <>
+        {/* Go Pro Banner - always show at top if not pro */}
+        {!isPro && (
+          <GoProButton variant="banner" style={styles.proBannerHeader} />
+        )}
+
+
+        {/* Add Subscription Button - inline, iOS style */}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => router.push('/modal')}
+          accessibilityRole="button"
+          accessibilityLabel={i18n.t('addSubscription')}
+        >
+          <IconSymbol name="plus" size={20} color="#FFFFFF" weight="semibold" />
+          <ThemedText style={styles.addButtonText}>{i18n.t('addSubscription')}</ThemedText>
+        </TouchableOpacity>
+
         <CopilotStep text={i18n.t('copilotDashboardPeriod')} order={1} name="period">
           <WalkthroughableView>
             <PeriodSelector value={period} onChange={setPeriod} />
@@ -194,10 +210,7 @@ export default function HomeScreen() {
           </CopilotStep>
         )}
 
-        {/* Go Pro Banner - show when user has subscriptions */}
-        {subscriptions.length > 0 && !isPro && (
-          <GoProButton variant="banner" style={styles.proBannerHeader} />
-        )}
+
 
         {/* Step 4: List explanation - always render even when list is not empty */}
         {subscriptions.length > 0 && (
@@ -247,7 +260,12 @@ export default function HomeScreen() {
         initialNumToRender={6}
         windowSize={5}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={primaryColor}
+            progressViewOffset={100}
+          />
         }
         ListEmptyComponent={
           <CopilotStep text={i18n.t('copilotDashboardList')} order={3} name="empty">
@@ -257,20 +275,13 @@ export default function HomeScreen() {
               <ThemedText style={styles.emptyHint}>
                 {i18n.t('emptyDashboardHint')}
               </ThemedText>
-              {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
+
             </WalkthroughableView>
           </CopilotStep>
         }
       />
 
-      <CopilotStep text={i18n.t('copilotDashboardFab')} order={subscriptions.length > 0 ? 5 : 4} name="fab">
-        <WalkthroughableView>
-          <AnimatedFAB
-            onPress={() => router.push('/modal')}
-            accessibilityLabel={i18n.t('addSubscription')}
-          />
-        </WalkthroughableView>
-      </CopilotStep>
+
     </ThemedView>
   );
 }
@@ -280,9 +291,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 110,
+    gap: 16,
   },
   subscriptionsHeader: {
     flexDirection: 'row',
@@ -351,6 +362,27 @@ const styles = StyleSheet.create({
   },
   proBannerHeader: {
     marginTop: 8,
-    marginBottom: 4,
+    marginBottom: 24,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF', // Standard iOS Blue
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 24,
+    marginTop: 8, // Little space from top or Go Pro
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -17,7 +17,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.fullstackdev1.bill-subscriptions-organizer-tracker",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "The app needs access to your photo library to let you attach images to your bills.",
+        "NSCameraUsageDescription": "The app needs access to your camera to let you take photos of bills and receipts."
       },
       "splash": {
         "image": "./assets/images/splash-icon.png",

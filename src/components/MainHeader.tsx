@@ -8,12 +8,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCopilot } from 'react-native-copilot';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Apple-style Navigation Header
@@ -80,7 +80,8 @@ export function MainHeader({ title }: { title: string }) {
                 >
                     <IconSymbol
                         name="info.circle"
-                        size={22}
+                        size={24}
+                        weight="semibold"
                         color={primaryColor}
                     />
                 </TouchableOpacity>
@@ -105,7 +106,7 @@ export function MainHeader({ title }: { title: string }) {
                     {currentLang ? (
                         <ThemedText style={styles.flag}>{currentLang.flag}</ThemedText>
                     ) : (
-                        <IconSymbol name="globe" size={22} color={primaryColor} />
+                        <IconSymbol name="globe" size={24} weight="semibold" color={primaryColor} />
                     )}
                 </TouchableOpacity>
                 {/* Theme button - right */}
@@ -117,7 +118,8 @@ export function MainHeader({ title }: { title: string }) {
                 >
                     <IconSymbol
                         name={colorScheme === 'dark' ? 'sun.max.fill' : 'moon.fill'}
-                        size={22}
+                        size={24}
+                        weight="semibold"
                         color={primaryColor}
                     />
                 </TouchableOpacity>

@@ -8,7 +8,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
 import { AnimatedCard } from '@/components/ui/AnimatedCard';
-import { AnimatedFAB } from '@/components/ui/AnimatedFAB';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
 import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
@@ -272,6 +271,9 @@ export default function MyBillsScreen() {
     return (
         <ThemedView style={styles.container}>
             <View style={styles.header}>
+                {/* Go Pro Banner - always show at top if not pro */}
+                {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
+
                 {/* Search bar */}
                 <CopilotStep text={i18n.t('copilotBillsSearch')} order={1} name="bills-search">
                     <WalkthroughableView>
@@ -281,7 +283,7 @@ export default function MyBillsScreen() {
                                 placeholder={i18n.t('searchBills')}
                                 value={query}
                                 onChangeText={setQuery}
-                                style={styles.input}
+                                containerStyle={styles.input}
                             />
                             {query.length > 0 && (
                                 <TouchableOpacity onPress={() => setQuery('')}>
@@ -345,8 +347,7 @@ export default function MyBillsScreen() {
                         </WalkthroughableView>
                     </CopilotStep>
 
-                    {/* Go Pro Banner */}
-                    {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
+
 
                     {/* View Toggle and Mark All Paid */}
                     <View style={styles.actionsRow}>
@@ -453,7 +454,7 @@ export default function MyBillsScreen() {
                             <ThemedText style={styles.emptyHint}>
                                 {query || categoryFilter !== 'all' ? i18n.t('emptySearchHint') : i18n.t('emptyBillsHint')}
                             </ThemedText>
-                            {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
+
                         </View>
                     }
                 />
@@ -513,14 +514,6 @@ export default function MyBillsScreen() {
                 />
             )}
 
-            <CopilotStep text={i18n.t('copilotBillsItem')} order={4} name="bills-item">
-                <WalkthroughableView>
-                    <AnimatedFAB
-                        onPress={() => router.push('/modal')}
-                        accessibilityLabel={i18n.t('addSubscription')}
-                    />
-                </WalkthroughableView>
-            </CopilotStep>
         </ThemedView>
     );
 }
@@ -536,7 +529,8 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
+        marginBottom: 12,
     },
     input: {
         flex: 1,
@@ -597,7 +591,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     list: {
-        padding: 16,
+        paddingHorizontal: 20,
         paddingTop: 8,
         paddingBottom: 100,
         gap: 12,
@@ -658,12 +652,8 @@ const styles = StyleSheet.create({
         lineHeight: 20,
         paddingHorizontal: 16,
     },
-    proBanner: {
-        marginTop: 16,
-        marginRight: 70,
-    },
     proBannerHeader: {
         marginTop: 8,
-        marginBottom: 4,
+        marginBottom: 24,
     },
 });

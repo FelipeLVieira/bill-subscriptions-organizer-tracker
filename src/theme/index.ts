@@ -11,57 +11,57 @@ import { Platform } from 'react-native';
  */
 export const theme = {
     light: {
-        // Backgrounds - Clean whites and light grays
-        background: '#F5F5F7', // Light gray background
+        // Backgrounds - Cleaner, slightly brighter
+        background: '#F2F2F7', // Standard iOS system gray 6
         card: '#FFFFFF', // Pure white cards
-        text: '#1C1C1E', // Near-black text
-        textSecondary: '#6E6E73', // Medium gray
+        text: '#000000', // True black for max contrast
+        textSecondary: '#8E8E93', // Standard iOS gray
 
-        // Brand colors - Neutral charcoal as primary
-        primary: '#1C1C1E', // Charcoal black
-        accent: '#3A3A3C', // Dark gray accent
-        interactive: '#1C1C1E', // For buttons, toggles, FAB - stays dark
+        // Brand colors - Darker, more premium charcoal/black
+        primary: '#000000', // True black
+        accent: '#1C1C1E', // Off-black
+        interactive: '#007AFF', // Standard iOS Blue for interactivity (better affordance)
 
-        // Semantic colors - Muted, professional
-        border: 'rgba(60, 60, 67, 0.18)', // Subtle gray border
-        success: '#34C759', // Keep green for success (universal)
-        warning: '#FF9500', // Orange/yellow for pending/upcoming
-        danger: '#FF3B30', // Keep red for danger (universal)
-        info: '#007AFF', // Blue for total/info
+        // Semantic colors - More vibrant
+        border: 'rgba(60, 60, 67, 0.12)', // Slightly subtler border
+        success: '#34C759', // iOS Green
+        warning: '#FF9500', // iOS Orange
+        danger: '#FF3B30', // iOS Red
+        info: '#007AFF', // iOS Blue
 
-        // Status colors for bills - Mostly grayscale with semantic hints
-        statusOverdue: '#FF3B30', // Red for overdue (important)
-        statusOverdueBg: 'rgba(255, 59, 48, 0.08)',
-        statusUpcoming: '#6E6E73', // Gray for upcoming
-        statusUpcomingBg: 'rgba(110, 110, 115, 0.08)',
-        statusPaid: '#34C759', // Green for paid (positive)
-        statusPaidBg: 'rgba(52, 199, 89, 0.08)',
-        statusLater: '#AEAEB2', // Light gray for later
-        statusLaterBg: 'rgba(174, 174, 178, 0.08)',
+        // Status colors for bills
+        statusOverdue: '#FF3B30',
+        statusOverdueBg: 'rgba(255, 59, 48, 0.1)',
+        statusUpcoming: '#8E8E93',
+        statusUpcomingBg: 'rgba(142, 142, 147, 0.1)',
+        statusPaid: '#34C759',
+        statusPaidBg: 'rgba(52, 199, 89, 0.1)',
+        statusLater: '#AEAEB2',
+        statusLaterBg: 'rgba(174, 174, 178, 0.1)',
 
         // Input/Form
         inputBg: '#FFFFFF',
-        infoBg: '#F5F5F7',
-        pickerText: '#1C1C1E',
+        infoBg: '#F2F2F7',
+        pickerText: '#000000',
         pickerBg: '#E5E5EA',
 
-        // Tab bar - Grayscale
-        tint: '#1C1C1E',
-        icon: '#AEAEB2',
-        tabIconDefault: '#AEAEB2',
-        tabIconSelected: '#1C1C1E',
+        // Tab bar
+        tint: '#007AFF', // Active tab color (Blue)
+        icon: '#8E8E93', // Inactive tab color
+        tabIconDefault: '#8E8E93',
+        tabIconSelected: '#007AFF',
 
         // Toast colors
         toastSuccess: '#34C759',
         toastError: '#FF3B30',
-        toastWarning: '#6E6E73',
-        toastInfo: '#1C1C1E',
+        toastWarning: '#8E8E93',
+        toastInfo: '#000000',
         toastBg: '#FFFFFF',
 
-        // Gradients - Flat, no gradients
+        // Gradients
         gradients: {
-            header: ['#F5F5F7', '#F5F5F7'] as const,
-            button: ['#1C1C1E', '#3A3A3C'] as const,
+            header: ['#F2F2F7', '#F2F2F7'] as const,
+            button: ['#000000', '#1C1C1E'] as const,
             card: ['#FFFFFF', '#FFFFFF'] as const,
         },
     },

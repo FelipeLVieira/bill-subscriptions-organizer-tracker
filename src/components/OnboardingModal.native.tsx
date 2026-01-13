@@ -81,6 +81,7 @@ export function OnboardingModal({ visible, onComplete }: OnboardingModalProps) {
     const primaryColor = useThemeColor({}, 'primary');
     const cardBg = useThemeColor({}, 'card');
     const secondaryText = useThemeColor({}, 'textSecondary');
+    const contrastColor = useThemeColor({}, 'background');
 
     const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
@@ -248,7 +249,7 @@ export function OnboardingModal({ visible, onComplete }: OnboardingModalProps) {
                             onPress={goToNext}
                             activeOpacity={0.8}
                         >
-                            <ThemedText style={styles.nextText}>
+                            <ThemedText style={[styles.nextText, { color: contrastColor }]}>
                                 {currentIndex === ONBOARDING_STEPS.length - 1
                                     ? i18n.t('getStarted')
                                     : i18n.t('next')}
@@ -256,7 +257,7 @@ export function OnboardingModal({ visible, onComplete }: OnboardingModalProps) {
                             <IconSymbol
                                 name={currentIndex === ONBOARDING_STEPS.length - 1 ? 'checkmark' : 'chevron.right'}
                                 size={20}
-                                color="#FFFFFF"
+                                color={contrastColor}
                             />
                         </TouchableOpacity>
                     </View>

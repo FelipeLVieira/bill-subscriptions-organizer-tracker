@@ -1,9 +1,9 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import { SymbolView, SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
+import { OpaqueColorValue, Platform, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
 type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
@@ -44,6 +44,7 @@ const MAPPING = {
   'tv.fill': 'tv',
   'music.note': 'music-note',
   'video.fill': 'videocam',
+  'gamecontroller.fill': 'sports-esports',
 
   // Cloud & Storage
   'icloud.fill': 'cloud',
@@ -59,6 +60,7 @@ const MAPPING = {
   'books.vertical.fill': 'library-books',
   'character.book.closed.fill': 'auto-stories',
   'list.bullet': 'format-list-bulleted',
+  'desktopcomputer': 'computer',
   'rectangle.3.group': 'view-module',
   'list.bullet.clipboard': 'assignment',
   'list.bullet.rectangle.fill': 'list-alt',
@@ -69,7 +71,7 @@ const MAPPING = {
   'at': 'alternate-email',
 
   // Gaming & Entertainment
-  'gamecontroller.fill': 'sports-esports',
+
   'sparkles': 'auto-awesome',
 
   // Health & Fitness
@@ -83,8 +85,10 @@ const MAPPING = {
   // Food & Shopping
   'takeoutbag.and.cup.and.straw.fill': 'fastfood',
   'bag.fill': 'shopping-bag',
+  'tshirt.fill': 'checkroom',
   'cart.fill': 'shopping-cart',
   'shippingbox.fill': 'inventory-2',
+
 
   // Utilities
   'bolt.fill': 'bolt',
@@ -102,6 +106,7 @@ const MAPPING = {
   // Housing & Transportation
   'building.2.fill': 'apartment',
   'car.fill': 'directions-car',
+  'bus.fill': 'directions-bus',
   'p.circle.fill': 'local-parking',
 
   // Education
@@ -112,6 +117,7 @@ const MAPPING = {
   'person.fill': 'person',
   'person.2.fill': 'people',
   'hand.wave.fill': 'waving-hand',
+  'pawprint.fill': 'pets',
 
   // Charts & Data
   'chart.pie.fill': 'pie-chart',
@@ -123,13 +129,17 @@ const MAPPING = {
 
   // Info & Help
   'questionmark.circle': 'help-outline',
+  'info.circle': 'info',
   'lightbulb.fill': 'lightbulb',
   'ellipsis.circle.fill': 'more-horiz',
+  'sun.max.fill': 'wb-sunny',
+  'moon.fill': 'nightlight-round',
 
   // Finance
   'creditcard.fill': 'credit-card',
   'g.circle.fill': 'g-mobiledata',
   'dollarsign.circle.fill': 'monetization-on',
+  'diamond.fill': 'diamond',
 
   // Alerts
   'exclamationmark.triangle.fill': 'warning',
@@ -150,6 +160,7 @@ export function IconSymbol({
   size = 24,
   color,
   style,
+  weight = 'regular',
 }: {
   name: IconSymbolName;
   size?: number;
@@ -157,5 +168,24 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
+
+  if (Platform.OS === 'ios') {
+    return (
+      <SymbolView
+        weight={weight}
+        tintColor={color}
+        resizeMode="scaleAspectFit"
+        name={name}
+        style={[
+          {
+            width: size,
+            height: size,
+          },
+          style as StyleProp<ViewStyle>,
+        ]}
+      />
+    );
+  }
+
   return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }

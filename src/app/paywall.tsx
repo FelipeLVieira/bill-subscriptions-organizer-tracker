@@ -4,318 +4,389 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { usePro } from '@/contexts/ProContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
-import { formatPrice, getSubscriptionPeriod, getMonthlyPackage } from '@/services/purchases';
-import { useNativeDriver } from '@/utils/animation';
+import { calculateYearlySavings, formatPrice, getLifetimePackage, getManagementURL, getMonthlyPackage, getSubscriptionPeriod, getYearlyPackage } from '@/services/purchases';
 import { Haptic } from '@/utils/haptics';
+import { scale } from '@/utils/responsive';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Animated,
+    Linking,
     StyleSheet,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
+import { PurchasesPackage } from 'react-native-purchases';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { PurchasesPackage } from 'react-native-purchases';
 
+// Make sure to export this as default since it's a screen
 export default function PaywallScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { isPro, purchasePro, restorePurchases, offerings, loadOfferings } = usePro();
-    const [loading, setLoading] = useState(false);
-    const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+    const [purchaseLoading, setPurchaseLoading] = useState(false);
 
-    const cardBg = useThemeColor({}, 'card');
-    const infoColor = useThemeColor({}, 'info');
-    const successColor = useThemeColor({}, 'statusPaid');
+    // UI Theme Colors
+    const primaryColor = useThemeColor({}, 'tint'); // Using tint for primary actions
+    const textColor = useThemeColor({}, 'text');
     const secondaryText = useThemeColor({}, 'textSecondary');
     const borderColor = useThemeColor({}, 'border');
+    const inputBg = useThemeColor({}, 'inputBg'); // Corrected key
 
-    // Animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
-    const scaleAnim = useRef(new Animated.Value(0.9)).current;
-    const buttonScale = useRef(new Animated.Value(1)).current;
-
-    // Feature row animations
-    const featureAnims = useRef([
-        new Animated.Value(0),
-    ]).current;
+    const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly');
+    const [monthlyPkg, setMonthlyPkg] = useState<PurchasesPackage | null>(null);
+    const [yearlyPkg, setYearlyPkg] = useState<PurchasesPackage | null>(null);
+    const [lifetimePkg, setLifetimePkg] = useState<PurchasesPackage | null>(null);
+    const [yearlySavings, setYearlySavings] = useState<number>(0);
 
     // Load offerings on mount
     useEffect(() => {
         loadOfferings();
     }, [loadOfferings]);
 
-    // Set default package when offerings load
+    // Extract packages from offering
     useEffect(() => {
-        if (offerings && !selectedPackage) {
+        if (offerings) {
             const monthly = getMonthlyPackage(offerings);
-            if (monthly) {
-                setSelectedPackage(monthly);
+            const yearly = getYearlyPackage(offerings);
+            const lifetime = getLifetimePackage(offerings);
+
+            setMonthlyPkg(monthly);
+            setYearlyPkg(yearly);
+            setLifetimePkg(lifetime);
+
+            if (monthly && yearly) {
+                setYearlySavings(calculateYearlySavings(monthly, yearly));
             }
         }
-    }, [offerings, selectedPackage]);
+    }, [offerings]);
 
-    useEffect(() => {
-        // Staggered entrance animations
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 400,
-                useNativeDriver,
-            }),
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                tension: 50,
-                friction: 8,
-                useNativeDriver,
-            }),
-            Animated.spring(scaleAnim, {
-                toValue: 1,
-                tension: 50,
-                friction: 8,
-                useNativeDriver,
-            }),
-        ]).start();
-
-        // Stagger feature rows
-        featureAnims.forEach((anim, index) => {
-            Animated.timing(anim, {
-                toValue: 1,
-                duration: 300,
-                delay: 200 + index * 80,
-                useNativeDriver,
-            }).start();
-        });
-    }, [fadeAnim, slideAnim, scaleAnim, featureAnims]);
-
-    const handlePurchase = async () => {
-        // Button press animation
-        Animated.sequence([
-            Animated.timing(buttonScale, {
-                toValue: 0.95,
-                duration: 100,
-                useNativeDriver,
-            }),
-            Animated.spring(buttonScale, {
-                toValue: 1,
-                tension: 50,
-                friction: 8,
-                useNativeDriver,
-            }),
-        ]).start();
-
-        setLoading(true);
-        await Haptic.medium();
+    const handleSubscribe = async () => {
+        setPurchaseLoading(true);
+        const pkg = getSelectedPackage();
         try {
-            await purchasePro(selectedPackage || undefined);
+            await Haptic.medium();
+            // purchasePro returns void on success, throws on error
+            await purchasePro(pkg || undefined);
+
             await Haptic.success();
-            Alert.alert(i18n.t('success'), i18n.t('purchaseSuccess'));
+            Alert.alert(i18n.t('success'), i18n.t('premium.purchaseSuccess'));
             router.back();
         } catch (error) {
-            // Don't show error for cancellation
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             if (errorMessage !== 'CANCELLED') {
                 await Haptic.error();
-                Alert.alert(i18n.t('error'), i18n.t('purchaseFailed'));
+                Alert.alert(i18n.t('error'), i18n.t('premium.purchaseFailed'));
             }
         } finally {
-            setLoading(false);
+            setPurchaseLoading(false);
         }
     };
 
-    const handleRestore = async () => {
-        setLoading(true);
-        await Haptic.light();
+    const handleRestorePurchases = async () => {
+        setPurchaseLoading(true);
         try {
-            const restored = await restorePurchases();
-            if (restored) {
+            await Haptic.light();
+            const success = await restorePurchases();
+            if (success) {
                 await Haptic.success();
-                Alert.alert(i18n.t('success'), i18n.t('restoreSuccess'));
+                Alert.alert(i18n.t('success'), i18n.t('premium.restoreSuccess'));
                 router.back();
             } else {
-                Alert.alert(i18n.t('error'), i18n.t('restoreFailed'));
+                Alert.alert(i18n.t('error'), i18n.t('premium.restoreFailed'));
             }
         } catch {
             await Haptic.error();
-            Alert.alert(i18n.t('error'), i18n.t('restoreFailed'));
+            Alert.alert(i18n.t('error'), i18n.t('premium.restoreFailed'));
         } finally {
-            setLoading(false);
+            setPurchaseLoading(false);
         }
     };
 
-    const features = [
-        { icon: 'xmark.circle.fill', text: i18n.t('proBenefit1') },
-    ];
-
-    // Get price display from RevenueCat package or fallback
-    const getPriceDisplay = () => {
-        if (selectedPackage) {
-            const priceString = formatPrice(selectedPackage);
-            const period = getSubscriptionPeriod(selectedPackage);
-            // Parse price string to extract currency and amount
-            const match = priceString.match(/([^\d]*)(\d+(?:[.,]\d+)?)/);
-            if (match) {
-                const currency = match[1] || '$';
-                const amount = match[2];
-                return { currency, amount, period };
-            }
+    const handleManageSubscription = async () => {
+        const url = await getManagementURL();
+        if (url) {
+            Linking.openURL(url);
         }
-        // Fallback
-        return { currency: '$', amount: '4.99', period: '/month' };
     };
 
-    const { currency, amount, period } = getPriceDisplay();
+    const getSelectedPackage = (): PurchasesPackage | null => {
+        switch (selectedPlan) {
+            case 'monthly':
+                return monthlyPkg;
+            case 'yearly':
+                return yearlyPkg;
+            case 'lifetime':
+                return lifetimePkg;
+            default:
+                return yearlyPkg || monthlyPkg;
+        }
+    };
+
+    const selectedPackage = getSelectedPackage();
+
+    // If user is already premium, show thank you message
+    // Note: In the BMI app, this was a modal, here it's a screen. 
+    // We can just render the "Already Premium" state cleanly.
+    if (isPro) {
+        return (
+            <ThemedView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+                <View style={styles.navBar}>
+                    <TouchableOpacity
+                        style={[styles.closeButton, { backgroundColor: inputBg }]}
+                        onPress={() => router.back()}
+                    >
+                        <IconSymbol name="xmark" size={scale(18)} color={textColor} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.alreadyPremiumContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: '#4CD964' + '20' }]}>
+                        <IconSymbol name="checkmark.circle.fill" size={scale(48)} color="#4CD964" />
+                    </View>
+
+                    <ThemedText style={[styles.title]}>
+                        {i18n.t('premium.alreadyPremium')}
+                    </ThemedText>
+
+                    <ThemedText style={[styles.subtitle, { color: secondaryText }]}>
+                        {i18n.t('premium.thankYou')}
+                    </ThemedText>
+
+                    <TouchableOpacity
+                        style={[styles.manageButton, { borderColor: borderColor }]}
+                        onPress={handleManageSubscription}
+                    >
+                        <ThemedText style={[styles.manageButtonText, { color: primaryColor }]}>
+                            {i18n.t('premium.manageSubscription')}
+                        </ThemedText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.subscribeButton, { backgroundColor: primaryColor, marginTop: scale(20) }]}
+                        onPress={() => router.back()}
+                    >
+                        <ThemedText style={styles.subscribeText}>{i18n.t('common.close')}</ThemedText>
+                    </TouchableOpacity>
+                </View>
+            </ThemedView>
+        );
+    }
 
     return (
-        <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
-            {/* Close button */}
+        <ThemedView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+            {/* Nav Bar */}
             <View style={styles.navBar}>
                 <TouchableOpacity
-                    style={[styles.closeButton, { backgroundColor: cardBg }]}
+                    style={[styles.closeButton, { backgroundColor: inputBg }]}
                     onPress={() => router.back()}
-                    activeOpacity={0.7}
+                    disabled={purchaseLoading}
                 >
-                    <IconSymbol name="xmark" size={18} color={secondaryText} />
+                    <IconSymbol name="xmark" size={scale(18)} color={textColor} />
                 </TouchableOpacity>
             </View>
 
-            {/* Content */}
             <View style={styles.content}>
-                {/* Hero Section */}
-                <Animated.View
-                    style={[
-                        styles.heroSection,
-                        {
-                            opacity: fadeAnim,
-                            transform: [
-                                { translateY: slideAnim },
-                                { scale: scaleAnim },
-                            ],
-                        },
-                    ]}
-                >
-                    <View style={[styles.iconWrapper, { backgroundColor: infoColor + '15' }]}>
-                        <IconSymbol name="sparkles" size={48} color={infoColor} />
+                {/* Crown icon */}
+                <View style={[styles.iconContainer, { backgroundColor: primaryColor + '20' }]}>
+                    <IconSymbol name="sparkles" size={scale(48)} color={primaryColor} />
+                </View>
+
+                {/* Title */}
+                <ThemedText style={[styles.title]}>
+                    {i18n.t('premium.title')}
+                </ThemedText>
+
+                {/* Subtitle */}
+                <ThemedText style={[styles.subtitle, { color: secondaryText }]}>
+                    {i18n.t('premium.subtitle')}
+                </ThemedText>
+
+                {/* Features */}
+                <View style={styles.features}>
+                    <View style={styles.featureRow}>
+                        <IconSymbol name="checkmark.circle.fill" size={scale(24)} color="#4CD964" />
+                        <ThemedText style={[styles.featureText]}>
+                            {i18n.t('premium.feature1')}
+                        </ThemedText>
                     </View>
-                    <ThemedText style={styles.title}>
-                        {i18n.t('goPro')}
-                    </ThemedText>
-                    <ThemedText style={[styles.subtitle, { color: secondaryText }]}>
-                        {i18n.t('removeAdsUnlockFeatures')}
-                    </ThemedText>
-                </Animated.View>
-
-                {/* Features List */}
-                <Animated.View
-                    style={[
-                        styles.featuresCard,
-                        { backgroundColor: cardBg, opacity: fadeAnim },
-                    ]}
-                >
-                    {features.map((feature, index) => (
-                        <Animated.View
-                            key={index}
-                            style={[
-                                styles.featureRow,
-                                index < features.length - 1 && {
-                                    borderBottomWidth: StyleSheet.hairlineWidth,
-                                    borderBottomColor: borderColor,
-                                },
-                                {
-                                    opacity: featureAnims[index],
-                                    transform: [{
-                                        translateX: featureAnims[index].interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [-20, 0],
-                                        }),
-                                    }],
-                                },
-                            ]}
-                        >
-                            <View style={[styles.featureIcon, { backgroundColor: successColor + '15' }]}>
-                                <IconSymbol
-                                    name="checkmark.circle.fill"
-                                    size={22}
-                                    color={successColor}
-                                />
-                            </View>
-                            <ThemedText style={styles.featureText}>
-                                {feature.text}
-                            </ThemedText>
-                        </Animated.View>
-                    ))}
-                </Animated.View>
-
-                {/* Pricing Card */}
-                <Animated.View
-                    style={[
-                        styles.pricingCard,
-                        {
-                            backgroundColor: infoColor + '08',
-                            borderColor: infoColor + '30',
-                            opacity: fadeAnim,
-                            transform: [{ scale: scaleAnim }],
-                        },
-                    ]}
-                >
-                    <View style={styles.priceRow}>
-                        <ThemedText style={[styles.currency, { color: successColor }]}>{currency}</ThemedText>
-                        <ThemedText style={[styles.price, { color: successColor }]}>{amount}</ThemedText>
-                        <ThemedText style={[styles.period, { color: secondaryText }]}>{period}</ThemedText>
+                    <View style={styles.featureRow}>
+                        <IconSymbol name="checkmark.circle.fill" size={scale(24)} color="#4CD964" />
+                        <ThemedText style={[styles.featureText]}>
+                            {i18n.t('premium.feature2')}
+                        </ThemedText>
                     </View>
-                    <ThemedText style={[styles.priceSubtext, { color: secondaryText, opacity: 0.7 }]}>
-                        {i18n.t('cancelAnytime')}
-                    </ThemedText>
-                </Animated.View>
-            </View>
+                </View>
 
-            {/* Bottom Actions */}
-            <Animated.View
-                style={[
-                    styles.bottomActions,
-                    { paddingBottom: insets.bottom + 20, opacity: fadeAnim },
-                ]}
-            >
-                <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                {/* Plan Selection */}
+                {offerings ? (
+                    <View style={styles.planSelection}>
+                        {/* Yearly Plan - Best Value */}
+                        {yearlyPkg && (
+                            <TouchableOpacity
+                                style={[
+                                    styles.planOption,
+                                    {
+                                        borderColor: selectedPlan === 'yearly' ? primaryColor : borderColor,
+                                        backgroundColor: selectedPlan === 'yearly' ? primaryColor + '10' : 'transparent',
+                                    },
+                                ]}
+                                onPress={() => setSelectedPlan('yearly')}
+                                disabled={purchaseLoading}
+                            >
+                                {yearlySavings > 0 && (
+                                    <View style={[styles.savingsBadge, { backgroundColor: primaryColor }]}>
+                                        <ThemedText style={styles.savingsText}>
+                                            {i18n.t('premium.save', { percent: yearlySavings })}
+                                        </ThemedText>
+                                    </View>
+                                )}
+                                <View style={styles.planInfo}>
+                                    <ThemedText style={[styles.planName]}>
+                                        {i18n.t('premium.yearly')}
+                                    </ThemedText>
+                                    <ThemedText style={[styles.planPrice, { color: primaryColor }]}>
+                                        {formatPrice(yearlyPkg)}{getSubscriptionPeriod(yearlyPkg)}
+                                    </ThemedText>
+                                </View>
+                                <View style={[
+                                    styles.radioButton,
+                                    {
+                                        borderColor: selectedPlan === 'yearly' ? primaryColor : borderColor,
+                                        backgroundColor: selectedPlan === 'yearly' ? primaryColor : 'transparent',
+                                    },
+                                ]}>
+                                    {selectedPlan === 'yearly' && (
+                                        <IconSymbol name="checkmark" size={scale(14)} color="#fff" />
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Monthly Plan */}
+                        {monthlyPkg && (
+                            <TouchableOpacity
+                                style={[
+                                    styles.planOption,
+                                    {
+                                        borderColor: selectedPlan === 'monthly' ? primaryColor : borderColor,
+                                        backgroundColor: selectedPlan === 'monthly' ? primaryColor + '10' : 'transparent',
+                                    },
+                                ]}
+                                onPress={() => setSelectedPlan('monthly')}
+                                disabled={purchaseLoading}
+                            >
+                                <View style={styles.planInfo}>
+                                    <ThemedText style={[styles.planName]}>
+                                        {i18n.t('premium.monthly')}
+                                    </ThemedText>
+                                    <ThemedText style={[styles.planPrice, { color: primaryColor }]}>
+                                        {formatPrice(monthlyPkg)}{getSubscriptionPeriod(monthlyPkg)}
+                                    </ThemedText>
+                                </View>
+                                <View style={[
+                                    styles.radioButton,
+                                    {
+                                        borderColor: selectedPlan === 'monthly' ? primaryColor : borderColor,
+                                        backgroundColor: selectedPlan === 'monthly' ? primaryColor : 'transparent',
+                                    },
+                                ]}>
+                                    {selectedPlan === 'monthly' && (
+                                        <IconSymbol name="checkmark" size={scale(14)} color="#fff" />
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Lifetime Plan */}
+                        {lifetimePkg && (
+                            <TouchableOpacity
+                                style={[
+                                    styles.planOption,
+                                    {
+                                        borderColor: selectedPlan === 'lifetime' ? primaryColor : borderColor,
+                                        backgroundColor: selectedPlan === 'lifetime' ? primaryColor + '10' : 'transparent',
+                                    },
+                                ]}
+                                onPress={() => setSelectedPlan('lifetime')}
+                                disabled={purchaseLoading}
+                            >
+                                <View style={[styles.lifetimeBadge, { backgroundColor: '#FFD700' }]}>
+                                    <ThemedText style={styles.lifetimeText}>{i18n.t('premium.bestDeal')}</ThemedText>
+                                </View>
+                                <View style={styles.planInfo}>
+                                    <ThemedText style={[styles.planName]}>
+                                        {i18n.t('premium.lifetime')}
+                                    </ThemedText>
+                                    <ThemedText style={[styles.planPrice, { color: primaryColor }]}>
+                                        {formatPrice(lifetimePkg)}{getSubscriptionPeriod(lifetimePkg)}
+                                    </ThemedText>
+                                </View>
+                                <View style={[
+                                    styles.radioButton,
+                                    {
+                                        borderColor: selectedPlan === 'lifetime' ? primaryColor : borderColor,
+                                        backgroundColor: selectedPlan === 'lifetime' ? primaryColor : 'transparent',
+                                    },
+                                ]}>
+                                    {selectedPlan === 'lifetime' && (
+                                        <IconSymbol name="checkmark" size={scale(14)} color="#fff" />
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                ) : (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={primaryColor} />
+                        <ThemedText style={[styles.loadingText, { color: secondaryText }]}>
+                            {i18n.t('premium.loadingProducts')}
+                        </ThemedText>
+                    </View>
+                )}
+
+                {/* Buttons Container aligned to bottom */}
+                <View style={styles.bottomContainer}>
+                    {/* Subscribe Button */}
                     <TouchableOpacity
                         style={[
-                            styles.purchaseButton,
-                            { backgroundColor: infoColor },
-                            (loading || isPro) && { opacity: 0.6 },
+                            styles.subscribeButton,
+                            {
+                                backgroundColor: primaryColor,
+                                opacity: purchaseLoading || !selectedPackage ? 0.7 : 1,
+                            },
                         ]}
-                        onPress={handlePurchase}
-                        disabled={loading || isPro}
-                        activeOpacity={0.9}
+                        onPress={handleSubscribe}
+                        disabled={purchaseLoading || !selectedPackage}
                     >
-                        {loading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                        {purchaseLoading ? (
+                            <ActivityIndicator color="#fff" />
                         ) : (
-                            <ThemedText style={styles.purchaseButtonText}>
-                                {isPro ? i18n.t('alreadyPurchased') : i18n.t('subscribeNow')}
+                            <ThemedText style={styles.subscribeText}>
+                                {i18n.t('premium.subscribe')}
                             </ThemedText>
                         )}
                     </TouchableOpacity>
-                </Animated.View>
 
-                <TouchableOpacity
-                    onPress={handleRestore}
-                    style={styles.restoreButton}
-                    disabled={loading}
-                    activeOpacity={0.7}
-                >
-                    <ThemedText style={[styles.restoreText, { color: secondaryText }]}>
-                        {i18n.t('restorePurchases')}
+                    {/* Restore Button */}
+                    <TouchableOpacity
+                        style={styles.restoreButton}
+                        onPress={handleRestorePurchases}
+                        disabled={purchaseLoading}
+                    >
+                        <ThemedText style={[styles.restoreText, { color: primaryColor }]}>
+                            {i18n.t('premium.restore')}
+                        </ThemedText>
+                    </TouchableOpacity>
+
+                    {/* Terms */}
+                    <ThemedText style={[styles.terms, { color: secondaryText }]}>
+                        {i18n.t('premium.terms')}
                     </ThemedText>
-                </TouchableOpacity>
+                </View>
 
-                <ThemedText style={[styles.termsText, { color: secondaryText, opacity: 0.6 }]}>
-                    {i18n.t('subscriptionTerms')}
-                </ThemedText>
-            </Animated.View>
+            </View>
         </ThemedView>
     );
 }
@@ -324,128 +395,167 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    content: {
+        flex: 1,
+        paddingHorizontal: scale(24),
+    },
     navBar: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
+        paddingHorizontal: scale(20),
+        paddingVertical: scale(12),
+        // zIndex: 10,
     },
     closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: scale(36),
+        height: scale(36),
+        borderRadius: scale(18),
+        alignItems: 'center',
         justifyContent: 'center',
+    },
+    iconContainer: {
+        width: scale(80),
+        height: scale(80),
+        borderRadius: scale(40),
         alignItems: 'center',
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: 20,
-        gap: 20,
-    },
-    heroSection: {
-        alignItems: 'center',
-        paddingTop: 16,
-        gap: 8,
-    },
-    iconWrapper: {
-        width: 88,
-        height: 88,
-        borderRadius: 44,
         justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 4,
+        alignSelf: 'center',
+        marginBottom: scale(16),
+        marginTop: scale(10), // Added some top spacing
     },
     title: {
-        fontSize: 32,
+        fontSize: scale(24),
         fontWeight: '700',
-        letterSpacing: -0.5,
         textAlign: 'center',
+        marginBottom: scale(8),
     },
     subtitle: {
-        fontSize: 17,
+        fontSize: scale(14),
         textAlign: 'center',
-        lineHeight: 24,
+        marginBottom: scale(20),
+        lineHeight: scale(20),
     },
-    featuresCard: {
-        borderRadius: 14,
-        overflow: 'hidden',
+    features: {
+        marginBottom: scale(20),
     },
     featureRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 14,
-        gap: 12,
-    },
-    featureIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
+        marginBottom: scale(10),
+        gap: scale(12),
     },
     featureText: {
-        fontSize: 16,
+        fontSize: scale(15),
         flex: 1,
     },
-    pricingCard: {
+    planSelection: {
+        marginBottom: scale(16),
+        gap: scale(10),
+    },
+    planOption: {
+        flexDirection: 'row',
         alignItems: 'center',
-        padding: 24,
-        paddingVertical: 20,
-        borderRadius: 14,
-        borderWidth: 1.5,
+        padding: scale(14),
+        borderRadius: scale(12),
+        borderWidth: 2,
     },
-    priceRow: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
+    planInfo: {
+        flex: 1,
     },
-    currency: {
-        fontSize: 24,
+    planName: {
+        fontSize: scale(16),
         fontWeight: '600',
-        marginRight: 2,
     },
-    price: {
-        fontSize: 56,
-        fontWeight: '700',
-        letterSpacing: -2,
+    planPrice: {
+        fontSize: scale(14),
+        marginTop: scale(2),
     },
-    period: {
-        fontSize: 18,
-        fontWeight: '500',
-        marginLeft: 4,
-    },
-    priceSubtext: {
-        fontSize: 13,
-        marginTop: 4,
-    },
-    bottomActions: {
-        padding: 20,
-        gap: 12,
-    },
-    purchaseButton: {
-        flexDirection: 'row',
+    radioButton: {
+        width: scale(24),
+        height: scale(24),
+        borderRadius: scale(12),
+        borderWidth: 2,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        height: 56,
-        borderRadius: 14,
     },
-    purchaseButtonText: {
-        fontSize: 17,
+    savingsBadge: {
+        position: 'absolute',
+        top: scale(-10),
+        right: scale(12),
+        paddingHorizontal: scale(8),
+        paddingVertical: scale(4),
+        borderRadius: scale(8),
+    },
+    savingsText: {
+        color: '#fff',
+        fontSize: scale(11),
+        fontWeight: '700',
+    },
+    lifetimeBadge: {
+        position: 'absolute',
+        top: scale(-10),
+        right: scale(12),
+        paddingHorizontal: scale(8),
+        paddingVertical: scale(4),
+        borderRadius: scale(8),
+    },
+    lifetimeText: {
+        color: '#000',
+        fontSize: scale(11),
+        fontWeight: '700',
+    },
+    loadingContainer: {
+        alignItems: 'center',
+        padding: scale(20),
+    },
+    loadingText: {
+        marginTop: scale(10),
+        fontSize: scale(14),
+    },
+    bottomContainer: {
+        marginTop: 'auto',
+        marginBottom: scale(10),
+    },
+    subscribeButton: {
+        paddingVertical: scale(16),
+        borderRadius: scale(14),
+        alignItems: 'center',
+        marginBottom: scale(12),
+    },
+    subscribeText: {
+        color: '#fff',
+        fontSize: scale(18),
         fontWeight: '600',
-        color: '#FFFFFF',
-        letterSpacing: -0.2,
     },
     restoreButton: {
+        padding: scale(12),
         alignItems: 'center',
-        paddingVertical: 8,
     },
     restoreText: {
-        fontSize: 15,
+        fontSize: scale(14),
         fontWeight: '500',
     },
-    termsText: {
-        fontSize: 12,
+    terms: {
+        fontSize: scale(11),
         textAlign: 'center',
-        lineHeight: 16,
+        lineHeight: scale(16),
     },
+    manageButton: {
+        padding: scale(14),
+        borderRadius: scale(12),
+        borderWidth: 1,
+        alignItems: 'center',
+        marginBottom: scale(12),
+        width: '100%',
+    },
+    manageButtonText: {
+        fontSize: scale(16),
+        fontWeight: '500',
+    },
+    alreadyPremiumContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: scale(24),
+    }
 });

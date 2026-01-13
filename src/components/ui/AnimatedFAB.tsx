@@ -6,9 +6,10 @@ import { Haptic } from '@/utils/haptics';
 import { shadows } from '@/utils/shadow';
 import { useEffect, useRef } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Tab bar height + safe area
-const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
+// Fallback tab bar height
+const FALLBACK_TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
 const AD_BANNER_HEIGHT = 60; // Approximate banner ad height
 
 interface AnimatedFABProps {
@@ -34,9 +35,11 @@ export function AnimatedFAB({
 }: AnimatedFABProps) {
     const interactiveColor = useThemeColor({}, 'interactive');
     const { shouldShowBannerAd } = usePro();
+    const insets = useSafeAreaInsets();
 
-    // Calculate bottom offset based on tab bar and ad banner
-    const bottomOffset = TAB_BAR_HEIGHT + (shouldShowBannerAd ? AD_BANNER_HEIGHT : 0) + 16;
+    // Calculate bottom offset based on safe area + fixed amount to ensure visibility
+    // Using fixed 10px base offset to sit just above the tab bar area
+    const bottomOffset = insets.bottom + 10 + (shouldShowBannerAd ? AD_BANNER_HEIGHT : 0);
 
     const entranceValue = useRef(new Animated.Value(0)).current;
     const scaleValue = useRef(new Animated.Value(1)).current;
