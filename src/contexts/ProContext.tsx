@@ -32,6 +32,8 @@ interface ProContextType {
     // RevenueCat offerings
     offerings: PurchasesOffering | null;
     loadOfferings: () => Promise<void>;
+    // Error state for offerings
+    offeringsError: string | null;
 }
 
 const ProContext = createContext<ProContextType | undefined>(undefined);
@@ -58,6 +60,7 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [lastInterstitialTime, setLastInterstitialTime] = useState(0);
     const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
+    const [offeringsError, setOfferingsError] = useState<string | null>(null);
 
     // Initialize RevenueCat and load pro status on mount
     useEffect(() => {
@@ -78,6 +81,20 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
                 // Initialize RevenueCat (only on native platforms)
                 if (Platform.OS !== 'web') {
                     await initializePurchases();
+
+                    // Load offerings immediately after initialization (like BMI Calculator)
+                    try {
+                        const currentOfferings = await getOfferings();
+                        setOfferings(currentOfferings);
+                        if (!currentOfferings) {
+                            setOfferingsError('No products available. Please check your RevenueCat configuration.');
+                        } else {
+                            setOfferingsError(null);
+                        }
+                    } catch (offeringsErr) {
+                        console.error('[Purchases] Failed to load offerings during init:', offeringsErr);
+                        setOfferingsError('Failed to load products. Please try again.');
+                    }
 
                     // Check actual premium status from RevenueCat
                     const hasPremium = await checkPremiumStatus();
@@ -104,11 +121,16 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     const loadOfferings = useCallback(async () => {
         if (Platform.OS === 'web') return;
 
+        setOfferingsError(null); // Clear previous error
         try {
             const currentOfferings = await getOfferings();
             setOfferings(currentOfferings);
+            if (!currentOfferings) {
+                setOfferingsError('No products available. Please try again later.');
+            }
         } catch (error) {
             console.error('Failed to load offerings:', error);
+            setOfferingsError('Failed to load products. Please try again.');
         }
     }, []);
 
@@ -225,6 +247,7 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         toggleProStatus,
         offerings,
         loadOfferings,
+        offeringsError,
     }), [
         isPro,
         isLoading,
@@ -236,6 +259,7 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         toggleProStatus,
         offerings,
         loadOfferings,
+        offeringsError,
     ]);
 
     return (

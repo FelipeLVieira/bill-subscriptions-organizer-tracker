@@ -28,6 +28,8 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('monthly');
   const primaryColor = useThemeColor({}, 'primary');
+  const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+  const buttonTextColor = useThemeColor({}, 'buttonText');
   const statusOverdue = useThemeColor({}, 'statusOverdue');
   const statusPaid = useThemeColor({}, 'statusPaid');
   const dangerColor = useThemeColor({}, 'danger');
@@ -181,13 +183,13 @@ export default function HomeScreen() {
 
         {/* Add Subscription Button - inline, iOS style */}
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: buttonPrimaryColor }]}
           onPress={() => router.push('/modal')}
           accessibilityRole="button"
           accessibilityLabel={i18n.t('addSubscription')}
         >
-          <IconSymbol name="plus" size={20} color="#FFFFFF" weight="semibold" />
-          <ThemedText style={styles.addButtonText}>{i18n.t('addSubscription')}</ThemedText>
+          <IconSymbol name="plus" size={20} color={buttonTextColor} weight="semibold" />
+          <ThemedText style={[styles.addButtonText, { color: buttonTextColor }]}>{i18n.t('addSubscription')}</ThemedText>
         </TouchableOpacity>
 
         <CopilotStep text={i18n.t('copilotDashboardPeriod')} order={1} name="period">
@@ -368,12 +370,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF', // Standard iOS Blue
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
     marginBottom: 24,
-    marginTop: 8, // Little space from top or Go Pro
+    marginTop: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -381,7 +382,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   addButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

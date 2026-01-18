@@ -1,9 +1,17 @@
-import { shadows } from '@/utils/shadow';
 import DateTimePicker from '@/components/ui/DateTimePicker';
-import { Picker } from '@/components/ui/Picker';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  ActionSheetIOS,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Attachment, AttachmentPicker } from '@/components/AttachmentPicker';
@@ -11,8 +19,6 @@ import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
-import { TooltipLabel } from '@/components/Tooltip';
-import { Button } from '@/components/ui/Button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -27,13 +33,30 @@ import { Currency } from '@/constants/Currencies';
 import { getSubscriptionCategories } from '@/constants/categories';
 import i18n from '@/i18n';
 
-const CUSTOM_CATEGORY_VALUE = '__custom__';
+const BILLING_INTERVALS = [
+  { label: 'monthly', value: 'monthly', icon: 'calendar' as const },
+  { label: 'yearly', value: 'yearly', icon: 'calendar.badge.clock' as const },
+  { label: 'weekly', value: 'weekly', icon: 'calendar.day.timeline.left' as const },
+  { label: 'daily', value: 'daily', icon: 'sun.max' as const },
+  { label: 'unique', value: 'unique', icon: 'star' as const },
+];
+
+// Category icons mapping
+const CATEGORY_ICONS: { [key: string]: string } = {
+  Entertainment: 'play.tv',
+  Utilities: 'bolt.fill',
+  Housing: 'house.fill',
+  Insurance: 'shield.fill',
+  'Personal Care': 'heart.fill',
+  Software: 'app.fill',
+  Other: 'ellipsis.circle.fill',
+};
 
 export default function AddSubscriptionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useTheme();
-  useLanguage(); // Triggers re-render when locale changes
+  useLanguage();
   const { defaultCurrency, getCurrencyByCode } = useCurrency();
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -47,11 +70,10 @@ export default function AddSubscriptionScreen() {
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
-  // Form validation state
   const [touched, setTouched] = useState({ name: false, amount: false });
 
-  // Validation errors
   const errors = useMemo(() => {
     const cleanedAmount = amount.replace(/[^0-9.]/g, '');
     const parsedAmount = parseFloat(cleanedAmount);
@@ -66,18 +88,61 @@ export default function AddSubscriptionScreen() {
   const categories = getSubscriptionCategories();
   const currentCurrency = getCurrencyByCode(selectedCurrency);
   const { showSuccess, showError } = useToast();
-  const textColor = useThemeColor({}, 'text');
-  const cardColor = useThemeColor({}, 'card');
-  const primaryColor = useThemeColor({}, 'primary');
-  const pickerTextColor = useThemeColor({}, 'pickerText');
-  const pickerBgColor = useThemeColor({}, 'pickerBg');
-  const borderColor = useThemeColor({}, 'border');
 
-  const handleCategoryChange = (value: string) => {
-    if (value === CUSTOM_CATEGORY_VALUE) {
-      setShowCustomCategoryModal(true);
-    } else {
-      setCategory(value);
+  // Theme colors
+  const textColor = useThemeColor({}, 'text');
+  const textSecondaryColor = useThemeColor({}, 'textSecondary');
+  const cardColor = useThemeColor({}, 'card');
+  const backgroundColor = useThemeColor({}, 'background');
+  const primaryColor = useThemeColor({}, 'primary');
+  const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+  const buttonTextColor = useThemeColor({}, 'buttonText');
+  const borderColor = useThemeColor({}, 'border');
+  const inputBgColor = useThemeColor({}, 'inputBg');
+  const successColor = useThemeColor({}, 'success');
+
+  const handleClose = () => {
+    router.dismiss();
+  };
+
+  const showIntervalPicker = () => {
+    if (Platform.OS === 'ios') {
+      const options = BILLING_INTERVALS.map(i => i18n.t(i.label));
+      options.push(i18n.t('cancel'));
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: options.length - 1,
+          title: i18n.t('billingInterval'),
+        },
+        (buttonIndex) => {
+          if (buttonIndex < BILLING_INTERVALS.length) {
+            setInterval(BILLING_INTERVALS[buttonIndex].value);
+          }
+        }
+      );
+    }
+  };
+
+  const showCategoryPicker = () => {
+    if (Platform.OS === 'ios') {
+      const options = categories.map(c => c.label);
+      options.push(`+ ${i18n.t('customCategory')}`);
+      options.push(i18n.t('cancel'));
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: options.length - 1,
+          title: i18n.t('category'),
+        },
+        (buttonIndex) => {
+          if (buttonIndex < categories.length) {
+            setCategory(categories[buttonIndex].value);
+          } else if (buttonIndex === categories.length) {
+            setShowCustomCategoryModal(true);
+          }
+        }
+      );
     }
   };
 
@@ -93,10 +158,8 @@ export default function AddSubscriptionScreen() {
   };
 
   const handleSubmit = async () => {
-    // Mark all fields as touched to show validation errors
     setTouched({ name: true, amount: true });
 
-    // Check for validation errors
     if (errors.name || errors.amount) {
       await Haptic.error();
       return;
@@ -107,12 +170,9 @@ export default function AddSubscriptionScreen() {
 
     setLoading(true);
     try {
-
-      // Create default reminder schema (1 day before at midnight)
       const defaultReminder = createDefaultReminder();
       let reminderSchema = { reminders: [defaultReminder] };
 
-      // Schedule the reminder
       reminderSchema = await scheduleAllReminders(
         name,
         parsedAmount,
@@ -122,7 +182,6 @@ export default function AddSubscriptionScreen() {
         i18n.t.bind(i18n)
       );
 
-      // Serialize attachments to JSON
       const attachmentsJson = attachments.length > 0
         ? JSON.stringify(attachments)
         : undefined;
@@ -152,130 +211,249 @@ export default function AddSubscriptionScreen() {
     }
   };
 
-  const allCategories = [
-    ...categories,
-    { label: `+ ${i18n.t('customCategory')}`, value: CUSTOM_CATEGORY_VALUE }
-  ];
+  const getCategoryLabel = () => {
+    const found = categories.find(c => c.value === category);
+    return found ? found.label : category;
+  };
+
+  const getCategoryIcon = () => {
+    return CATEGORY_ICONS[category] || 'tag.fill';
+  };
+
+  const getIntervalLabel = () => {
+    return i18n.t(interval);
+  };
+
+  const getIntervalIcon = () => {
+    const found = BILLING_INTERVALS.find(i => i.value === interval);
+    return found?.icon || 'calendar';
+  };
 
   return (
     <ThemedView style={styles.container}>
+      {/* Modern Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 12, backgroundColor }]}>
+        <TouchableOpacity
+          onPress={handleClose}
+          style={[styles.headerButton, { backgroundColor: cardColor }]}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <IconSymbol name="xmark" size={16} color={textColor} weight="semibold" />
+        </TouchableOpacity>
+
+        <View style={styles.headerTitleContainer}>
+          <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
+            {i18n.t('addSubscription')}
+          </ThemedText>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={loading}
+          style={[
+            styles.headerSaveButton,
+            { backgroundColor: buttonPrimaryColor, opacity: loading ? 0.6 : 1 }
+          ]}
+        >
+          <IconSymbol name="checkmark" size={14} color={buttonTextColor} weight="semibold" />
+          <ThemedText style={[styles.headerSaveText, { color: buttonTextColor }]}>
+            {loading ? '...' : i18n.t('save')}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        keyboardVerticalOffset={0}
       >
-        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 20 }]} keyboardShouldPersistTaps="handled">
-          <ThemedText type="title" style={styles.title}>{i18n.t('addSubscription')}</ThemedText>
-
-          <TooltipLabel label={i18n.t('name')} hint={i18n.t('hintServiceName')} />
-          <Input
-            placeholder={i18n.t('serviceNamePlaceholder')}
-            value={name}
-            onChangeText={setName}
-            onBlur={() => setTouched(t => ({ ...t, name: true }))}
-            error={errors.name}
-            touched={touched.name}
-            style={styles.input}
-          />
-
-          <TooltipLabel label={`${i18n.t('amount')} (${selectedCurrency})`} hint={i18n.t('hintAmount')} />
-          <View style={styles.amountInputContainer}>
-            <TouchableOpacity
-              style={[styles.currencyButton, { backgroundColor: primaryColor + '15', borderColor: primaryColor + '40' }]}
-              onPress={() => setShowCurrencyPicker(true)}
-            >
-              <ThemedText style={[styles.currencyPrefix, { color: primaryColor }]}>
-                {currentCurrency?.symbol || '$'}
-              </ThemedText>
-              <IconSymbol name="chevron.down" size={12} color={primaryColor} />
-            </TouchableOpacity>
-            <Input
-              placeholder="0.00"
-              value={amount}
-              onChangeText={setAmount}
-              onBlur={() => setTouched(t => ({ ...t, amount: true }))}
-              error={errors.amount}
-              touched={touched.amount}
-              keyboardType="decimal-pad"
-              style={[styles.input, styles.amountInput]}
-            />
+        <ScrollView
+          contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 30 }]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Hero Amount Section */}
+          <View style={[styles.amountHero, { backgroundColor: cardColor }]}>
+            <ThemedText style={[styles.amountLabel, { color: textSecondaryColor }]}>
+              {i18n.t('amount')}
+            </ThemedText>
+            <View style={styles.amountInputContainer}>
+              <TouchableOpacity
+                style={styles.currencySelector}
+                onPress={() => setShowCurrencyPicker(true)}
+              >
+                <ThemedText style={[styles.currencySymbol, { color: buttonPrimaryColor }]}>
+                  {currentCurrency?.symbol || '$'}
+                </ThemedText>
+                <IconSymbol name="chevron.down" size={12} color={buttonPrimaryColor} />
+              </TouchableOpacity>
+              <Input
+                placeholder="0.00"
+                value={amount}
+                onChangeText={setAmount}
+                onBlur={() => setTouched(t => ({ ...t, amount: true }))}
+                keyboardType="decimal-pad"
+                style={styles.heroAmountInput}
+                inputStyle={styles.heroAmountInputText}
+                showBorder={false}
+              />
+            </View>
+            {touched.amount && errors.amount && (
+              <ThemedText style={styles.errorText}>{errors.amount}</ThemedText>
+            )}
           </View>
 
-          <View style={[styles.pickerContainer, { backgroundColor: pickerBgColor, borderRadius: 8, borderWidth: 1, borderColor: borderColor }]}>
-            <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
-              <TooltipLabel label={i18n.t('billingInterval')} hint={i18n.t('hintBillingInterval')} />
+          {/* Name Input Card */}
+          <View style={[styles.card, { backgroundColor: cardColor }]}>
+            <View style={styles.cardRow}>
+              <View style={[styles.iconContainer, { backgroundColor: buttonPrimaryColor + '15' }]}>
+                <IconSymbol name="tag.fill" size={18} color={buttonPrimaryColor} />
+              </View>
+              <View style={styles.cardInputContainer}>
+                <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('name')}
+                </ThemedText>
+                <Input
+                  placeholder={i18n.t('serviceNamePlaceholder')}
+                  value={name}
+                  onChangeText={setName}
+                  onBlur={() => setTouched(t => ({ ...t, name: true }))}
+                  style={styles.cardInput}
+                  inputStyle={styles.cardInputText}
+                  showBorder={false}
+                />
+              </View>
             </View>
-            <Picker
-              selectedValue={interval}
-              onValueChange={(itemValue) => setInterval(itemValue)}
-              style={{ color: pickerTextColor }}
-              dropdownIconColor={pickerTextColor}
-              itemStyle={{ color: pickerTextColor }}
-            >
-              <Picker.Item label={i18n.t('monthly')} value="monthly" color={pickerTextColor} />
-              <Picker.Item label={i18n.t('yearly')} value="yearly" color={pickerTextColor} />
-              <Picker.Item label={i18n.t('weekly')} value="weekly" color={pickerTextColor} />
-              <Picker.Item label={i18n.t('daily')} value="daily" color={pickerTextColor} />
-              <Picker.Item label={i18n.t('unique')} value="unique" color={pickerTextColor} />
-            </Picker>
+            {touched.name && errors.name && (
+              <ThemedText style={[styles.errorText, { marginLeft: 52 }]}>{errors.name}</ThemedText>
+            )}
           </View>
 
-          <View style={[styles.pickerContainer, { backgroundColor: pickerBgColor, borderRadius: 8, borderWidth: 1, borderColor: borderColor }]}>
-            <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
-              <TooltipLabel label={i18n.t('category')} hint={i18n.t('hintCategory')} />
+          {/* Billing & Category Card */}
+          <View style={[styles.card, { backgroundColor: cardColor }]}>
+            {/* Billing Interval Row */}
+            <Pressable style={styles.cardRow} onPress={showIntervalPicker}>
+              <View style={[styles.iconContainer, { backgroundColor: successColor + '15' }]}>
+                <IconSymbol name={getIntervalIcon()} size={18} color={successColor} />
+              </View>
+              <View style={styles.cardContent}>
+                <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('billingInterval')}
+                </ThemedText>
+                <ThemedText style={styles.cardValue}>{getIntervalLabel()}</ThemedText>
+              </View>
+              <IconSymbol name="chevron.right" size={14} color={textSecondaryColor} />
+            </Pressable>
+
+            <View style={[styles.divider, { backgroundColor: borderColor }]} />
+
+            {/* Category Row */}
+            <Pressable style={styles.cardRow} onPress={showCategoryPicker}>
+              <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '15' }]}>
+                <IconSymbol name={getCategoryIcon()} size={18} color="#FF9500" />
+              </View>
+              <View style={styles.cardContent}>
+                <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('category')}
+                </ThemedText>
+                <ThemedText style={styles.cardValue} numberOfLines={1}>
+                  {getCategoryLabel()}
+                </ThemedText>
+              </View>
+              <IconSymbol name="chevron.right" size={14} color={textSecondaryColor} />
+            </Pressable>
+          </View>
+
+          {/* Date Card */}
+          <View style={[styles.card, { backgroundColor: cardColor }]}>
+            <View style={styles.cardRow}>
+              <View style={[styles.iconContainer, { backgroundColor: '#FF3B30' + '15' }]}>
+                <IconSymbol name="calendar.badge.clock" size={18} color="#FF3B30" />
+              </View>
+              <View style={styles.cardContent}>
+                <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('nextBilling')}
+                </ThemedText>
+              </View>
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  const currentDate = selectedDate || date;
+                  setDate(currentDate);
+                }}
+                themeVariant={colorScheme}
+                accentColor={buttonPrimaryColor}
+              />
             </View>
-            <Picker
-              selectedValue={allCategories.find(c => c.value === category) ? category : CUSTOM_CATEGORY_VALUE}
-              onValueChange={handleCategoryChange}
-              style={{ color: pickerTextColor }}
-              dropdownIconColor={pickerTextColor}
-              itemStyle={{ color: pickerTextColor }}
-            >
-              {allCategories.map((cat) => (
-                <Picker.Item key={cat.value} label={cat.label} value={cat.value} color={pickerTextColor} />
-              ))}
-            </Picker>
-            {!allCategories.find(c => c.value === category && c.value !== CUSTOM_CATEGORY_VALUE) && category && (
-              <View style={[styles.customCategoryBadge, { backgroundColor: primaryColor + '20' }]}>
-                <ThemedText style={{ fontSize: 12, color: primaryColor }}>{category}</ThemedText>
+          </View>
+
+          {/* Notes Card */}
+          <View style={[styles.card, { backgroundColor: cardColor }]}>
+            {!showNotes ? (
+              <Pressable style={styles.cardRow} onPress={() => setShowNotes(true)}>
+                <View style={[styles.iconContainer, { backgroundColor: '#5856D6' + '15' }]}>
+                  <IconSymbol name="note.text" size={18} color="#5856D6" />
+                </View>
+                <View style={styles.cardContent}>
+                  <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
+                    {i18n.t('notes')}
+                  </ThemedText>
+                  <ThemedText style={[styles.cardValue, { color: textSecondaryColor, fontStyle: 'italic' }]}>
+                    {i18n.t('notesPlaceholder')}
+                  </ThemedText>
+                </View>
+                <IconSymbol name="plus.circle.fill" size={22} color={buttonPrimaryColor} />
+              </Pressable>
+            ) : (
+              <View style={styles.notesContainer}>
+                <View style={styles.notesHeader}>
+                  <View style={styles.notesHeaderLeft}>
+                    <View style={[styles.iconContainer, { backgroundColor: '#5856D6' + '15' }]}>
+                      <IconSymbol name="note.text" size={18} color="#5856D6" />
+                    </View>
+                    <ThemedText style={styles.notesTitle}>{i18n.t('notes')}</ThemedText>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => { setShowNotes(false); setNotes(''); }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <IconSymbol name="xmark.circle.fill" size={22} color={textSecondaryColor} />
+                  </TouchableOpacity>
+                </View>
+                <Input
+                  placeholder={i18n.t('notesPlaceholder')}
+                  value={notes}
+                  onChangeText={setNotes}
+                  multiline
+                  style={styles.notesInput}
+                  inputStyle={styles.notesInputText}
+                  showBorder={false}
+                />
               </View>
             )}
           </View>
 
-          <View style={styles.dateContainer}>
-            <TooltipLabel label={i18n.t('nextBilling')} hint={i18n.t('hintNextBilling')} />
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                const currentDate = selectedDate || date;
-                setDate(currentDate);
-              }}
-              themeVariant={colorScheme}
-              accentColor={primaryColor}
-            />
-          </View>
-
-          <TooltipLabel label={i18n.t('notes')} hint={i18n.t('hintNotes')} />
-          <Input
-            placeholder={i18n.t('notesPlaceholder')}
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            style={[styles.input, { height: 80 }]}
-          />
-
-          {/* Attachments Section */}
+          {/* Attachments */}
           <AttachmentPicker
             attachments={attachments}
             onAttachmentsChange={setAttachments}
             maxAttachments={5}
           />
 
-          <View style={{ marginBottom: 40 }}>
-            <Button title={loading ? i18n.t('saving') : i18n.t('save')} onPress={handleSubmit} disabled={loading} style={styles.button} />
-          </View>
+          {/* Save Button */}
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: buttonPrimaryColor, opacity: loading ? 0.6 : 1 }]}
+            onPress={handleSubmit}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <IconSymbol name="checkmark.circle.fill" size={22} color={buttonTextColor} />
+            <ThemedText style={[styles.saveButtonText, { color: buttonTextColor }]}>
+              {loading ? i18n.t('saving') : i18n.t('save')}
+            </ThemedText>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -291,7 +469,7 @@ export default function AddSubscriptionScreen() {
             <View style={styles.modalHeader}>
               <ThemedText type="subtitle">{i18n.t('customCategory')}</ThemedText>
               <TouchableOpacity onPress={() => setShowCustomCategoryModal(false)}>
-                <IconSymbol name="xmark.circle.fill" size={24} color={textColor} style={{ opacity: 0.5 }} />
+                <IconSymbol name="xmark.circle.fill" size={24} color={textSecondaryColor} />
               </TouchableOpacity>
             </View>
             <Input
@@ -301,11 +479,18 @@ export default function AddSubscriptionScreen() {
               style={styles.modalInput}
               autoFocus
             />
-            <Button
-              title={i18n.t('save')}
+            <TouchableOpacity
+              style={[
+                styles.modalSaveButton,
+                { backgroundColor: buttonPrimaryColor, opacity: customCategory.trim() ? 1 : 0.5 }
+              ]}
               onPress={handleCustomCategorySubmit}
               disabled={!customCategory.trim()}
-            />
+            >
+              <ThemedText style={[styles.modalSaveButtonText, { color: buttonTextColor }]}>
+                {i18n.t('save')}
+              </ThemedText>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -325,67 +510,197 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  headerButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 17,
+    letterSpacing: -0.4,
+  },
+  headerSaveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  headerSaveText: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
   scroll: {
-    padding: 20,
+    padding: 16,
     gap: 12,
   },
-  title: {
-    marginBottom: 16,
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 0.35,
+  // Hero Amount Section
+  amountHero: {
+    padding: 24,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  input: {
+  amountLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: 8,
   },
   amountInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
-  currencyButton: {
+  currencySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginRight: 10,
     gap: 4,
+    marginRight: 4,
   },
-  currencyPrefix: {
-    fontSize: 17,
-    fontWeight: '600',
+  currencySymbol: {
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: -1,
   },
-  amountInput: {
-    flex: 1,
-    marginBottom: 0,
+  heroAmountInput: {
+    flex: 0,
+    width: 'auto',
+    minWidth: 100,
+    maxWidth: 200,
+    backgroundColor: 'transparent',
+    height: 60,
   },
-  pickerContainer: {
-    marginVertical: 8,
+  heroAmountInputText: {
+    fontSize: 48,
+    fontWeight: '700',
+    letterSpacing: -2,
+    textAlign: 'left',
+    padding: 0,
+    height: 60,
+  },
+  // Card Styles
+  card: {
+    borderRadius: 16,
     overflow: 'hidden',
   },
-  dateContainer: {
-    marginVertical: 12,
+  cardRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 14,
+    gap: 12,
   },
-  button: {
-    marginTop: 24,
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  customCategoryBadge: {
+  cardInputContainer: {
+    flex: 1,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 16,
+    fontWeight: '500',
+    letterSpacing: -0.3,
+  },
+  cardInput: {
+    backgroundColor: 'transparent',
+    padding: 0,
+    margin: 0,
+  },
+  cardInputText: {
+    fontSize: 16,
+    fontWeight: '500',
+    letterSpacing: -0.3,
+    padding: 0,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 62,
+  },
+  // Notes
+  notesContainer: {
+    padding: 14,
+  },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  notesHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  notesTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  notesInput: {
+    backgroundColor: 'transparent',
+    minHeight: 80,
+  },
+  notesInputText: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  // Error
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+    marginLeft: 14,
+  },
+  // Save Button
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 14,
+    gap: 8,
     marginTop: 8,
-    marginHorizontal: 12,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
   },
-  // iOS-style modal
+  saveButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    letterSpacing: -0.4,
+  },
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -394,9 +709,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     padding: 24,
-    borderRadius: 14,
+    borderRadius: 20,
     gap: 16,
-    ...shadows.modal,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -405,5 +719,14 @@ const styles = StyleSheet.create({
   },
   modalInput: {
     marginBottom: 0,
+  },
+  modalSaveButton: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

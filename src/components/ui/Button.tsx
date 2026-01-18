@@ -18,19 +18,21 @@ type Props = TouchableOpacityProps & {
  * - Rounded corners matching iOS HIG
  */
 export function Button({ title, type = 'primary', style, disabled, ...props }: Props) {
-    const primaryColor = useThemeColor({}, 'primary');
-    const interactiveColor = useThemeColor({}, 'interactive');
+    const textColor = useThemeColor({}, 'text');
+    const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+    const buttonTextColorTheme = useThemeColor({}, 'buttonText');
     const dangerColor = useThemeColor({}, 'danger');
     const cardColor = useThemeColor({}, 'card');
+    const borderColor = useThemeColor({}, 'border');
 
     const backgroundColor = type === 'danger'
         ? dangerColor
         : type === 'secondary'
             ? cardColor
-            : interactiveColor;
+            : buttonPrimaryColor;
 
-    const buttonTextColor = type === 'secondary' ? primaryColor : '#FFFFFF';
-    const secondaryBorderColor = `${primaryColor}4D`; // 30% opacity (4D in hex = 77/255 ≈ 30%)
+    const buttonTextColor = type === 'secondary' ? textColor : buttonTextColorTheme;
+    const secondaryBorderColor = borderColor;
 
     return (
         <TouchableOpacity

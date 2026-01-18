@@ -8,6 +8,8 @@ interface InputProps extends TextInputProps {
     error?: string;
     touched?: boolean;
     containerStyle?: any;
+    inputStyle?: any;
+    showBorder?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ interface InputProps extends TextInputProps {
  * - Proper typography sizing
  * - Rounded corners matching iOS HIG
  */
-export function Input({ style, multiline, error, touched, ...props }: InputProps) {
+export function Input({ style, multiline, error, touched, inputStyle, showBorder = true, ...props }: InputProps) {
     const colorScheme = useColorScheme();
     const color = useThemeColor({}, 'text');
     const placeholderColor = useThemeColor({}, 'textSecondary');
@@ -30,9 +32,9 @@ export function Input({ style, multiline, error, touched, ...props }: InputProps
     const hasError = touched && error;
 
     // iOS uses subtle gray backgrounds for inputs
-    const backgroundColor = colorScheme === 'dark'
-        ? 'rgba(118, 118, 128, 0.12)'
-        : 'rgba(118, 118, 128, 0.12)';
+    const backgroundColor = showBorder
+        ? (colorScheme === 'dark' ? 'rgba(118, 118, 128, 0.12)' : 'rgba(118, 118, 128, 0.12)')
+        : 'transparent';
 
     // Shake animation when error appears (native only - web doesn't support useNativeDriver well)
     useEffect(() => {
@@ -54,8 +56,10 @@ export function Input({ style, multiline, error, touched, ...props }: InputProps
                         styles.input,
                         { backgroundColor, color },
                         multiline && styles.multiline,
+                        !showBorder && styles.noBorder,
                         hasError && { borderWidth: 1, borderColor: dangerColor },
-                        style
+                        style,
+                        inputStyle,
                     ]}
                     placeholderTextColor={placeholderColor}
                     multiline={multiline}
@@ -85,6 +89,10 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         paddingBottom: 12,
         textAlignVertical: 'top',
+    },
+    noBorder: {
+        paddingHorizontal: 0,
+        borderRadius: 0,
     },
     errorText: {
         fontSize: 12,

@@ -23,6 +23,7 @@ export default function TabLayout() {
       dashboard: i18n.t('dashboard'),
       myBills: i18n.t('myBills'),
       history: i18n.t('history'),
+      calendar: i18n.t('calendar'),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- locale triggers i18n updates
     [locale]
@@ -66,6 +67,13 @@ export default function TabLayout() {
           options={{
             title: translations.history,
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="calendar"
+          options={{
+            title: translations.calendar,
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
           }}
         />
       </Tabs>

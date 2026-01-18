@@ -24,13 +24,13 @@ export interface ReminderSchema {
     reminders: Reminder[];
 }
 
-// Create default reminder (1 day before at midnight)
+// Create default reminder (1 day before at 9 AM - a practical time)
 export function createDefaultReminder(): Reminder {
     return {
         id: generateReminderId(),
         notificationId: null,
         daysBefore: 1,
-        hour: 0,
+        hour: 9,
         minute: 0,
         enabled: true,
     };
@@ -133,6 +133,28 @@ export async function cancelAllReminders(schema: ReminderSchema) {
     }
 }
 
+// Get due text based on days before
+function getDueText(daysBefore: number, t: (key: string) => string): string {
+    if (daysBefore === 0) {
+        return t('notificationDueToday');
+    } else if (daysBefore === 1) {
+        return t('notificationDueTomorrow');
+    } else {
+        return t('notificationDueIn').replace('{{days}}', daysBefore.toString());
+    }
+}
+
+// Format currency amount nicely
+function formatCurrencyAmount(amount: number, currency: string): string {
+    // Common currency symbols
+    const symbols: { [key: string]: string } = {
+        USD: '$', EUR: '€', GBP: '£', JPY: '¥', CNY: '¥',
+        BRL: 'R$', CAD: 'C$', AUD: 'A$', INR: '₹', KRW: '₩',
+    };
+    const symbol = symbols[currency] || currency;
+    return `${symbol}${amount.toFixed(2)}`;
+}
+
 // Schedule all reminders for a subscription
 export async function scheduleAllReminders(
     subscriptionName: string,
@@ -164,9 +186,16 @@ export async function scheduleAllReminders(
         // Schedule if in the future
         let notificationId: string | null = null;
         if (triggerDate > new Date()) {
+            // Create informative notification content
+            const dueText = getDueText(reminder.daysBefore, t);
+            const formattedAmount = formatCurrencyAmount(amount, currency);
+
+            const title = `💰 ${t('notificationTitle')}`;
+            const body = `${subscriptionName} (${formattedAmount}) - ${dueText}`;
+
             notificationId = await scheduleReminder(
-                `${t('billDue')}: ${subscriptionName}`,
-                `${t('paymentDueRef')}: ${currency} ${amount.toFixed(2)}`,
+                title,
+                body,
                 triggerDate
             );
         }
@@ -180,6 +209,14 @@ export async function scheduleAllReminders(
     return { reminders: updatedReminders };
 }
 
+// Format time in 12-hour format with AM/PM
+function formatTime12Hour(hour: number, minute: number): string {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    const minuteStr = minute.toString().padStart(2, '0');
+    return `${hour12}:${minuteStr} ${period}`;
+}
+
 // Calculate the display text for a reminder
 export function getReminderDisplayText(
     reminder: Reminder,
@@ -188,10 +225,10 @@ export function getReminderDisplayText(
     const daysText = reminder.daysBefore === 0
         ? t('onDueDate')
         : reminder.daysBefore === 1
-            ? t('dayBefore')
+            ? `1 ${t('dayBefore')}`
             : `${reminder.daysBefore} ${t('daysBefore')}`;
 
-    const timeText = `${reminder.hour.toString().padStart(2, '0')}:${reminder.minute.toString().padStart(2, '0')}`;
+    const timeText = formatTime12Hour(reminder.hour, reminder.minute);
 
     return `${daysText} ${t('at')} ${timeText}`;
 }

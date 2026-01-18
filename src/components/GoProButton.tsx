@@ -4,12 +4,10 @@ import i18n from '@/i18n';
 import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from './themed-text';
-// Actually, BMI calc uses spacing constants. I'll hardcode or define them locally to keep it self-contained or use the new responsive utility if I exported constants.
-// For now, I'll stick to hardcoded values close to the BMI design to ensure 1:1 match visually.
+import { PaywallModal } from './PaywallModal';
 
 interface GoProButtonProps {
     variant?: 'full' | 'compact' | 'banner';
@@ -18,9 +16,9 @@ interface GoProButtonProps {
 }
 
 export function GoProButton({ variant = 'banner', onPress, style }: GoProButtonProps) {
-    const router = useRouter();
     const { isPro, isLoading } = usePro();
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const [showPaywall, setShowPaywall] = useState(false);
 
     // Theme colors
     const textColor = useThemeColor({}, 'text');
@@ -50,47 +48,48 @@ export function GoProButton({ variant = 'banner', onPress, style }: GoProButtonP
         if (onPress) {
             onPress();
         } else {
-            router.push('/paywall');
+            setShowPaywall(true);
         }
-    }, [onPress, router]);
+    }, [onPress]);
 
     // Don't show if already pro
     if (isPro) {
         return null;
     }
 
-    // BMI Calculator Style "GoPremiumBanner"
-    // It creates a row with: Icon Container (Sparkles) | Text (Title + Chevron)
-    // The BMI one used: 
-    // container: { flexDirection: 'row', alignItems: 'center', paddingVertical: sm, paddingHorizontal: md, borderRadius: md, borderWidth: 1, gap: sm }
-    // iconContainer: { width: xxl, height: xxl, borderRadius: xs, justifyContent: 'center', alignItems: 'center' }
-
     return (
-        <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
-            <Pressable
-                onPress={handlePress}
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                disabled={isLoading}
-                style={[
-                    styles.container,
-                    {
-                        backgroundColor: tintColor + '10', // 10% opacity
-                        borderColor: tintColor + '20',    // 20% opacity
-                    }
-                ]}
-                accessibilityLabel={i18n.t('premium.removeAds')}
-                accessibilityRole="button"
-            >
-                <View style={[styles.iconContainer, { backgroundColor: tintColor + '20' }]}>
-                    <Ionicons name="sparkles" size={20} color={tintColor} />
-                </View>
-                <ThemedText style={[styles.title, { color: textColor }]}>
-                    {i18n.t('premium.removeAds')}
-                </ThemedText>
-                <Ionicons name="chevron-forward" size={20} color={textSecondary} />
-            </Pressable>
-        </Animated.View>
+        <>
+            <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
+                <Pressable
+                    onPress={handlePress}
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                    disabled={isLoading}
+                    style={[
+                        styles.container,
+                        {
+                            backgroundColor: tintColor + '10',
+                            borderColor: tintColor + '20',
+                        }
+                    ]}
+                    accessibilityLabel={i18n.t('premium.removeAds')}
+                    accessibilityRole="button"
+                >
+                    <View style={[styles.iconContainer, { backgroundColor: tintColor + '20' }]}>
+                        <Ionicons name="sparkles" size={20} color={tintColor} />
+                    </View>
+                    <ThemedText style={[styles.title, { color: textColor }]}>
+                        {i18n.t('premium.removeAds')}
+                    </ThemedText>
+                    <Ionicons name="chevron-forward" size={20} color={textSecondary} />
+                </Pressable>
+            </Animated.View>
+
+            <PaywallModal
+                visible={showPaywall}
+                onClose={() => setShowPaywall(false)}
+            />
+        </>
     );
 }
 
@@ -98,22 +97,22 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12, // spacing.sm (approx 8-12)
-        paddingHorizontal: 16, // spacing.md (approx 16)
-        borderRadius: 12, // radius.md
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 12,
         borderWidth: 1,
-        gap: 12, // spacing.sm
+        gap: 12,
     },
     iconContainer: {
-        width: 40, // spacing.xxl (approx 40-48)
+        width: 40,
         height: 40,
-        borderRadius: 8, // radius.xs
+        borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
     },
     title: {
-        fontSize: 16, // typography.size.body
-        fontWeight: '500', // typography.weight.medium
+        fontSize: 16,
+        fontWeight: '500',
         flex: 1,
     },
 });

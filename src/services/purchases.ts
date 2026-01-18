@@ -10,28 +10,19 @@ import Purchases, {
 } from 'react-native-purchases';
 
 // RevenueCat API Keys - Platform specific
-// These are unique to the Bills & Subscriptions Tracker project
-// iOS: Will use production key when App Store is configured
-// Android: Will use production key when Play Store is configured
+// Bills & Subscriptions Tracker in Wise Digital Inc project
 const API_KEYS = {
-    ios: {
-        test: 'test_bdRFynvtUGigIKscAKmUlzJdopC',
-        // TODO: Replace with your actual RevenueCat Production API Key for iOS
-        prod: 'appl_FrHdSApEttuEOWhUHtimeaNsziT',
-    },
-    android: {
-        test: 'test_bdRFynvtUGigIKscAKmUlzJdopC',
-        // TODO: Replace with your actual RevenueCat Production API Key for Android (if different)
-        prod: 'goog_REPLACE_WITH_YOUR_PROD_KEY',
-    },
+    ios: 'appl_OskLRvGyYtfeTVyEpwVHPYCLfwQ',
+    android: 'test_jDrfQgLJLkiSsGdIteBfhquKsRA', // Test key for Android
 };
 
 const API_KEY = Platform.select({
-    ios: __DEV__ ? API_KEYS.ios.test : API_KEYS.ios.prod,
-    android: __DEV__ ? API_KEYS.android.test : API_KEYS.android.prod,
-}) || API_KEYS.ios.test;
+    ios: API_KEYS.ios,
+    android: API_KEYS.android,
+}) || API_KEYS.ios;
 
 // Entitlement ID configured in RevenueCat dashboard
+// Specific to Bills & Subscriptions Tracker
 export const ENTITLEMENT_ID = 'Bills & Subscriptions Tracker Pro';
 
 // Package identifiers for different subscription tiers
@@ -73,11 +64,37 @@ export const getOfferings = async (): Promise<PurchasesOffering | null> => {
     try {
         const offerings = await Purchases.getOfferings();
 
+        // Debug logging to help diagnose issues
+        console.log('[Purchases] All offerings:', JSON.stringify(offerings, null, 2));
+        console.log('[Purchases] Current offering:', offerings.current);
+        console.log('[Purchases] All offering keys:', Object.keys(offerings.all || {}));
+
         if (offerings.current !== null && offerings.current.availablePackages.length > 0) {
+            console.log('[Purchases] Available packages:', offerings.current.availablePackages.map(p => ({
+                identifier: p.identifier,
+                packageType: p.packageType,
+                productId: p.product.identifier,
+                price: p.product.priceString,
+            })));
             return offerings.current;
         }
 
-        console.warn('[Purchases] No offerings available');
+        // If no current offering, try to get any available offering
+        const allOfferings = Object.values(offerings.all || {});
+        if (allOfferings.length > 0) {
+            const firstOffering = allOfferings[0];
+            if (firstOffering.availablePackages.length > 0) {
+                console.log('[Purchases] Using fallback offering:', firstOffering.identifier);
+                return firstOffering;
+            }
+        }
+
+        console.warn('[Purchases] No offerings available. Check RevenueCat dashboard configuration.');
+        console.warn('[Purchases] Common issues:');
+        console.warn('  1. No "current" offering set in RevenueCat dashboard');
+        console.warn('  2. Product IDs in RevenueCat don\'t match App Store Connect');
+        console.warn('  3. Products not approved or missing metadata in App Store Connect');
+        console.warn('  4. Paid Apps Agreement not accepted in App Store Connect');
         return null;
     } catch (error) {
         console.error('[Purchases] Error fetching offerings:', error);

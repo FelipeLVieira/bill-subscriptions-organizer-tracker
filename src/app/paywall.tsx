@@ -24,15 +24,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function PaywallScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { isPro, purchasePro, restorePurchases, offerings, loadOfferings } = usePro();
+    const { isPro, purchasePro, restorePurchases, offerings, loadOfferings, offeringsError } = usePro();
     const [purchaseLoading, setPurchaseLoading] = useState(false);
 
     // UI Theme Colors
-    const primaryColor = useThemeColor({}, 'tint'); // Using tint for primary actions
+    const primaryColor = useThemeColor({}, 'buttonPrimary'); // iOS Blue for buttons
     const textColor = useThemeColor({}, 'text');
     const secondaryText = useThemeColor({}, 'textSecondary');
     const borderColor = useThemeColor({}, 'border');
-    const inputBg = useThemeColor({}, 'inputBg'); // Corrected key
+    const inputBg = useThemeColor({}, 'inputBg');
+    const buttonText = useThemeColor({}, 'buttonText');
 
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly');
     const [monthlyPkg, setMonthlyPkg] = useState<PurchasesPackage | null>(null);
@@ -167,7 +168,7 @@ export default function PaywallScreen() {
                         style={[styles.subscribeButton, { backgroundColor: primaryColor, marginTop: scale(20) }]}
                         onPress={() => router.back()}
                     >
-                        <ThemedText style={styles.subscribeText}>{i18n.t('common.close')}</ThemedText>
+                        <ThemedText style={[styles.subscribeText, { color: buttonText }]}>{i18n.t('common.close')}</ThemedText>
                     </TouchableOpacity>
                 </View>
             </ThemedView>
@@ -337,6 +338,22 @@ export default function PaywallScreen() {
                             </TouchableOpacity>
                         )}
                     </View>
+                ) : offeringsError ? (
+                    <View style={styles.errorContainer}>
+                        <IconSymbol name="exclamationmark.triangle" size={scale(48)} color="#FF9500" />
+                        <ThemedText style={[styles.errorText, { color: textColor }]}>
+                            {offeringsError}
+                        </ThemedText>
+                        <TouchableOpacity
+                            style={[styles.retryButton, { backgroundColor: primaryColor }]}
+                            onPress={loadOfferings}
+                            disabled={purchaseLoading}
+                        >
+                            <ThemedText style={[styles.retryButtonText, { color: buttonText }]}>
+                                {i18n.t('common.retry') || 'Retry'}
+                            </ThemedText>
+                        </TouchableOpacity>
+                    </View>
                 ) : (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={primaryColor} />
@@ -361,9 +378,9 @@ export default function PaywallScreen() {
                         disabled={purchaseLoading || !selectedPackage}
                     >
                         {purchaseLoading ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color={buttonText} />
                         ) : (
-                            <ThemedText style={styles.subscribeText}>
+                            <ThemedText style={[styles.subscribeText, { color: buttonText }]}>
                                 {i18n.t('premium.subscribe')}
                             </ThemedText>
                         )}
@@ -382,8 +399,25 @@ export default function PaywallScreen() {
 
                     {/* Terms */}
                     <ThemedText style={[styles.terms, { color: secondaryText }]}>
-                        {i18n.t('premium.terms')}
+                        {i18n.t('premium.termsIntro')}
                     </ThemedText>
+                    <View style={styles.legalLinks}>
+                        <TouchableOpacity
+                            onPress={() => Linking.openURL('https://privacy-policy-app-flax.vercel.app/bills-tracker/terms.html')}
+                        >
+                            <ThemedText style={[styles.legalLink, { color: primaryColor }]}>
+                                {i18n.t('premium.termsOfUse')}
+                            </ThemedText>
+                        </TouchableOpacity>
+                        <ThemedText style={[styles.legalSeparator, { color: secondaryText }]}> | </ThemedText>
+                        <TouchableOpacity
+                            onPress={() => Linking.openURL('https://privacy-policy-app-flax.vercel.app/bills-tracker/')}
+                        >
+                            <ThemedText style={[styles.legalLink, { color: primaryColor }]}>
+                                {i18n.t('premium.privacyPolicy')}
+                            </ThemedText>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
             </View>
@@ -512,6 +546,25 @@ const styles = StyleSheet.create({
         marginTop: scale(10),
         fontSize: scale(14),
     },
+    errorContainer: {
+        alignItems: 'center',
+        padding: scale(20),
+        gap: scale(16),
+    },
+    errorText: {
+        fontSize: scale(14),
+        textAlign: 'center',
+        lineHeight: scale(20),
+    },
+    retryButton: {
+        paddingHorizontal: scale(24),
+        paddingVertical: scale(12),
+        borderRadius: scale(10),
+    },
+    retryButtonText: {
+        fontSize: scale(16),
+        fontWeight: '600',
+    },
     bottomContainer: {
         marginTop: 'auto',
         marginBottom: scale(10),
@@ -523,7 +576,6 @@ const styles = StyleSheet.create({
         marginBottom: scale(12),
     },
     subscribeText: {
-        color: '#fff',
         fontSize: scale(18),
         fontWeight: '600',
     },
@@ -539,6 +591,21 @@ const styles = StyleSheet.create({
         fontSize: scale(11),
         textAlign: 'center',
         lineHeight: scale(16),
+        marginBottom: scale(8),
+    },
+    legalLinks: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: scale(8),
+    },
+    legalLink: {
+        fontSize: scale(12),
+        fontWeight: '500',
+        textDecorationLine: 'underline',
+    },
+    legalSeparator: {
+        fontSize: scale(12),
     },
     manageButton: {
         padding: scale(14),

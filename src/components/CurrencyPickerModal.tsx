@@ -39,6 +39,8 @@ export function CurrencyPickerModal({
     const cardColor = useThemeColor({}, 'card');
     const primaryColor = useThemeColor({}, 'primary');
     const interactiveColor = useThemeColor({}, 'interactive');
+    const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+    const buttonTextColor = useThemeColor({}, 'buttonText');
     const dangerColor = useThemeColor({}, 'danger');
 
     const { userCurrencies, defaultCurrency, addCurrency, removeCurrency, setDefaultCurrency, addCustomCurrency } = useCurrency();
@@ -284,11 +286,11 @@ export function CurrencyPickerModal({
                             <View style={styles.manageActions}>
                                 {!showAddMode ? (
                                     <TouchableOpacity
-                                        style={[styles.addButton, { backgroundColor: interactiveColor }]}
+                                        style={[styles.addButton, { backgroundColor: buttonPrimaryColor }]}
                                         onPress={() => setShowAddMode(true)}
                                     >
-                                        <IconSymbol name="plus" size={18} color="#fff" />
-                                        <ThemedText style={styles.addButtonText}>
+                                        <IconSymbol name="plus" size={18} color={buttonTextColor} />
+                                        <ThemedText style={[styles.addButtonText, { color: buttonTextColor }]}>
                                             {i18n.t('addCurrency')}
                                         </ThemedText>
                                     </TouchableOpacity>
@@ -358,10 +360,10 @@ export function CurrencyPickerModal({
                                         <ThemedText>{i18n.t('cancel')}</ThemedText>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={[styles.customFormBtn, { backgroundColor: interactiveColor, flex: 1 }]}
+                                        style={[styles.customFormBtn, { backgroundColor: buttonPrimaryColor, flex: 1 }]}
                                         onPress={handleAddCustom}
                                     >
-                                        <ThemedText style={styles.saveCustomText}>{i18n.t('save')}</ThemedText>
+                                        <ThemedText style={[styles.saveCustomText, { color: buttonTextColor }]}>{i18n.t('save')}</ThemedText>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -508,7 +510,6 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     addButtonText: {
-        color: '#fff',
         fontWeight: '600',
     },
     addModeHeader: {
@@ -571,7 +572,6 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     saveCustomText: {
-        color: '#fff',
         fontWeight: '600',
     },
     emptyContainer: {

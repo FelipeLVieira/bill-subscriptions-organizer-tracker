@@ -51,6 +51,10 @@ export const theme = {
         tabIconDefault: '#8E8E93',
         tabIconSelected: '#007AFF',
 
+        // Button colors - consistent across modes
+        buttonPrimary: '#007AFF', // iOS Blue for primary actions
+        buttonText: '#FFFFFF', // White text on buttons
+
         // Toast colors
         toastSuccess: '#34C759',
         toastError: '#FF3B30',
@@ -105,6 +109,10 @@ export const theme = {
         icon: '#636366',
         tabIconDefault: '#636366',
         tabIconSelected: '#FFFFFF',
+
+        // Button colors - consistent across modes
+        buttonPrimary: '#0A84FF', // iOS Blue for dark mode (slightly brighter)
+        buttonText: '#FFFFFF', // White text on buttons
 
         // Toast colors
         toastSuccess: '#30D158',

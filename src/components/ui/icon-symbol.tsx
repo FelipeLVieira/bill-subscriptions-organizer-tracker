@@ -36,7 +36,25 @@ const MAPPING = {
   'magnifyingglass': 'search',
   'doc.text.magnifyingglass': 'find-in-page',
 
+  // Tags & Labels
+  'tag': 'label',
+  'tag.fill': 'label',
+
+  // Notes & Text
+  'note.text': 'note',
+  'note.text.badge.plus': 'note-add',
+
+  // Calendar variants
+  'calendar': 'calendar-today',
+  'calendar.day.timeline.left': 'date-range',
+
+  // Weather & Time
+  'sun.max': 'wb-sunny',
+  'star': 'star',
+  'star.fill': 'star',
+
   // Media & Entertainment
+  'play.tv': 'live-tv',
   'play.tv.fill': 'live-tv',
   'sparkles.tv.fill': 'live-tv',
   'play.rectangle.fill': 'play-arrow',

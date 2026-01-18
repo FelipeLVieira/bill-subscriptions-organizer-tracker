@@ -26,6 +26,8 @@ export function ReminderManager({ schema, onUpdate, isEditing = false }: Reminde
     const [showEditModal, setShowEditModal] = useState(false);
 
     const primaryColor = useThemeColor({}, 'primary');
+    const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+    const buttonTextColor = useThemeColor({}, 'buttonText');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const borderColor = useThemeColor({}, 'border');
@@ -234,10 +236,10 @@ export function ReminderManager({ schema, onUpdate, isEditing = false }: Reminde
                                 <ThemedText>{i18n.t('cancel')}</ThemedText>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.saveButton, { backgroundColor: primaryColor }]}
+                                style={[styles.modalButton, styles.saveButton, { backgroundColor: buttonPrimaryColor }]}
                                 onPress={handleSaveReminder}
                             >
-                                <ThemedText style={{ color: '#fff' }}>{i18n.t('save')}</ThemedText>
+                                <ThemedText style={{ color: buttonTextColor }}>{i18n.t('save')}</ThemedText>
                             </TouchableOpacity>
                         </View>
                     </View>

@@ -26,14 +26,20 @@ const BASE_URL = `http://localhost:${PORT}`;
 // Device configurations for App Store
 // iOS requires specific screenshot sizes
 const devices = [
-    // iPhone 6.7" (iPhone 15 Pro Max, 14 Pro Max) - Required
+    // iPhone 6.9" (iPhone 16 Pro Max) - Required for newest devices (1320 x 2868)
+    { name: 'iOS 6.9-inch', width: 440, height: 956, scale: 3, dir: 'store_assets/ios/6.9inch' },
+    // iPhone 6.7" (iPhone 15 Pro Max, 14 Pro Max) - Required (1290 x 2796)
     { name: 'iOS 6.7-inch', width: 430, height: 932, scale: 3, dir: 'store_assets/ios/6.7inch' },
-    // iPhone 6.5" (iPhone 11 Pro Max, XS Max) - Required
+    // iPhone 6.5" (iPhone 11 Pro Max, XS Max) - Required (1242 x 2688)
     { name: 'iOS 6.5-inch', width: 414, height: 896, scale: 3, dir: 'store_assets/ios/6.5inch' },
-    // iPhone 5.5" (iPhone 8 Plus, 7 Plus, 6s Plus) - Required for older devices
+    // iPhone 6.1" (iPhone 14, 15, 16) - Required for standard models (1179 x 2556)
+    { name: 'iOS 6.1-inch', width: 393, height: 852, scale: 3, dir: 'store_assets/ios/6.1inch' },
+    // iPhone 5.5" (iPhone 8 Plus, 7 Plus, 6s Plus) - Required for older devices (1242 x 2208)
     { name: 'iOS 5.5-inch', width: 414, height: 736, scale: 3, dir: 'store_assets/ios/5.5inch' },
-    // iPad Pro 12.9" 6th Gen (13-inch display) - Required for iPad
+    // iPad Pro 12.9" 6th Gen (13-inch display) - Required for iPad (2064 x 2752)
     { name: 'iOS 13-inch iPad', width: 1032, height: 1376, scale: 2, dir: 'store_assets/ios/13inch' },
+    // iPad 11" (iPad Air, iPad) - Required for iPad (1668 x 2388)
+    { name: 'iOS 11-inch iPad', width: 834, height: 1194, scale: 2, dir: 'store_assets/ios/11inch' },
     // Android Phone
     { name: 'Android Phone', width: 360, height: 640, scale: 3, dir: 'store_assets/android/phone' },
     // Android 7" Tablet
@@ -46,6 +52,7 @@ const devices = [
 const screens = [
     { name: 'dashboard', path: '/', label: 'Dashboard' },
     { name: 'bills', path: '/search', label: 'My Bills' },
+    { name: 'calendar', path: '/calendar', label: 'Calendar' },
     { name: 'history', path: '/history', label: 'History' },
     { name: 'add_bill', path: '/modal', label: 'Add Bill' },
 ];
@@ -213,10 +220,13 @@ async function main() {
 
     // Print App Store requirements reminder
     console.log('\n--- App Store Screenshot Requirements ---');
-    console.log('iPhone 6.7": 1290 x 2796 pixels');
-    console.log('iPhone 6.5": 1242 x 2688 pixels');
-    console.log('iPhone 5.5": 1242 x 2208 pixels');
-    console.log('iPad 13":    2064 x 2752 pixels');
+    console.log('iPhone 6.9": 1320 x 2868 pixels (iPhone 16 Pro Max)');
+    console.log('iPhone 6.7": 1290 x 2796 pixels (iPhone 15/14 Pro Max)');
+    console.log('iPhone 6.5": 1242 x 2688 pixels (iPhone 11 Pro Max, XS Max)');
+    console.log('iPhone 6.1": 1179 x 2556 pixels (iPhone 14/15/16 standard)');
+    console.log('iPhone 5.5": 1242 x 2208 pixels (iPhone 8/7/6s Plus)');
+    console.log('iPad 13":    2064 x 2752 pixels (iPad Pro 12.9")');
+    console.log('iPad 11":    1668 x 2388 pixels (iPad Air, iPad)');
 }
 
 main().catch(console.error);
