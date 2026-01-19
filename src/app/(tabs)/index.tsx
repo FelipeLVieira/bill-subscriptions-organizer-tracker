@@ -1,3 +1,4 @@
+import { AdBanner } from '@/components/AdBanner';
 import { ExpensesChart } from '@/components/ExpensesChart';
 import { GoProButton } from '@/components/GoProButton';
 import { Period, PeriodSelector } from '@/components/PeriodSelector';
@@ -204,24 +205,33 @@ export default function HomeScreen() {
           </WalkthroughableView>
         </CopilotStep>
 
-        {subscriptions.length > 0 && (
-          <CopilotStep text={i18n.t('copilotDashboardChart')} order={3} name="chart">
-            <WalkthroughableView>
-              <ExpensesChart subscriptions={subscriptions} />
-            </WalkthroughableView>
-          </CopilotStep>
+        <CopilotStep
+          text={i18n.t('copilotDashboardChart')}
+          order={3}
+          name="chart"
+          active={subscriptions.length > 0}
+        >
+          <WalkthroughableView>
+            <ExpensesChart subscriptions={subscriptions} />
+          </WalkthroughableView>
+        </CopilotStep>
+
+        {/* Inline Ad Banner on Dashboard - only for free users */}
+        {!isPro && (
+          <AdBanner style={styles.inlineAd} />
         )}
 
-
-
-        {/* Step 4: List explanation - always render even when list is not empty */}
-        {subscriptions.length > 0 && (
-          <CopilotStep text={i18n.t('copilotDashboardList')} order={4} name="list-hint">
-            <WalkthroughableView>
-              <View />
-            </WalkthroughableView>
-          </CopilotStep>
-        )}
+        {/* Step 4: List explanation - always render but only active when list is not empty */}
+        <CopilotStep
+          text={i18n.t('copilotDashboardList')}
+          order={4}
+          name="list-hint"
+          active={subscriptions.length > 0}
+        >
+          <WalkthroughableView>
+            <View />
+          </WalkthroughableView>
+        </CopilotStep>
 
         {subscriptions.length > 0 && (
           <View style={styles.subscriptionsHeader}>
@@ -270,16 +280,13 @@ export default function HomeScreen() {
           />
         }
         ListEmptyComponent={
-          <CopilotStep text={i18n.t('copilotDashboardList')} order={3} name="empty">
-            <WalkthroughableView style={styles.empty}>
-              <IconSymbol name="list.bullet.clipboard" size={60} color={primaryColor} style={{ opacity: 0.6 }} />
-              <ThemedText type="subtitle" style={styles.emptyTitle}>{i18n.t('emptyDashboardTitle')}</ThemedText>
-              <ThemedText style={styles.emptyHint}>
-                {i18n.t('emptyDashboardHint')}
-              </ThemedText>
-
-            </WalkthroughableView>
-          </CopilotStep>
+          <View style={styles.empty}>
+            <IconSymbol name="list.bullet.clipboard" size={60} color={primaryColor} style={{ opacity: 0.6 }} />
+            <ThemedText type="subtitle" style={styles.emptyTitle}>{i18n.t('emptyDashboardTitle')}</ThemedText>
+            <ThemedText style={styles.emptyHint}>
+              {i18n.t('emptyDashboardHint')}
+            </ThemedText>
+          </View>
         }
       />
 
@@ -384,5 +391,10 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  inlineAd: {
+    marginVertical: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
 });

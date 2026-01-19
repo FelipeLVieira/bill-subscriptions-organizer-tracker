@@ -168,7 +168,7 @@ export default function PaymentHistoryScreen() {
                 {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
 
                 {/* Search bar */}
-                <CopilotStep text={i18n.t('copilotHistorySearch')} order={1} name="history-search">
+                <CopilotStep text={i18n.t('copilotHistorySearch')} order={21} name="history-search">
                     <WalkthroughableView>
                         <View style={styles.searchContainer}>
                             <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
@@ -207,7 +207,7 @@ export default function PaymentHistoryScreen() {
                 {/* Controls */}
                 <View style={styles.controlsRow}>
                     {/* View Toggle */}
-                    <CopilotStep text={i18n.t('copilotHistoryView')} order={2} name="history-view">
+                    <CopilotStep text={i18n.t('copilotHistoryView')} order={22} name="history-view">
                         <WalkthroughableView>
                             <View style={styles.viewToggle} accessibilityRole="radiogroup">
                                 <TouchableOpacity
@@ -246,10 +246,15 @@ export default function PaymentHistoryScreen() {
                         </WalkthroughableView>
                     </CopilotStep>
 
-                    {/* Group By Toggle (only in grouped mode) */}
-                    {viewMode === 'grouped' && (
-                        <CopilotStep text={i18n.t('copilotHistoryGroup')} order={3} name="history-group">
-                            <WalkthroughableView>
+                    {/* Group By Toggle (only visible in grouped mode, but always registered for copilot) */}
+                    <CopilotStep
+                        text={i18n.t('copilotHistoryGroup')}
+                        order={23}
+                        name="history-group"
+                        active={viewMode === 'grouped'}
+                    >
+                        <WalkthroughableView>
+                            {viewMode === 'grouped' && (
                                 <View style={styles.groupByToggle} accessibilityRole="radiogroup">
                                     <TouchableOpacity
                                         style={[
@@ -286,9 +291,9 @@ export default function PaymentHistoryScreen() {
                                         </ThemedText>
                                     </TouchableOpacity>
                                 </View>
-                            </WalkthroughableView>
-                        </CopilotStep>
-                    )}
+                            )}
+                        </WalkthroughableView>
+                    </CopilotStep>
                 </View>
             </View>
 

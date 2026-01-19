@@ -275,7 +275,7 @@ export default function MyBillsScreen() {
                 {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
 
                 {/* Search bar */}
-                <CopilotStep text={i18n.t('copilotBillsSearch')} order={1} name="bills-search">
+                <CopilotStep text={i18n.t('copilotBillsSearch')} order={11} name="bills-search">
                     <WalkthroughableView>
                         <View style={styles.searchContainer}>
                             <IconSymbol name="magnifyingglass" size={20} color={textColor} style={{ opacity: 0.5 }} />
@@ -297,7 +297,7 @@ export default function MyBillsScreen() {
                 {/* Filter and View Controls */}
                 <View style={styles.controlsRow}>
                     {/* Category Filter */}
-                    <CopilotStep text={i18n.t('copilotBillsFilter')} order={2} name="bills-filter">
+                    <CopilotStep text={i18n.t('copilotBillsFilter')} order={12} name="bills-filter">
                         <WalkthroughableView>
                             <View style={styles.filterContainer}>
                                 <TouchableOpacity
@@ -351,7 +351,7 @@ export default function MyBillsScreen() {
 
                     {/* View Toggle and Mark All Paid */}
                     <View style={styles.actionsRow}>
-                        <CopilotStep text={i18n.t('copilotBillsView')} order={3} name="bills-view">
+                        <CopilotStep text={i18n.t('copilotBillsView')} order={13} name="bills-view">
                             <WalkthroughableView>
                                 <View style={styles.viewToggle}>
                                     <TouchableOpacity

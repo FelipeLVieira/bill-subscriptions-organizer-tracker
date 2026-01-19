@@ -1,9 +1,7 @@
-import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
 import { LanguagePickerModal } from '@/components/LanguagePickerModal';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SUPPORTED_LANGUAGES } from '@/constants/Languages';
-import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -26,45 +24,62 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  */
 const TUTORIAL_KEY = 'HAS_SEEN_TUTORIAL_V3';
 
+// Get the first tutorial step name for the current screen
+// Dashboard: steps 1-4, My Bills: steps 11-13, History: steps 21-23
+const getFirstStepName = (screenTitle: string): string => {
+    // Match by checking if title matches any of the known screen translations
+    const dashboardTitle = i18n.t('dashboard');
+    const myBillsTitle = i18n.t('myBills');
+    const historyTitle = i18n.t('history');
+
+    if (screenTitle === dashboardTitle) return 'period';
+    if (screenTitle === myBillsTitle) return 'bills-search';
+    if (screenTitle === historyTitle) return 'history-search';
+
+    return 'period'; // Default to Dashboard
+};
+
 export function MainHeader({ title }: { title: string }) {
     const insets = useSafeAreaInsets();
     const { colorScheme, toggleTheme } = useTheme();
     const { locale, setLocale } = useLanguage();
-    const { defaultCurrency } = useCurrency();
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
     const { start: startTutorial } = useCopilot();
 
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
-    const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
     const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === locale) ||
         SUPPORTED_LANGUAGES.find(l => locale.startsWith(l.code.split('-')[0])) ||
         SUPPORTED_LANGUAGES.find(l => l.code === 'en');
 
-    // Show Copilot tutorial on first launch
+    // Show Copilot tutorial on first launch (only on Dashboard)
     useEffect(() => {
         const checkTutorial = async () => {
+            // Only auto-start tutorial on Dashboard
+            if (title !== i18n.t('dashboard')) return;
+
             const seen = await AsyncStorage.getItem(TUTORIAL_KEY);
             if (!seen) {
                 // Small delay to let the UI settle
                 setTimeout(() => {
-                    startTutorial();
+                    startTutorial('period'); // Start from Dashboard's first step
                 }, 800);
                 await AsyncStorage.setItem(TUTORIAL_KEY, 'true');
             }
         };
         checkTutorial();
-    }, [startTutorial]);
+    }, [startTutorial, title]);
 
     const handleLanguageSelect = (code: string) => {
         setLocale(code);
         setLanguageModalVisible(false);
     };
 
-    // Info button starts the tutorial balloons
+    // Info button starts the tutorial from the current screen's first step
     const handleInfoPress = () => {
-        startTutorial();
+        const firstStep = getFirstStepName(title);
+        startTutorial(firstStep);
     };
 
     const HeaderContent = (
@@ -85,18 +100,7 @@ export function MainHeader({ title }: { title: string }) {
                         color={primaryColor}
                     />
                 </TouchableOpacity>
-                {/* Currency button - left */}
-                <TouchableOpacity
-                    onPress={() => setCurrencyModalVisible(true)}
-                    style={styles.button}
-                    activeOpacity={0.6}
-                    accessibilityLabel={i18n.t('manageCurrencies')}
-                >
-                    <ThemedText style={styles.currencySymbol}>
-                        {defaultCurrency?.symbol || '$'}
-                    </ThemedText>
-                </TouchableOpacity>
-                {/* Language button - middle */}
+                {/* Language button */}
                 <TouchableOpacity
                     onPress={() => setLanguageModalVisible(true)}
                     style={styles.button}
@@ -109,7 +113,7 @@ export function MainHeader({ title }: { title: string }) {
                         <IconSymbol name="globe" size={24} weight="semibold" color={primaryColor} />
                     )}
                 </TouchableOpacity>
-                {/* Theme button - right */}
+                {/* Theme button */}
                 <TouchableOpacity
                     onPress={toggleTheme}
                     style={styles.button}
@@ -141,12 +145,6 @@ export function MainHeader({ title }: { title: string }) {
                     onClose={() => setLanguageModalVisible(false)}
                     onSelect={handleLanguageSelect}
                 />
-                <CurrencyPickerModal
-                    visible={currencyModalVisible}
-                    onClose={() => setCurrencyModalVisible(false)}
-                    showManageOptions
-                    mode="manage"
-                />
             </BlurView>
         );
     }
@@ -158,12 +156,6 @@ export function MainHeader({ title }: { title: string }) {
                 visible={languageModalVisible}
                 onClose={() => setLanguageModalVisible(false)}
                 onSelect={handleLanguageSelect}
-            />
-            <CurrencyPickerModal
-                visible={currencyModalVisible}
-                onClose={() => setCurrencyModalVisible(false)}
-                showManageOptions
-                mode="manage"
             />
         </View>
     );
@@ -204,9 +196,5 @@ const styles = StyleSheet.create({
     flag: {
         fontSize: 24,
         lineHeight: 30,
-    },
-    currencySymbol: {
-        fontSize: 20,
-        fontWeight: '600',
     },
 });
