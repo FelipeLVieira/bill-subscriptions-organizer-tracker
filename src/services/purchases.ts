@@ -29,7 +29,6 @@ export const ENTITLEMENT_ID = 'Bills & Subscriptions Tracker Pro';
 export const PACKAGE_TYPES = {
     MONTHLY: 'monthly',
     YEARLY: 'yearly',
-    LIFETIME: 'lifetime',
 } as const;
 
 /**
@@ -114,8 +113,6 @@ export const getPackageByType = (
             return offering.monthly || null;
         case 'YEARLY':
             return offering.annual || null;
-        case 'LIFETIME':
-            return offering.lifetime || null;
         default:
             return offering.availablePackages[0] || null;
     }
@@ -139,19 +136,6 @@ export const getYearlyPackage = (offering: PurchasesOffering): PurchasesPackage 
         ) || null
     );
 };
-
-/**
- * Get lifetime package from offerings
- */
-export const getLifetimePackage = (offering: PurchasesOffering): PurchasesPackage | null => {
-    if (offering.lifetime) return offering.lifetime;
-    return (
-        offering.availablePackages.find(
-            (pkg) => pkg.packageType === PACKAGE_TYPE.LIFETIME
-        ) || null
-    );
-};
-
 
 /**
  * Purchase a package
@@ -263,8 +247,6 @@ export const getSubscriptionPeriod = (pkg: PurchasesPackage): string => {
         return '/month';
     } else if (pkg.packageType === PACKAGE_TYPE.ANNUAL) {
         return '/year';
-    } else if (pkg.packageType === PACKAGE_TYPE.LIFETIME) {
-        return ' (one-time)';
     }
     return '';
 };

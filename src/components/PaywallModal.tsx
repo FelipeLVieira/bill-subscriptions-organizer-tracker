@@ -21,7 +21,6 @@ import {
     getSubscriptionPeriod,
     getMonthlyPackage,
     getYearlyPackage,
-    getLifetimePackage,
     calculateYearlySavings,
     getManagementURL,
 } from '@/services/purchases';
@@ -32,7 +31,7 @@ interface PaywallModalProps {
     onClose: () => void;
 }
 
-type SelectedPlan = 'monthly' | 'yearly' | 'lifetime';
+type SelectedPlan = 'monthly' | 'yearly';
 
 export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) => {
     const { isPro, purchasePro, restorePurchases, offerings, loadOfferings } = usePro();
@@ -49,7 +48,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
     const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>('yearly');
     const [monthlyPkg, setMonthlyPkg] = useState<PurchasesPackage | null>(null);
     const [yearlyPkg, setYearlyPkg] = useState<PurchasesPackage | null>(null);
-    const [lifetimePkg, setLifetimePkg] = useState<PurchasesPackage | null>(null);
     const [yearlySavings, setYearlySavings] = useState<number>(0);
     const [purchaseLoading, setPurchaseLoading] = useState(false);
 
@@ -65,11 +63,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
         if (offerings) {
             const monthly = getMonthlyPackage(offerings);
             const yearly = getYearlyPackage(offerings);
-            const lifetime = getLifetimePackage(offerings);
 
             setMonthlyPkg(monthly);
             setYearlyPkg(yearly);
-            setLifetimePkg(lifetime);
 
             if (monthly && yearly) {
                 setYearlySavings(calculateYearlySavings(monthly, yearly));
@@ -130,8 +126,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
                 return monthlyPkg;
             case 'yearly':
                 return yearlyPkg;
-            case 'lifetime':
-                return lifetimePkg;
             default:
                 return yearlyPkg || monthlyPkg;
         }
@@ -309,43 +303,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
                                 </TouchableOpacity>
                             )}
 
-                            {/* Lifetime Plan */}
-                            {lifetimePkg && (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.planOption,
-                                        {
-                                            borderColor: selectedPlan === 'lifetime' ? primaryColor : borderColor,
-                                            backgroundColor: selectedPlan === 'lifetime' ? primaryColor + '10' : 'transparent',
-                                        },
-                                    ]}
-                                    onPress={() => setSelectedPlan('lifetime')}
-                                    disabled={purchaseLoading}
-                                >
-                                    <View style={[styles.lifetimeBadge, { backgroundColor: '#FFD700' }]}>
-                                        <Text style={styles.lifetimeText}>{i18n.t('premium.bestDeal')}</Text>
-                                    </View>
-                                    <View style={styles.planInfo}>
-                                        <Text style={[styles.planName, { color: textColor }]}>
-                                            {i18n.t('premium.lifetime')}
-                                        </Text>
-                                        <Text style={[styles.planPrice, { color: textSecondaryColor }]}>
-                                            {formatPrice(lifetimePkg)}{getSubscriptionPeriod(lifetimePkg)}
-                                        </Text>
-                                    </View>
-                                    <View style={[
-                                        styles.radioButton,
-                                        {
-                                            borderColor: selectedPlan === 'lifetime' ? primaryColor : borderColor,
-                                            backgroundColor: selectedPlan === 'lifetime' ? primaryColor : 'transparent',
-                                        },
-                                    ]}>
-                                        {selectedPlan === 'lifetime' && (
-                                            <Ionicons name="checkmark" size={scale(14)} color="#fff" />
-                                        )}
-                                    </View>
-                                </TouchableOpacity>
-                            )}
                         </View>
                     ) : (
                         <View style={styles.loadingContainer}>
@@ -513,19 +470,6 @@ const styles = StyleSheet.create({
     },
     savingsText: {
         color: '#fff',
-        fontSize: scale(11),
-        fontWeight: '700',
-    },
-    lifetimeBadge: {
-        position: 'absolute',
-        top: scale(-10),
-        right: scale(12),
-        paddingHorizontal: scale(8),
-        paddingVertical: scale(4),
-        borderRadius: scale(8),
-    },
-    lifetimeText: {
-        color: '#000',
         fontSize: scale(11),
         fontWeight: '700',
     },

@@ -38,9 +38,8 @@ We actively develop and refine this app based on user feedback. If you have sugg
 
 Available as a free download with optional Pro subscription for an ad-free experience and additional features.
 
-• Monthly: $4.99
-• Yearly: $49.99 (save over 15%)
-• Lifetime: $79.99 (one-time purchase)
+• Monthly: $4.99/month
+• Yearly: $59.99/year
 
 ## Keywords (100 characters max, comma-separated)
 bills,subscription,tracker,finance,budget,payment,reminder,expense,money,recurring,utility,manage

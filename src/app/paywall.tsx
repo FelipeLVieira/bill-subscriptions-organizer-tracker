@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { usePro } from '@/contexts/ProContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
-import { calculateYearlySavings, formatPrice, getLifetimePackage, getManagementURL, getMonthlyPackage, getSubscriptionPeriod, getYearlyPackage } from '@/services/purchases';
+import { calculateYearlySavings, formatPrice, getManagementURL, getMonthlyPackage, getSubscriptionPeriod, getYearlyPackage } from '@/services/purchases';
 import { Haptic } from '@/utils/haptics';
 import { scale } from '@/utils/responsive';
 import { useRouter } from 'expo-router';
@@ -35,10 +35,9 @@ export default function PaywallScreen() {
     const inputBg = useThemeColor({}, 'inputBg');
     const buttonText = useThemeColor({}, 'buttonText');
 
-    const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly');
+    const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
     const [monthlyPkg, setMonthlyPkg] = useState<PurchasesPackage | null>(null);
     const [yearlyPkg, setYearlyPkg] = useState<PurchasesPackage | null>(null);
-    const [lifetimePkg, setLifetimePkg] = useState<PurchasesPackage | null>(null);
     const [yearlySavings, setYearlySavings] = useState<number>(0);
 
     // Load offerings on mount
@@ -51,11 +50,9 @@ export default function PaywallScreen() {
         if (offerings) {
             const monthly = getMonthlyPackage(offerings);
             const yearly = getYearlyPackage(offerings);
-            const lifetime = getLifetimePackage(offerings);
 
             setMonthlyPkg(monthly);
             setYearlyPkg(yearly);
-            setLifetimePkg(lifetime);
 
             if (monthly && yearly) {
                 setYearlySavings(calculateYearlySavings(monthly, yearly));
@@ -118,8 +115,6 @@ export default function PaywallScreen() {
                 return monthlyPkg;
             case 'yearly':
                 return yearlyPkg;
-            case 'lifetime':
-                return lifetimePkg;
             default:
                 return yearlyPkg || monthlyPkg;
         }
@@ -300,43 +295,6 @@ export default function PaywallScreen() {
                             </TouchableOpacity>
                         )}
 
-                        {/* Lifetime Plan */}
-                        {lifetimePkg && (
-                            <TouchableOpacity
-                                style={[
-                                    styles.planOption,
-                                    {
-                                        borderColor: selectedPlan === 'lifetime' ? primaryColor : borderColor,
-                                        backgroundColor: selectedPlan === 'lifetime' ? primaryColor + '10' : 'transparent',
-                                    },
-                                ]}
-                                onPress={() => setSelectedPlan('lifetime')}
-                                disabled={purchaseLoading}
-                            >
-                                <View style={[styles.lifetimeBadge, { backgroundColor: '#FFD700' }]}>
-                                    <ThemedText style={styles.lifetimeText}>{i18n.t('premium.bestDeal')}</ThemedText>
-                                </View>
-                                <View style={styles.planInfo}>
-                                    <ThemedText style={[styles.planName]}>
-                                        {i18n.t('premium.lifetime')}
-                                    </ThemedText>
-                                    <ThemedText style={[styles.planPrice, { color: primaryColor }]}>
-                                        {formatPrice(lifetimePkg)}{getSubscriptionPeriod(lifetimePkg)}
-                                    </ThemedText>
-                                </View>
-                                <View style={[
-                                    styles.radioButton,
-                                    {
-                                        borderColor: selectedPlan === 'lifetime' ? primaryColor : borderColor,
-                                        backgroundColor: selectedPlan === 'lifetime' ? primaryColor : 'transparent',
-                                    },
-                                ]}>
-                                    {selectedPlan === 'lifetime' && (
-                                        <IconSymbol name="checkmark" size={scale(14)} color="#fff" />
-                                    )}
-                                </View>
-                            </TouchableOpacity>
-                        )}
                     </View>
                 ) : offeringsError ? (
                     <View style={styles.errorContainer}>
@@ -522,19 +480,6 @@ const styles = StyleSheet.create({
     },
     savingsText: {
         color: '#fff',
-        fontSize: scale(11),
-        fontWeight: '700',
-    },
-    lifetimeBadge: {
-        position: 'absolute',
-        top: scale(-10),
-        right: scale(12),
-        paddingHorizontal: scale(8),
-        paddingVertical: scale(4),
-        borderRadius: scale(8),
-    },
-    lifetimeText: {
-        color: '#000',
         fontSize: scale(11),
         fontWeight: '700',
     },
