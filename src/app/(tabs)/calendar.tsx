@@ -7,9 +7,10 @@ import { usePro } from '@/contexts/ProContext';
 import { getSubscriptions, Subscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { isTablet } from '@/utils/responsive';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function CalendarScreen() {
     const router = useRouter();
@@ -49,10 +50,13 @@ export default function CalendarScreen() {
         // If multiple or none, the calendar component shows the list below
     };
 
+    // Check if we're on a tablet for adaptive layout
+    const tablet = isTablet();
+
     return (
         <ThemedView style={styles.container}>
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, tablet && styles.tabletScrollContent]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -61,25 +65,27 @@ export default function CalendarScreen() {
                     />
                 }
             >
-                {/* Go Pro Banner */}
-                {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
+                <View style={tablet && styles.tabletContent}>
+                    {/* Go Pro Banner */}
+                    {!isPro && <GoProButton variant="banner" style={styles.proBanner} />}
 
-                {subscriptions.length > 0 ? (
-                    <BillsCalendar
-                        subscriptions={subscriptions}
-                        onDayPress={handleDayPress}
-                    />
-                ) : (
-                    <ThemedView style={styles.empty}>
-                        <IconSymbol name="calendar" size={60} color={primaryColor} style={{ opacity: 0.6 }} />
-                        <ThemedText type="subtitle" style={styles.emptyTitle}>
-                            {i18n.t('noSubscriptions')}
-                        </ThemedText>
-                        <ThemedText style={styles.emptyHint}>
-                            {i18n.t('addFirstSubscription')}
-                        </ThemedText>
-                    </ThemedView>
-                )}
+                    {subscriptions.length > 0 ? (
+                        <BillsCalendar
+                            subscriptions={subscriptions}
+                            onDayPress={handleDayPress}
+                        />
+                    ) : (
+                        <ThemedView style={styles.empty}>
+                            <IconSymbol name="calendar" size={60} color={primaryColor} style={{ opacity: 0.6 }} />
+                            <ThemedText type="subtitle" style={styles.emptyTitle}>
+                                {i18n.t('noSubscriptions')}
+                            </ThemedText>
+                            <ThemedText style={styles.emptyHint}>
+                                {i18n.t('addFirstSubscription')}
+                            </ThemedText>
+                        </ThemedView>
+                    )}
+                </View>
             </ScrollView>
         </ThemedView>
     );
@@ -112,5 +118,13 @@ const styles = StyleSheet.create({
         opacity: 0.6,
         lineHeight: 20,
         paddingHorizontal: 16,
+    },
+    // iPad-specific styles for better readability
+    tabletScrollContent: {
+        alignItems: 'center',
+    },
+    tabletContent: {
+        maxWidth: 600,
+        width: '100%',
     },
 });

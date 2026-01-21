@@ -15,6 +15,7 @@ import { Subscription, deleteSubscription, getPaidThisMonth, getSubscriptions, p
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Haptic } from '@/utils/haptics';
+import { isTablet } from '@/utils/responsive';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -259,13 +260,19 @@ export default function HomeScreen() {
     [subscriptions, paidThisMonth, period, locale, overdueCount, dangerColor, handleMarkAllPaid, isPro]
   );
 
+  // Check if we're on a tablet for adaptive layout
+  const tablet = isTablet();
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
         data={subscriptions}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[
+          styles.list,
+          tablet && styles.tabletList,
+        ]}
         ListHeaderComponent={listHeader}
         removeClippedSubviews
         maxToRenderPerBatch={10}
@@ -396,5 +403,12 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  // iPad-specific styles for better readability
+  tabletList: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+    paddingHorizontal: 24,
   },
 });

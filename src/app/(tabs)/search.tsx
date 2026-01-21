@@ -18,6 +18,7 @@ import { Subscription, deleteSubscription, getSubscriptions, paySubscription } f
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Haptic } from '@/utils/haptics';
+import { isTablet } from '@/utils/responsive';
 
 const WalkthroughableView = walkthroughable(View);
 
@@ -268,9 +269,12 @@ export default function MyBillsScreen() {
         </View>
     );
 
+    // Check if we're on a tablet for adaptive layout
+    const tablet = isTablet();
+
     return (
         <ThemedView style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, tablet && styles.tabletHeader]}>
                 {/* Go Pro Banner - always show at top if not pro */}
                 {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
 
@@ -437,7 +441,7 @@ export default function MyBillsScreen() {
                     data={filteredData}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    contentContainerStyle={styles.list}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
                     initialNumToRender={8}
@@ -464,7 +468,7 @@ export default function MyBillsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={styles.list}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
                     stickySectionHeadersEnabled={true}
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
@@ -491,7 +495,7 @@ export default function MyBillsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={styles.list}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
                     stickySectionHeadersEnabled={true}
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
@@ -655,5 +659,17 @@ const styles = StyleSheet.create({
     proBannerHeader: {
         marginTop: 8,
         marginBottom: 24,
+    },
+    // iPad-specific styles for better readability
+    tabletHeader: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+    },
+    tabletList: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+        paddingHorizontal: 24,
     },
 });

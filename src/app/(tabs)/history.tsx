@@ -10,6 +10,7 @@ import { usePro } from '@/contexts/ProContext';
 import { getAllBillingHistory, getSubscriptions } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { isTablet } from '@/utils/responsive';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -161,9 +162,12 @@ export default function PaymentHistoryScreen() {
         );
     };
 
+    // Check if we're on a tablet for adaptive layout
+    const tablet = isTablet();
+
     return (
         <ThemedView style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, tablet && styles.tabletHeader]}>
                 {/* Go Pro Banner - always show at top if not pro */}
                 {!isPro && <GoProButton variant="banner" style={styles.proBannerHeader} />}
 
@@ -302,7 +306,7 @@ export default function PaymentHistoryScreen() {
                     data={filteredData}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    contentContainerStyle={styles.list}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
                     removeClippedSubviews
                     maxToRenderPerBatch={15}
                     initialNumToRender={10}
@@ -328,7 +332,7 @@ export default function PaymentHistoryScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={styles.list}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
                     stickySectionHeadersEnabled={true}
                     removeClippedSubviews
                     maxToRenderPerBatch={15}
@@ -493,5 +497,17 @@ const styles = StyleSheet.create({
         opacity: 0.6,
         lineHeight: 20,
         paddingHorizontal: 16,
+    },
+    // iPad-specific styles for better readability
+    tabletHeader: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+    },
+    tabletList: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+        paddingHorizontal: 24,
     },
 });

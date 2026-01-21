@@ -1,4 +1,5 @@
 import DateTimePicker from '@/components/ui/DateTimePicker';
+import { isTablet } from '@/utils/responsive';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -268,7 +269,11 @@ export default function AddSubscriptionScreen() {
         keyboardVerticalOffset={0}
       >
         <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 30 }]}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingBottom: insets.bottom + 30 },
+            isTablet() && styles.tabletScroll
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -728,5 +733,11 @@ const styles = StyleSheet.create({
   modalSaveButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  // iPad-specific styles for better readability
+  tabletScroll: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
   },
 });

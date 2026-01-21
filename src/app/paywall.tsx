@@ -6,7 +6,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { calculateYearlySavings, formatPrice, getManagementURL, getMonthlyPackage, getSubscriptionPeriod, getYearlyPackage } from '@/services/purchases';
 import { Haptic } from '@/utils/haptics';
-import { scale } from '@/utils/responsive';
+import { isTablet, scale } from '@/utils/responsive';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -35,6 +35,7 @@ export default function PaywallScreen() {
     const inputBg = useThemeColor({}, 'inputBg');
     const buttonText = useThemeColor({}, 'buttonText');
 
+    const tablet = isTablet();
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
     const [monthlyPkg, setMonthlyPkg] = useState<PurchasesPackage | null>(null);
     const [yearlyPkg, setYearlyPkg] = useState<PurchasesPackage | null>(null);
@@ -137,7 +138,7 @@ export default function PaywallScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.alreadyPremiumContainer}>
+                <View style={[styles.alreadyPremiumContainer, tablet && styles.tabletContent]}>
                     <View style={[styles.iconContainer, { backgroundColor: '#4CD964' + '20' }]}>
                         <IconSymbol name="checkmark.circle.fill" size={scale(48)} color="#4CD964" />
                     </View>
@@ -183,7 +184,7 @@ export default function PaywallScreen() {
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.content}>
+            <View style={[styles.content, tablet && styles.tabletContent]}>
                 {/* Crown icon */}
                 <View style={[styles.iconContainer, { backgroundColor: primaryColor + '20' }]}>
                     <IconSymbol name="sparkles" size={scale(48)} color={primaryColor} />
@@ -390,6 +391,11 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: scale(24),
+    },
+    tabletContent: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
     },
     navBar: {
         flexDirection: 'row',

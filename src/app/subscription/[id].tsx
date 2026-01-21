@@ -29,6 +29,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { isTablet } from '@/utils/responsive';
 
 const CUSTOM_CATEGORY_VALUE = '__custom__';
 
@@ -70,6 +71,7 @@ export default function SubscriptionDetails() {
     const dangerColor = useThemeColor({}, 'danger');
     const categories = getSubscriptionCategories();
     const currentCurrency = getCurrencyByCode(currency);
+    const tablet = isTablet();
 
     useEffect(() => {
         if (id) {
@@ -280,7 +282,7 @@ export default function SubscriptionDetails() {
                 )}
             </View>
 
-            <ScrollView contentContainerStyle={styles.scroll}>
+            <ScrollView contentContainerStyle={[styles.scroll, tablet && styles.tabletScroll]}>
                 {isEditing ? (
                     // Edit Mode - Form only, no payment history
                     <View style={styles.form}>
@@ -520,6 +522,12 @@ const styles = StyleSheet.create({
     scroll: {
         padding: 20,
         paddingBottom: 40,
+    },
+    tabletScroll: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+        paddingHorizontal: 24,
     },
     header: {
         marginBottom: 20,
