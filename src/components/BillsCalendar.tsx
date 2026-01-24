@@ -170,32 +170,54 @@ export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps)
             {/* Calendar */}
             <Card style={styles.calendarCard}>
                 <Calendar
-                    key={`calendar-${colorScheme}`}
+                    key={`calendar-${colorScheme}-${textColor}`}
                     markedDates={markedDates}
                     onDayPress={handleDayPress}
                     enableSwipeMonths={true}
                     firstDay={0} // Sunday
                     theme={{
+                        // Background colors - explicit for dark mode
                         backgroundColor: cardColor,
                         calendarBackground: cardColor,
+                        reservationsBackgroundColor: cardColor,
+
+                        // Text colors - explicit for dark mode
                         textSectionTitleColor: textSecondaryColor,
+                        textSectionTitleDisabledColor: textSecondaryColor + '40',
+                        dayTextColor: textColor,
+                        monthTextColor: textColor,
+                        textDisabledColor: colorScheme === 'dark' ? '#48484A' : textSecondaryColor + '60',
+
+                        // Selected day
                         selectedDayBackgroundColor: buttonPrimaryColor,
                         selectedDayTextColor: '#FFFFFF',
+
+                        // Today
                         todayTextColor: buttonPrimaryColor,
                         todayBackgroundColor: buttonPrimaryColor + '15',
-                        dayTextColor: textColor,
-                        textDisabledColor: textSecondaryColor + '60',
+
+                        // Dots and arrows
                         dotColor: buttonPrimaryColor,
                         selectedDotColor: '#FFFFFF',
                         arrowColor: buttonPrimaryColor,
-                        monthTextColor: textColor,
                         indicatorColor: buttonPrimaryColor,
+
+                        // Agenda-specific (if used)
+                        agendaDayTextColor: textColor,
+                        agendaDayNumColor: textColor,
+                        agendaTodayColor: buttonPrimaryColor,
+                        agendaKnobColor: textSecondaryColor,
+
+                        // Typography
                         textDayFontWeight: '500',
                         textMonthFontWeight: '600',
                         textDayHeaderFontWeight: '600',
                         textDayFontSize: 15,
                         textMonthFontSize: 17,
                         textDayHeaderFontSize: 13,
+
+                        // Week day names (Mon, Tue, etc.)
+                        weekVerticalMargin: 4,
                     }}
                 />
             </Card>
