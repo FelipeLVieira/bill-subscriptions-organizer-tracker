@@ -1,6 +1,15 @@
 # Bill Subscriptions Organizer Tracker
 
+[![Version](https://img.shields.io/badge/version-1.0.6-blue.svg)](https://github.com/fullstackdev1/bill-subscriptions-organizer-tracker)
+[![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey.svg)]()
+
 A local-first, offline-capable mobile application for tracking and organizing bill subscriptions. Built with React Native, Expo, and SQLite.
+
+## Download
+
+<!-- TODO: Add links once approved -->
+- **iOS**: Coming soon to the App Store
+- **Android**: Coming soon to Google Play
 
 ## Features
 
@@ -165,6 +174,12 @@ This app is **100% offline**. Your financial data:
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
+
+## Support
+
+For questions, feedback, or issues:
+- **Email**: felipe.lv.90@gmail.com
+- **GitHub Issues**: [Report a bug](https://github.com/fullstackdev1/bill-subscriptions-organizer-tracker/issues)
 
 ## Contributing
 
