@@ -285,7 +285,7 @@ export default {
         thankYou: "지원해 주셔서 감사합니다!",
         manageSubscription: "구독 관리",
         subscribe: "지금 구독",
-        restore: "구매 복원",
+        restore: "구매 복원하기",
         loadingProducts: "상품 로딩 중...",
         terms: "구독은 매월 자동 갱신됩니다. 기기 설정에서 언제든지 취소할 수 있습니다.",
         termsIntro: "구독은 자동 갱신됩니다. 언제든지 취소 가능.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "캘린더",
     calendarHint: "캘린더 형식으로 청구서 보기",
-    noBillsOnDate: "이 날짜에 청구서가 없습니다",
+    noBillsDue: "청구서 없음",
+    noBillsOnDate: "이 날짜에 예정된 청구서가 없습니다",
 };

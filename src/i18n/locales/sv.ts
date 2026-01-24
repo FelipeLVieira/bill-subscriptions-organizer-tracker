@@ -285,7 +285,7 @@ export default {
         thankYou: "Tack för ditt stöd!",
         manageSubscription: "Hantera Prenumeration",
         subscribe: "Prenumerera Nu",
-        restore: "Återställ Köp",
+        restore: "Återställ köp",
         loadingProducts: "Laddar produkter...",
         terms: "Prenumerationen förnyas automatiskt månadsvis. Avbryt när som helst i enhetsinställningar.",
         termsIntro: "Prenumerationen förnyas automatiskt. Avbryt när som helst.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Kalender",
     calendarHint: "Visa dina räkningar i kalenderformat",
-    noBillsOnDate: "Inga räkningar på detta datum",
+    noBillsDue: "No Bills Due",
+    noBillsOnDate: "No bills scheduled for this date",
 };

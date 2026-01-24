@@ -362,7 +362,7 @@ export default function PaywallScreen() {
                     </ThemedText>
                     <View style={styles.legalLinks}>
                         <TouchableOpacity
-                            onPress={() => Linking.openURL('https://privacy-policy-app-flax.vercel.app/bills-tracker/terms.html')}
+                            onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
                         >
                             <ThemedText style={[styles.legalLink, { color: primaryColor }]}>
                                 {i18n.t('premium.termsOfUse')}

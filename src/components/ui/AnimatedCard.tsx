@@ -112,7 +112,8 @@ export function AnimatedCard({
 const styles = StyleSheet.create({
     card: {
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 14,
+        overflow: 'hidden',
         ...shadows.card,
     },
     pressable: {

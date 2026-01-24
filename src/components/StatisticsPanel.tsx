@@ -3,10 +3,12 @@ import { Card } from '@/components/ui/Card';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Subscription } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { useNativeDriver } from '@/utils/animation';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { Period } from './PeriodSelector';
@@ -26,6 +28,7 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
+    const { colorScheme } = useTheme();
     const animatedValue = useRef(new Animated.Value(0)).current;
     const scaleValue = useRef(new Animated.Value(0.8)).current;
     const [displayValue, setDisplayValue] = useState(value);
@@ -72,6 +75,9 @@ function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps -- fadeValue ref is stable, displayValue comparison is intentional
     }, [value]);
 
+    // Subtle gradient from color to transparent
+    const gradientOpacity = colorScheme === 'dark' ? '08' : '06';
+
     return (
         <Animated.View
             style={[
@@ -83,8 +89,15 @@ function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
             ]}
         >
             <Card style={styles.cardContent}>
-                <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-                    <IconSymbol name={icon as any} size={20} color={color} />
+                {/* Subtle gradient overlay */}
+                <LinearGradient
+                    colors={[color + gradientOpacity, 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientOverlay}
+                />
+                <View style={[styles.iconContainer, { backgroundColor: color + '18' }]}>
+                    <IconSymbol name={icon as any} size={22} color={color} />
                 </View>
                 <Animated.View style={{ opacity: fadeValue }}>
                     <ThemedText style={styles.statValue}>{displayValue}</ThemedText>
@@ -309,25 +322,37 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     cardContent: {
-        padding: 12,
+        padding: 14,
         alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    gradientOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     statValue: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '700',
         marginBottom: 4,
+        letterSpacing: -0.5,
     },
     statTitle: {
         fontSize: 11,
-        opacity: 0.7,
+        opacity: 0.6,
         textAlign: 'center',
+        fontWeight: '500',
+        letterSpacing: 0.2,
     },
 });

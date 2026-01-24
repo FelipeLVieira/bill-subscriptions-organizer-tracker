@@ -3,6 +3,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { useNativeDriver } from '@/utils/animation';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Dynamic import for Google Mobile Ads (only if not web)
 let BannerAd: any = null;
@@ -29,6 +30,7 @@ export function AdBanner({ style }: AdBannerProps) {
     const [adError, setAdError] = useState(false);
     const backgroundColor = useThemeColor({}, 'card');
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         if (isAdLoaded && !isPro) {
@@ -51,14 +53,18 @@ export function AdBanner({ style }: AdBannerProps) {
         <Animated.View
             style={[
                 styles.container,
-                { backgroundColor, opacity: fadeAnim },
+                {
+                    backgroundColor,
+                    opacity: fadeAnim,
+                    paddingBottom: insets.bottom,
+                },
                 style
             ]}
         >
             <View style={styles.adWrapper}>
                 <BannerAd
                     unitId={AD_UNIT_IDS.banner}
-                    size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                    size={BannerAdSize.BANNER}
                     requestOptions={{
                         requestNonPersonalizedAdsOnly: true,
                     }}

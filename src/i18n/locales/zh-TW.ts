@@ -285,7 +285,7 @@ export default {
         thankYou: "感謝您的支持！",
         manageSubscription: "管理訂閱",
         subscribe: "立即訂閱",
-        restore: "恢復購買",
+        restore: "恢復購買項目",
         loadingProducts: "正在載入產品...",
         terms: "訂閱每月自動續訂。可隨時在裝置設定中取消。",
         termsIntro: "訂閱自動續訂。可隨時取消。",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "日曆",
     calendarHint: "以日曆格式查看帳單",
-    noBillsOnDate: "此日期沒有帳單",
+    noBillsDue: "无账单",
+    noBillsOnDate: "此日期无计划账单",
 };

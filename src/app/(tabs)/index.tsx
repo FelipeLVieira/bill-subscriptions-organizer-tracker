@@ -1,4 +1,3 @@
-import { AdBanner } from '@/components/AdBanner';
 import { ExpensesChart } from '@/components/ExpensesChart';
 import { GoProButton } from '@/components/GoProButton';
 import { Period, PeriodSelector } from '@/components/PeriodSelector';
@@ -15,6 +14,7 @@ import { Subscription, deleteSubscription, getPaidThisMonth, getSubscriptions, p
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Haptic } from '@/utils/haptics';
+import { createShadow } from '@/utils/shadow';
 import { isTablet } from '@/utils/responsive';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const [period, setPeriod] = useState<Period>('monthly');
   const primaryColor = useThemeColor({}, 'primary');
   const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+  const addButtonColor = useThemeColor({}, 'buttonSecondary');
   const buttonTextColor = useThemeColor({}, 'buttonText');
   const statusOverdue = useThemeColor({}, 'statusOverdue');
   const statusPaid = useThemeColor({}, 'statusPaid');
@@ -185,7 +186,7 @@ export default function HomeScreen() {
 
         {/* Add Subscription Button - inline, iOS style */}
         <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: buttonPrimaryColor }]}
+          style={[styles.addButton, { backgroundColor: addButtonColor }]}
           onPress={() => router.push('/modal')}
           accessibilityRole="button"
           accessibilityLabel={i18n.t('addSubscription')}
@@ -216,11 +217,6 @@ export default function HomeScreen() {
             <ExpensesChart subscriptions={subscriptions} />
           </WalkthroughableView>
         </CopilotStep>
-
-        {/* Inline Ad Banner on Dashboard - only for free users */}
-        {!isPro && (
-          <AdBanner style={styles.inlineAd} />
-        )}
 
         {/* Step 4: List explanation - always render but only active when list is not empty */}
         <CopilotStep
@@ -389,20 +385,18 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 24,
     marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginTop: 8,
+    ...createShadow({
+      color: '#000',
+      offsetY: 2,
+      opacity: 0.1,
+      radius: 4,
+      elevation: 2,
+    }),
   },
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  inlineAd: {
-    marginVertical: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
   },
   // iPad-specific styles for better readability
   tabletList: {

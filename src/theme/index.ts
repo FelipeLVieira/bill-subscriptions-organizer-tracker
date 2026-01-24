@@ -53,6 +53,7 @@ export const theme = {
 
         // Button colors - consistent across modes
         buttonPrimary: '#007AFF', // iOS Blue for primary actions
+        buttonSecondary: '#248A3D', // Darker green for better contrast with white text
         buttonText: '#FFFFFF', // White text on buttons
 
         // Toast colors
@@ -112,6 +113,7 @@ export const theme = {
 
         // Button colors - consistent across modes
         buttonPrimary: '#0A84FF', // iOS Blue for dark mode (slightly brighter)
+        buttonSecondary: '#248A3D', // Darker green for better contrast with white text
         buttonText: '#FFFFFF', // White text on buttons
 
         // Toast colors

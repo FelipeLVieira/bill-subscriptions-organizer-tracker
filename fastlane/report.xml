@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000187">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="1: update_code_signing_settings" time="0.030277">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: build_app" time="145.851312">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>

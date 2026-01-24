@@ -7,8 +7,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import i18n from '@/i18n';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 
 interface BillsCalendarProps {
@@ -20,11 +21,18 @@ interface DaySubscriptions {
     [date: string]: Subscription[];
 }
 
+// Get today's date string in YYYY-MM-DD format
+const getTodayString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+};
+
 export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps) {
     const { colorScheme } = useTheme();
     const { locale } = useLanguage();
     const { formatAmount } = useCurrency();
-    const [selectedDate, setSelectedDate] = useState<string | null>(null);
+    // Auto-select today's date by default
+    const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
 
     // Theme colors
     const backgroundColor = useThemeColor({}, 'background');
@@ -139,29 +147,30 @@ export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps)
 
     return (
         <View style={styles.container}>
-            {/* Legend */}
+            {/* Legend - enhanced with pill style */}
             <View style={styles.legend}>
-                <View style={styles.legendItem}>
+                <View style={[styles.legendItem, { backgroundColor: dangerColor + '15' }]}>
                     <View style={[styles.legendDot, { backgroundColor: dangerColor }]} />
-                    <ThemedText style={styles.legendText}>{i18n.t('overdue')}</ThemedText>
+                    <ThemedText style={[styles.legendText, { color: dangerColor }]}>{i18n.t('overdue')}</ThemedText>
                 </View>
-                <View style={styles.legendItem}>
+                <View style={[styles.legendItem, { backgroundColor: warningColor + '15' }]}>
                     <View style={[styles.legendDot, { backgroundColor: warningColor }]} />
-                    <ThemedText style={styles.legendText}>{i18n.t('billDue')}</ThemedText>
+                    <ThemedText style={[styles.legendText, { color: warningColor }]}>{i18n.t('billDue')}</ThemedText>
                 </View>
-                <View style={styles.legendItem}>
+                <View style={[styles.legendItem, { backgroundColor: buttonPrimaryColor + '15' }]}>
                     <View style={[styles.legendDot, { backgroundColor: buttonPrimaryColor }]} />
-                    <ThemedText style={styles.legendText}>{i18n.t('upcomingWeek')}</ThemedText>
+                    <ThemedText style={[styles.legendText, { color: buttonPrimaryColor }]}>{i18n.t('upcomingWeek')}</ThemedText>
                 </View>
-                <View style={styles.legendItem}>
+                <View style={[styles.legendItem, { backgroundColor: successColor + '15' }]}>
                     <View style={[styles.legendDot, { backgroundColor: successColor }]} />
-                    <ThemedText style={styles.legendText}>{i18n.t('later')}</ThemedText>
+                    <ThemedText style={[styles.legendText, { color: successColor }]}>{i18n.t('later')}</ThemedText>
                 </View>
             </View>
 
             {/* Calendar */}
             <Card style={styles.calendarCard}>
                 <Calendar
+                    key={`calendar-${colorScheme}`}
                     markedDates={markedDates}
                     onDayPress={handleDayPress}
                     enableSwipeMonths={true}
@@ -192,41 +201,54 @@ export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps)
             </Card>
 
             {/* Selected date info */}
-            {selectedDate && (
-                <View style={styles.selectedDateSection}>
-                    <ThemedText type="subtitle" style={styles.selectedDateTitle}>
-                        {formatSelectedDate(selectedDate)}
-                    </ThemedText>
+            <View style={styles.selectedDateSection}>
+                <ThemedText type="subtitle" style={styles.selectedDateTitle}>
+                    {formatSelectedDate(selectedDate)}
+                </ThemedText>
 
-                    {selectedDateSubscriptions.length > 0 ? (
-                        <View style={styles.selectedDateBills}>
-                            {selectedDateSubscriptions.map((sub) => (
+                {selectedDateSubscriptions.length > 0 ? (
+                    <View style={styles.selectedDateBills}>
+                        {selectedDateSubscriptions.map((sub) => {
+                            const statusColor = getStatusColor(sub);
+                            return (
                                 <Card key={sub.id} style={styles.billCard}>
+                                    {/* Subtle gradient overlay based on status */}
+                                    <LinearGradient
+                                        colors={[statusColor + '08', 'transparent']}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                        style={styles.billGradient}
+                                    />
                                     <View style={styles.billCardContent}>
-                                        <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(sub) }]} />
+                                        <View style={[styles.statusIndicator, { backgroundColor: statusColor }]} />
                                         <View style={styles.billInfo}>
-                                            <ThemedText type="defaultSemiBold">{sub.name}</ThemedText>
+                                            <ThemedText type="defaultSemiBold" style={styles.billName}>{sub.name}</ThemedText>
                                             <ThemedText style={styles.billCategory}>
                                                 {sub.categoryGroup || i18n.t('cat_uncategorized')}
                                             </ThemedText>
                                         </View>
-                                        <ThemedText type="defaultSemiBold" style={styles.billAmount}>
+                                        <ThemedText type="defaultSemiBold" style={[styles.billAmount, { color: statusColor }]}>
                                             {formatAmount(sub.amount, sub.currency)}
                                         </ThemedText>
                                     </View>
                                 </Card>
-                            ))}
-                        </View>
-                    ) : (
+                            );
+                        })}
+                    </View>
+                ) : (
+                    <Card style={styles.noBillsCard}>
                         <View style={styles.noBillsContainer}>
-                            <IconSymbol name="checkmark.circle" size={32} color={successColor} />
+                            <IconSymbol name="checkmark.circle" size={40} color={successColor} />
+                            <ThemedText type="defaultSemiBold" style={styles.noBillsTitle}>
+                                {i18n.t('noBillsDue') || 'No Bills Due'}
+                            </ThemedText>
                             <ThemedText style={styles.noBillsText}>
-                                {i18n.t('noBillsInCategory') || 'No bills due on this date'}
+                                {i18n.t('noBillsOnDate') || 'No bills scheduled for this date'}
                             </ThemedText>
                         </View>
-                    )}
-                </View>
-            )}
+                    </Card>
+                )}
+            </View>
         </View>
     );
 }
@@ -239,23 +261,26 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         flexWrap: 'wrap',
-        gap: 12,
-        marginBottom: 12,
+        gap: 8,
+        marginBottom: 14,
         paddingHorizontal: 16,
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
     },
     legendDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        width: 6,
+        height: 6,
+        borderRadius: 3,
     },
     legendText: {
         fontSize: 11,
-        opacity: 0.7,
+        fontWeight: '600',
     },
     calendarCard: {
         marginHorizontal: 16,
@@ -264,17 +289,28 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     selectedDateSection: {
-        marginTop: 16,
+        marginTop: 20,
         paddingHorizontal: 16,
     },
     selectedDateTitle: {
-        marginBottom: 12,
+        marginBottom: 14,
+        fontSize: 17,
+        fontWeight: '600',
     },
     selectedDateBills: {
-        gap: 8,
+        gap: 10,
     },
     billCard: {
-        padding: 12,
+        padding: 14,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    billGradient: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     billCardContent: {
         flexDirection: 'row',
@@ -282,29 +318,42 @@ const styles = StyleSheet.create({
     },
     statusIndicator: {
         width: 4,
-        height: 32,
+        height: 36,
         borderRadius: 2,
-        marginRight: 12,
+        marginRight: 14,
     },
     billInfo: {
         flex: 1,
     },
+    billName: {
+        fontSize: 15,
+    },
     billCategory: {
         fontSize: 12,
         opacity: 0.6,
-        marginTop: 2,
+        marginTop: 3,
     },
     billAmount: {
-        fontSize: 16,
+        fontSize: 17,
+        fontWeight: '700',
+    },
+    noBillsCard: {
+        marginTop: 4,
     },
     noBillsContainer: {
         alignItems: 'center',
-        paddingVertical: 24,
+        paddingVertical: 36,
+        paddingHorizontal: 16,
         gap: 8,
+    },
+    noBillsTitle: {
+        marginTop: 10,
+        fontSize: 17,
     },
     noBillsText: {
         fontSize: 14,
         opacity: 0.6,
         textAlign: 'center',
+        lineHeight: 20,
     },
 });

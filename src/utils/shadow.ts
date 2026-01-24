@@ -56,9 +56,25 @@ export function createShadow({
 export const shadows = {
     /** Subtle card shadow - iOS style */
     card: createShadow({
-        offsetY: 1,
+        offsetY: 2,
+        opacity: 0.1,
+        radius: 10,
+        elevation: 3,
+    }),
+
+    /** Elevated card shadow - for highlighted cards */
+    cardElevated: createShadow({
+        offsetY: 4,
+        opacity: 0.15,
+        radius: 16,
+        elevation: 6,
+    }),
+
+    /** Subtle inner glow effect */
+    cardGlow: createShadow({
+        offsetY: 0,
         opacity: 0.08,
-        radius: 8,
+        radius: 20,
         elevation: 2,
     }),
 

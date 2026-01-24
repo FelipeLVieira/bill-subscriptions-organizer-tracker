@@ -285,7 +285,7 @@ export default {
         thankYou: "Gràcies pel teu suport!",
         manageSubscription: "Gestionar Subscripció",
         subscribe: "Subscriu-te Ara",
-        restore: "Restaurar Compra",
+        restore: "Restaurar Compras",
         loadingProducts: "Carregant productes...",
         terms: "La subscripció es renova automàticament mensualment. Cancel·la en qualsevol moment a la configuració del dispositiu.",
         termsIntro: "La subscripció es renova automàticament. Cancel·la en qualsevol moment.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Calendari",
     calendarHint: "Veure les teves factures en format calendari",
-    noBillsOnDate: "No hi ha factures en aquesta data",
+    noBillsDue: "No Bills Due",
+    noBillsOnDate: "No bills scheduled for this date",
 };

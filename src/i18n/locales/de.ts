@@ -289,7 +289,7 @@ export default {
         thankYou: "Vielen Dank für Ihre Unterstützung!",
         manageSubscription: "Abonnement verwalten",
         subscribe: "Jetzt abonnieren",
-        restore: "Kauf wiederherstellen",
+        restore: "Käufe wiederherstellen",
         loadingProducts: "Produkte werden geladen...",
         terms: "Abonnement verlängert sich monatlich automatisch. Jederzeit in den Geräteeinstellungen kündbar.",
         termsIntro: "Abonnement verlängert sich automatisch. Jederzeit kündbar.",
@@ -315,5 +315,6 @@ export default {
     // Calendar
     calendar: "Kalender",
     calendarHint: "Rechnungen im Kalenderformat anzeigen",
-    noBillsOnDate: "Keine Rechnungen an diesem Datum fällig",
+    noBillsDue: "Keine Rechnungen",
+    noBillsOnDate: "Keine Rechnungen für dieses Datum geplant",
 };

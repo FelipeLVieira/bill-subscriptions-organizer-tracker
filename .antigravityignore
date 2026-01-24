@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.expo/
+
+# Build outputs
+dist/
+build/
+android/app/build/
+ios/build/
+ios/Pods/
+
+# Native (large folders)
+android/
+ios/
+
+# Database
+*.db
+drizzle/
+
+# Logs
+*.log
+logs/
+
+# Test outputs
+coverage/
+.jest/
+
+# IDE
+.idea/
+*.swp
+
+# Screenshots
+screenshots/
+
+# Git
+.git/

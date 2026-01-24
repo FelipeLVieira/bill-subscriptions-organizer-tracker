@@ -285,7 +285,7 @@ export default {
         thankYou: "Merci pour votre soutien!",
         manageSubscription: "Gérer l'Abonnement",
         subscribe: "S'abonner Maintenant",
-        restore: "Restaurer l'Achat",
+        restore: "Restaurer les achats",
         loadingProducts: "Chargement des produits...",
         terms: "L'abonnement se renouvelle automatiquement chaque mois. Annulez à tout moment dans les paramètres de l'appareil.",
         termsIntro: "L'abonnement se renouvelle automatiquement. Annulez à tout moment.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Calendrier",
     calendarHint: "Voir vos factures au format calendrier",
-    noBillsOnDate: "Aucune facture à cette date",
+    noBillsDue: "Pas de Factures",
+    noBillsOnDate: "Aucune facture prévue pour cette date",
 };

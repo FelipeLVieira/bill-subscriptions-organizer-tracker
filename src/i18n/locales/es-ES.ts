@@ -285,7 +285,7 @@ export default {
         thankYou: "¡Gracias por tu apoyo!",
         manageSubscription: "Gestionar Suscripción",
         subscribe: "Suscribirse Ahora",
-        restore: "Restaurar Compra",
+        restore: "Restaurar Compras",
         loadingProducts: "Cargando productos...",
         terms: "La suscripción se renueva automáticamente mensualmente. Cancela en cualquier momento en la configuración del dispositivo.",
         termsIntro: "La suscripción se renueva automáticamente. Cancela en cualquier momento.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Calendario",
     calendarHint: "Ver tus facturas en formato de calendario",
-    noBillsOnDate: "No hay facturas en esta fecha",
+    noBillsDue: "Sin Facturas Pendientes",
+    noBillsOnDate: "Sin facturas programadas para esta fecha",
 };

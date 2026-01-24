@@ -285,7 +285,7 @@ export default {
         thankYou: "Bedankt voor uw steun!",
         manageSubscription: "Abonnement Beheren",
         subscribe: "Nu Abonneren",
-        restore: "Aankoop Herstellen",
+        restore: "Aankopen Herstellen",
         loadingProducts: "Producten laden...",
         terms: "Abonnement wordt maandelijks automatisch verlengd. Annuleer op elk moment in apparaatinstellingen.",
         termsIntro: "Abonnement wordt automatisch verlengd. Annuleer op elk moment.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Kalender",
     calendarHint: "Bekijk uw rekeningen in kalenderformaat",
-    noBillsOnDate: "Geen rekeningen op deze datum",
+    noBillsDue: "Geen Rekeningen",
+    noBillsOnDate: "Geen rekeningen gepland voor deze datum",
 };

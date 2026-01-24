@@ -289,7 +289,7 @@ export default {
         thankYou: "ご支援ありがとうございます！",
         manageSubscription: "サブスクリプション管理",
         subscribe: "今すぐ登録",
-        restore: "購入を復元",
+        restore: "購入を復元する",
         loadingProducts: "製品を読み込み中...",
         terms: "サブスクリプションは毎月自動更新されます。デバイス設定からいつでもキャンセルできます。",
         termsIntro: "サブスクリプションは自動更新されます。いつでもキャンセル可能。",
@@ -315,5 +315,6 @@ export default {
     // Calendar
     calendar: "カレンダー",
     calendarHint: "カレンダー形式で請求書を表示",
-    noBillsOnDate: "この日に請求書はありません",
+    noBillsDue: "請求なし",
+    noBillsOnDate: "この日に予定されている請求はありません",
 };

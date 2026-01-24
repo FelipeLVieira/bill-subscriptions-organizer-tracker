@@ -285,7 +285,7 @@ export default {
         thankYou: "Obrigado pelo seu apoio!",
         manageSubscription: "Gerir Subscrição",
         subscribe: "Subscrever Agora",
-        restore: "Restaurar Compra",
+        restore: "Restaurar Compras",
         loadingProducts: "A carregar produtos...",
         terms: "A subscrição é renovada automaticamente mensalmente. Cancele a qualquer momento nas definições do dispositivo.",
         termsIntro: "A subscrição é renovada automaticamente. Cancele a qualquer momento.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Calendário",
     calendarHint: "Veja as suas contas em formato de calendário",
-    noBillsOnDate: "Nenhuma conta nesta data",
+    noBillsDue: "Sem Contas",
+    noBillsOnDate: "Nenhuma conta agendada para esta data",
 };

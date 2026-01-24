@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "कैलेंडर",
     calendarHint: "कैलेंडर प्रारूप में अपने बिल देखें",
-    noBillsOnDate: "इस तारीख पर कोई बिल नहीं",
+    noBillsDue: "No Bills Due",
+    noBillsOnDate: "No bills scheduled for this date",
 };

@@ -285,7 +285,7 @@ export default {
         thankYou: "Dziękujemy za wsparcie!",
         manageSubscription: "Zarządzaj subskrypcją",
         subscribe: "Subskrybuj teraz",
-        restore: "Przywróć zakup",
+        restore: "Przywróć zakupy",
         loadingProducts: "Ładowanie produktów...",
         terms: "Subskrypcja odnawia się automatycznie co miesiąc. Anuluj w dowolnym momencie w ustawieniach urządzenia.",
         termsIntro: "Subskrypcja odnawia się automatycznie. Anuluj w dowolnym momencie.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Kalendarz",
     calendarHint: "Zobacz swoje rachunki w formacie kalendarza",
-    noBillsOnDate: "Brak rachunków w tym dniu",
+    noBillsDue: "Brak Rachunków",
+    noBillsOnDate: "Brak rachunków zaplanowanych na ten dzień",
 };

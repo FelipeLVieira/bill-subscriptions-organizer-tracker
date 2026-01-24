@@ -285,7 +285,7 @@ export default {
         thankYou: "Desteğiniz için teşekkürler!",
         manageSubscription: "Aboneliği Yönet",
         subscribe: "Şimdi Abone Ol",
-        restore: "Satın Almayı Geri Yükle",
+        restore: "Satın Almaları Geri Yükle",
         loadingProducts: "Ürünler yükleniyor...",
         terms: "Abonelik aylık olarak otomatik yenilenir. Cihaz ayarlarından istediğiniz zaman iptal edin.",
         termsIntro: "Abonelik otomatik yenilenir. İstediğiniz zaman iptal edin.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Takvim",
     calendarHint: "Faturalarınızı takvim formatında görüntüleyin",
-    noBillsOnDate: "Bu tarihte fatura yok",
+    noBillsDue: "Fatura Yok",
+    noBillsOnDate: "Bu tarih için planlanmış fatura yok",
 };

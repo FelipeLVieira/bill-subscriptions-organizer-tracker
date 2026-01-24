@@ -19,8 +19,10 @@ interface ExpensesChartProps {
 
 export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
     const primaryColor = useThemeColor({}, 'primary');
+    const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
+    const backgroundColor = useThemeColor({}, 'background');
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.9)).current;
     useLanguage(); // Re-render on locale change
@@ -129,11 +131,11 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
         <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
             <Card style={styles.card}>
                 {/* View Mode Toggle */}
-                <View style={styles.viewModeContainer}>
+                <View style={[styles.viewModeContainer, { backgroundColor }]}>
                     <TouchableOpacity
                         style={[
                             styles.viewModeTab,
-                            viewMode === 'category' && { backgroundColor: primaryColor }
+                            viewMode === 'category' && { backgroundColor: buttonPrimaryColor }
                         ]}
                         onPress={() => setViewMode('category')}
                         accessibilityRole="tab"
@@ -152,7 +154,7 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
                     <TouchableOpacity
                         style={[
                             styles.viewModeTab,
-                            viewMode === 'bill' && { backgroundColor: primaryColor }
+                            viewMode === 'bill' && { backgroundColor: buttonPrimaryColor }
                         ]}
                         onPress={() => setViewMode('bill')}
                         accessibilityRole="tab"
@@ -189,7 +191,7 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
                                     key={currCode}
                                     style={[
                                         styles.currencyTab,
-                                        isSelected && { backgroundColor: primaryColor }
+                                        isSelected && { backgroundColor: buttonPrimaryColor }
                                     ]}
                                     onPress={() => setSelectedCurrency(currCode)}
                                     accessibilityRole="tab"
@@ -262,7 +264,6 @@ const styles = StyleSheet.create({
     },
     viewModeContainer: {
         flexDirection: 'row',
-        backgroundColor: 'rgba(128,128,128,0.1)',
         borderRadius: 10,
         padding: 4,
         marginBottom: 12,

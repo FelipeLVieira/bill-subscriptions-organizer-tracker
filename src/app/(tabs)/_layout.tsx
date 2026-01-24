@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { AdBanner } from '@/components/AdBanner';
 import { HapticTab } from '@/components/haptic-tab';
@@ -33,6 +33,8 @@ export default function TabLayout() {
   const tabBarStyle = useMemo(() => ({
     backgroundColor: Colors[colorScheme ?? 'light'].card,
     borderTopColor: Colors[colorScheme ?? 'light'].border,
+    height: 75,
+    paddingTop: 8,
     // Add extra padding at bottom for ad banner when showing ads
     ...(shouldShowBannerAd ? { marginBottom: 0 } : {}),
   }), [colorScheme, shouldShowBannerAd]);
@@ -47,33 +49,42 @@ export default function TabLayout() {
           header: (props) => <MainHeader title={props.options.title || ''} />,
           tabBarButton: HapticTab,
           tabBarStyle,
+          tabBarIconStyle: {
+            width: 32,
+            height: 32,
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
+            marginTop: 4,
+          },
         }}>
         <Tabs.Screen
           name="index"
           options={{
             title: translations.dashboard,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
+            tabBarIcon: ({ color }) => <IconSymbol size={32} name="chart.bar.fill" color={color} weight="semibold" />,
           }}
         />
         <Tabs.Screen
           name="search"
           options={{
             title: translations.myBills,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet.rectangle.fill" color={color} />,
+            tabBarIcon: ({ color }) => <IconSymbol size={32} name="list.bullet.rectangle.fill" color={color} weight="semibold" />,
           }}
         />
         <Tabs.Screen
           name="history"
           options={{
             title: translations.history,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />,
+            tabBarIcon: ({ color }) => <IconSymbol size={32} name="clock.arrow.circlepath" color={color} weight="semibold" />,
           }}
         />
         <Tabs.Screen
           name="calendar"
           options={{
             title: translations.calendar,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+            tabBarIcon: ({ color }) => <IconSymbol size={32} name="calendar" color={color} weight="semibold" />,
           }}
         />
       </Tabs>

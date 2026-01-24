@@ -256,7 +256,7 @@ export default function AddSubscriptionScreen() {
             { backgroundColor: buttonPrimaryColor, opacity: loading ? 0.6 : 1 }
           ]}
         >
-          <IconSymbol name="checkmark" size={14} color={buttonTextColor} weight="semibold" />
+          <IconSymbol name="checkmark.circle.fill" size={18} color={buttonTextColor} />
           <ThemedText style={[styles.headerSaveText, { color: buttonTextColor }]}>
             {loading ? '...' : i18n.t('save')}
           </ThemedText>
@@ -279,29 +279,39 @@ export default function AddSubscriptionScreen() {
         >
           {/* Hero Amount Section */}
           <View style={[styles.amountHero, { backgroundColor: cardColor }]}>
-            <ThemedText style={[styles.amountLabel, { color: textSecondaryColor }]}>
-              {i18n.t('amount')}
-            </ThemedText>
             <View style={styles.amountInputContainer}>
-              <TouchableOpacity
-                style={styles.currencySelector}
-                onPress={() => setShowCurrencyPicker(true)}
-              >
-                <ThemedText style={[styles.currencySymbol, { color: buttonPrimaryColor }]}>
-                  {currentCurrency?.symbol || '$'}
+              {/* Currency Selector with Label */}
+              <View style={styles.currencySelectorContainer}>
+                <ThemedText style={[styles.currencyLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('currency')}
                 </ThemedText>
-                <IconSymbol name="chevron.down" size={12} color={buttonPrimaryColor} />
-              </TouchableOpacity>
-              <Input
-                placeholder="0.00"
-                value={amount}
-                onChangeText={setAmount}
-                onBlur={() => setTouched(t => ({ ...t, amount: true }))}
-                keyboardType="decimal-pad"
-                style={styles.heroAmountInput}
-                inputStyle={styles.heroAmountInputText}
-                showBorder={false}
-              />
+                <TouchableOpacity
+                  style={[styles.currencySelector, { backgroundColor: buttonPrimaryColor + '15' }]}
+                  onPress={() => setShowCurrencyPicker(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <ThemedText style={[styles.currencySymbol, { color: buttonPrimaryColor }]}>
+                    {currentCurrency?.symbol || '$'}
+                  </ThemedText>
+                  <IconSymbol name="chevron.down" size={14} color={buttonPrimaryColor} />
+                </TouchableOpacity>
+              </View>
+              {/* Amount Input with Label */}
+              <View style={styles.amountInputWrapper}>
+                <ThemedText style={[styles.amountLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('amount')}
+                </ThemedText>
+                <Input
+                  placeholder="0.00"
+                  value={amount}
+                  onChangeText={setAmount}
+                  onBlur={() => setTouched(t => ({ ...t, amount: true }))}
+                  keyboardType="decimal-pad"
+                  style={styles.heroAmountInput}
+                  inputStyle={styles.heroAmountInputText}
+                  showBorder={false}
+                />
+              </View>
             </View>
             {touched.amount && errors.amount && (
               <ThemedText style={styles.errorText}>{errors.amount}</ThemedText>
@@ -561,29 +571,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  amountLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
   amountInputContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     width: '100%',
+    gap: 20, // Increased gap between currency and amount
+  },
+  currencySelectorContainer: {
+    alignItems: 'center',
+  },
+  currencyLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
   },
   currencySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginRight: 4,
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 70,
+    minHeight: 60,
   },
   currencySymbol: {
     fontSize: 36,
-    fontWeight: '700',
-    letterSpacing: -1,
+    fontWeight: '500',
+    letterSpacing: 0,
+  },
+  amountInputWrapper: {
+    alignItems: 'flex-start',
+  },
+  amountLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
   },
   heroAmountInput: {
     flex: 0,

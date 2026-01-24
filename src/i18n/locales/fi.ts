@@ -286,7 +286,7 @@ export default {
         thankYou: "Thank you for your support!",
         manageSubscription: "Manage Subscription",
         subscribe: "Subscribe Now",
-        restore: "Restore Purchase",
+        restore: "Restore Purchases",
         loadingProducts: "Loading products...",
         terms: "Subscription auto-renews monthly. Cancel anytime in your device settings.",
         termsIntro: "Subscription auto-renews. Cancel anytime.",
@@ -312,5 +312,6 @@ export default {
     // Calendar
     calendar: "Calendar",
     calendarHint: "View your bills in calendar format",
-    noBillsOnDate: "No bills due on this date",
+    noBillsDue: "No Bills Due",
+    noBillsOnDate: "No bills scheduled for this date",
 };

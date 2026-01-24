@@ -285,7 +285,7 @@ export default {
         thankYou: "Grazie per il tuo supporto!",
         manageSubscription: "Gestisci Abbonamento",
         subscribe: "Abbonati Ora",
-        restore: "Ripristina Acquisto",
+        restore: "Ripristina Acquisti",
         loadingProducts: "Caricamento prodotti...",
         terms: "L'abbonamento si rinnova automaticamente mensilmente. Annulla in qualsiasi momento nelle impostazioni del dispositivo.",
         termsIntro: "L'abbonamento si rinnova automaticamente. Annulla in qualsiasi momento.",
@@ -311,5 +311,6 @@ export default {
     // Calendar
     calendar: "Calendario",
     calendarHint: "Visualizza le tue bollette in formato calendario",
-    noBillsOnDate: "Nessuna bolletta in questa data",
+    noBillsDue: "Nessuna Bolletta",
+    noBillsOnDate: "Nessuna bolletta prevista per questa data",
 };

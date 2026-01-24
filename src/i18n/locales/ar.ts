@@ -315,5 +315,6 @@ export default {
     // Calendar
     calendar: "التقويم",
     calendarHint: "عرض فواتيرك بتنسيق التقويم",
-    noBillsOnDate: "لا توجد فواتير في هذا التاريخ",
+    noBillsDue: "لا توجد فواتير",
+    noBillsOnDate: "لا توجد فواتير مجدولة لهذا التاريخ",
 };

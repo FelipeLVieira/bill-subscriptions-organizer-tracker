@@ -11,6 +11,7 @@ import { getAllBillingHistory, getSubscriptions } from '@/db/actions';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { isTablet } from '@/utils/responsive';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -38,7 +39,8 @@ export default function PaymentHistoryScreen() {
     const [groupBy, setGroupBy] = useState<GroupBy>('date');
 
     const primaryColor = useThemeColor({}, 'primary');
-    const interactiveColor = useThemeColor({}, 'interactive');
+    const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
+    const successColor = useThemeColor({}, 'success');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const backgroundColor = useThemeColor({}, 'background');
@@ -195,8 +197,17 @@ export default function PaymentHistoryScreen() {
                     </WalkthroughableView>
                 </CopilotStep>
 
-                {/* Total Summary */}
+                {/* Total Summary - with gradient */}
                 <Card style={styles.summaryCard}>
+                    <LinearGradient
+                        colors={[successColor + '10', 'transparent']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.summaryGradient}
+                    />
+                    <View style={[styles.summaryIconContainer, { backgroundColor: successColor + '18' }]}>
+                        <IconSymbol name="checkmark.circle.fill" size={24} color={successColor} />
+                    </View>
                     <ThemedText style={styles.summaryLabel}>{i18n.t('totalPaid')}</ThemedText>
                     <ThemedText type="title" style={styles.summaryValue}>
                         {formatCurrencyAmount(totalAmount)}
@@ -217,7 +228,7 @@ export default function PaymentHistoryScreen() {
                                 <TouchableOpacity
                                     style={[
                                         styles.viewToggleBtn,
-                                        { backgroundColor: viewMode === 'list' ? interactiveColor : cardColor }
+                                        { backgroundColor: viewMode === 'list' ? buttonPrimaryColor : cardColor }
                                     ]}
                                     onPress={() => setViewMode('list')}
                                     accessibilityLabel={i18n.t('listView')}
@@ -226,14 +237,14 @@ export default function PaymentHistoryScreen() {
                                 >
                                     <IconSymbol
                                         name="list.bullet"
-                                        size={16}
+                                        size={18}
                                         color={viewMode === 'list' ? '#FFFFFF' : textColor}
                                     />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
                                         styles.viewToggleBtn,
-                                        { backgroundColor: viewMode === 'grouped' ? interactiveColor : cardColor }
+                                        { backgroundColor: viewMode === 'grouped' ? buttonPrimaryColor : cardColor }
                                     ]}
                                     onPress={() => setViewMode('grouped')}
                                     accessibilityLabel={i18n.t('groupView')}
@@ -242,7 +253,7 @@ export default function PaymentHistoryScreen() {
                                 >
                                     <IconSymbol
                                         name="rectangle.3.group"
-                                        size={16}
+                                        size={18}
                                         color={viewMode === 'grouped' ? '#FFFFFF' : textColor}
                                     />
                                 </TouchableOpacity>
@@ -263,7 +274,7 @@ export default function PaymentHistoryScreen() {
                                     <TouchableOpacity
                                         style={[
                                             styles.groupByBtn,
-                                            { backgroundColor: groupBy === 'date' ? interactiveColor : cardColor }
+                                            { backgroundColor: groupBy === 'date' ? buttonPrimaryColor : cardColor }
                                         ]}
                                         onPress={() => setGroupBy('date')}
                                         accessibilityLabel={i18n.t('byDate')}
@@ -280,7 +291,7 @@ export default function PaymentHistoryScreen() {
                                     <TouchableOpacity
                                         style={[
                                             styles.groupByBtn,
-                                            { backgroundColor: groupBy === 'subscription' ? interactiveColor : cardColor }
+                                            { backgroundColor: groupBy === 'subscription' ? buttonPrimaryColor : cardColor }
                                         ]}
                                         onPress={() => setGroupBy('subscription')}
                                         accessibilityLabel={i18n.t('byBill')}
@@ -378,20 +389,41 @@ const styles = StyleSheet.create({
         marginBottom: 0,
     },
     summaryCard: {
-        padding: 16,
+        padding: 20,
         alignItems: 'center',
         marginTop: 12,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    summaryGradient: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    summaryIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 10,
     },
     summaryLabel: {
         fontSize: 12,
-        opacity: 0.7,
+        opacity: 0.6,
+        fontWeight: '500',
+        letterSpacing: 0.3,
     },
     summaryValue: {
-        marginVertical: 4,
+        marginVertical: 6,
+        letterSpacing: -0.5,
     },
     summaryCount: {
         fontSize: 12,
-        opacity: 0.7,
+        opacity: 0.6,
+        fontWeight: '500',
     },
     proBannerHeader: {
         marginTop: 8,

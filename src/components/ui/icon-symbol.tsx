@@ -139,6 +139,7 @@ const MAPPING = {
 
   // Charts & Data
   'chart.pie.fill': 'pie-chart',
+  'chart.bar.fill': 'bar-chart',
 
   // Time & History
   'clock.fill': 'schedule',
