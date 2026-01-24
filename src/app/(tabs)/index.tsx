@@ -7,7 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
 import { AnimatedCard } from '@/components/ui/AnimatedCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
+import { getSubscriptionIcon } from '@/constants/companyIcons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePro } from '@/contexts/ProContext';
 import { Subscription, deleteSubscription, getPaidThisMonth, getSubscriptions, paySubscription } from '@/db/actions';
@@ -144,7 +144,7 @@ export default function HomeScreen() {
     const now = new Date();
     const isOverdue = nextDate < now;
     const dateColor = isOverdue ? statusOverdue : statusPaid;
-    const companyIcon = getCompanyIcon(item.name) || DEFAULT_ICON;
+    const companyIcon = getSubscriptionIcon(item);
 
     return (
       <AnimatedCard
@@ -384,7 +384,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     marginBottom: 24,
-    marginTop: 8,
     marginTop: 8,
     ...createShadow({
       color: '#000',

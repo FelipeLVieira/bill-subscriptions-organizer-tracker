@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Attachment, AttachmentPicker } from '@/components/AttachmentPicker';
 import { CurrencyPickerModal } from '@/components/CurrencyPickerModal';
+import { IconPickerModal } from '@/components/IconPickerModal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/Toast';
@@ -32,6 +33,7 @@ import { createDefaultReminder, scheduleAllReminders, serializeReminderSchema } 
 
 import { Currency } from '@/constants/Currencies';
 import { getSubscriptionCategories } from '@/constants/categories';
+import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
 import i18n from '@/i18n';
 
 const BILLING_INTERVALS = [
@@ -72,6 +74,9 @@ export default function AddSubscriptionScreen() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [customIcon, setCustomIcon] = useState<string | null>(null);
+  const [customIconColor, setCustomIconColor] = useState<string | null>(null);
 
   const [touched, setTouched] = useState({ name: false, amount: false });
 
@@ -198,6 +203,8 @@ export default function AddSubscriptionScreen() {
         attachments: attachmentsJson,
         reminderSchema: serializeReminderSchema(reminderSchema),
         active: true,
+        customIcon: customIcon || undefined,
+        customIconColor: customIconColor || undefined,
       });
 
       await Haptic.success();
@@ -228,6 +235,26 @@ export default function AddSubscriptionScreen() {
   const getIntervalIcon = () => {
     const found = BILLING_INTERVALS.find(i => i.value === interval);
     return found?.icon || 'calendar';
+  };
+
+  // Get the display icon (custom > auto-detected > default)
+  const getDisplayIcon = () => {
+    if (customIcon && customIconColor) {
+      return { icon: customIcon, color: customIconColor };
+    }
+    const autoDetected = getCompanyIcon(name);
+    return autoDetected || DEFAULT_ICON;
+  };
+
+  const handleIconSelect = (icon: string, color: string) => {
+    if (!icon || !color) {
+      // Reset to auto-detect
+      setCustomIcon(null);
+      setCustomIconColor(null);
+    } else {
+      setCustomIcon(icon);
+      setCustomIconColor(color);
+    }
   };
 
   return (
@@ -344,6 +371,24 @@ export default function AddSubscriptionScreen() {
             )}
           </View>
 
+          {/* Icon Card */}
+          <View style={[styles.card, { backgroundColor: cardColor }]}>
+            <Pressable style={styles.cardRow} onPress={() => setShowIconPicker(true)}>
+              <View style={[styles.iconContainer, { backgroundColor: getDisplayIcon().color + '15' }]}>
+                <IconSymbol name={getDisplayIcon().icon as any} size={18} color={getDisplayIcon().color} />
+              </View>
+              <View style={styles.cardContent}>
+                <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
+                  {i18n.t('icon')}
+                </ThemedText>
+                <ThemedText style={styles.cardValue}>
+                  {customIcon ? i18n.t('customIcon') : i18n.t('autoDetected')}
+                </ThemedText>
+              </View>
+              <IconSymbol name="chevron.right" size={14} color={textSecondaryColor} />
+            </Pressable>
+          </View>
+
           {/* Billing & Category Card */}
           <View style={[styles.card, { backgroundColor: cardColor }]}>
             {/* Billing Interval Row */}
@@ -365,7 +410,7 @@ export default function AddSubscriptionScreen() {
             {/* Category Row */}
             <Pressable style={styles.cardRow} onPress={showCategoryPicker}>
               <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '15' }]}>
-                <IconSymbol name={getCategoryIcon()} size={18} color="#FF9500" />
+                <IconSymbol name={getCategoryIcon() as any} size={18} color="#FF9500" />
               </View>
               <View style={styles.cardContent}>
                 <ThemedText style={[styles.cardLabel, { color: textSecondaryColor }]}>
@@ -516,6 +561,16 @@ export default function AddSubscriptionScreen() {
         onClose={() => setShowCurrencyPicker(false)}
         onSelect={handleCurrencySelect}
         mode="select"
+      />
+
+      {/* Icon Picker Modal */}
+      <IconPickerModal
+        visible={showIconPicker}
+        onClose={() => setShowIconPicker(false)}
+        onSelect={handleIconSelect}
+        currentIcon={customIcon}
+        currentColor={customIconColor}
+        subscriptionName={name}
       />
     </ThemedView>
   );

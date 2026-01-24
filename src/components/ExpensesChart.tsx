@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/Card';
-import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
+import { getSubscriptionIcon } from '@/constants/companyIcons';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Subscription } from '@/db/actions';
@@ -91,7 +91,7 @@ export function ExpensesChart({ subscriptions }: ExpensesChartProps) {
         } else {
             // By individual bill
             return filteredSubscriptions.map((sub, index) => {
-                const companyIcon = getCompanyIcon(sub.name) || DEFAULT_ICON;
+                const companyIcon = getSubscriptionIcon(sub);
                 return {
                     value: sub.amount,
                     text: `${((sub.amount / total) * 100).toFixed(0)}%`,

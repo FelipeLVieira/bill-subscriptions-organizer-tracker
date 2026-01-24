@@ -197,3 +197,27 @@ export const DEFAULT_ICON: CompanyIcon = {
     icon: 'creditcard.fill',
     color: '#8E8E93',
 };
+
+// Get icon for a subscription with priority: custom > auto-detected > default
+export function getSubscriptionIcon(subscription: {
+    name: string;
+    customIcon?: string | null;
+    customIconColor?: string | null;
+}): CompanyIcon {
+    // Priority 1: Custom icon (user override)
+    if (subscription.customIcon && subscription.customIconColor) {
+        return {
+            icon: subscription.customIcon,
+            color: subscription.customIconColor,
+        };
+    }
+
+    // Priority 2: Auto-detected company icon
+    const companyIcon = getCompanyIcon(subscription.name);
+    if (companyIcon) {
+        return companyIcon;
+    }
+
+    // Priority 3: Default fallback
+    return DEFAULT_ICON;
+}

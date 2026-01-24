@@ -12,6 +12,8 @@ export const subscriptions = sqliteTable('subscriptions', {
     notes: text('notes'),
     attachments: text('attachments'), // JSON string array of file URIs (images/PDFs)
     active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    customIcon: text('custom_icon'), // SF Symbol name for custom icon override
+    customIconColor: text('custom_icon_color'), // Hex color for custom icon
 });
 
 export const billingHistory = sqliteTable('billing_history', {

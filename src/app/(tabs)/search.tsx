@@ -10,7 +10,7 @@ import { useToast } from '@/components/Toast';
 import { AnimatedCard } from '@/components/ui/AnimatedCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
-import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
+import { getSubscriptionIcon } from '@/constants/companyIcons';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePro } from '@/contexts/ProContext';
@@ -227,7 +227,7 @@ export default function MyBillsScreen() {
         const now = new Date();
         const isOverdue = nextDate < now;
         const dateColor = isOverdue ? statusOverdue : statusPaid;
-        const companyIcon = getCompanyIcon(item.name) || DEFAULT_ICON;
+        const companyIcon = getSubscriptionIcon(item);
 
         return (
             <AnimatedCard

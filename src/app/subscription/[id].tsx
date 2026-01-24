@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Input } from '@/components/ui/Input';
 import { getCategoryLabel, getSubscriptionCategories } from '@/constants/categories';
-import { DEFAULT_ICON, getCompanyIcon } from '@/constants/companyIcons';
+import { DEFAULT_ICON, getSubscriptionIcon } from '@/constants/companyIcons';
 import { Currency } from '@/constants/Currencies';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -223,8 +223,8 @@ export default function SubscriptionDetails() {
         { label: `+ ${i18n.t('customCategory')}`, value: CUSTOM_CATEGORY_VALUE }
     ];
 
-    // Get company icon
-    const companyIcon = subscription ? getCompanyIcon(subscription.name) || DEFAULT_ICON : DEFAULT_ICON;
+    // Get company icon (uses custom icon if set, otherwise auto-detects)
+    const companyIcon = subscription ? getSubscriptionIcon(subscription) : DEFAULT_ICON;
 
     if (!subscription) {
         return (
