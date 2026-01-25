@@ -1,14 +1,31 @@
-import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
+// Lazy import for expo-notifications to avoid SSR issues on web
+let Notifications: typeof import('expo-notifications') | null = null;
+
+// Initialize notifications on demand (client-side only)
+async function getNotifications() {
+    if (Platform.OS === 'web') {
+        return null;
+    }
+    if (!Notifications) {
+        Notifications = await import('expo-notifications');
+        try {
+            Notifications.setNotificationHandler({
+                handleNotification: async () => ({
+                    shouldShowAlert: true,
+                    shouldPlaySound: true,
+                    shouldSetBadge: false,
+                    shouldShowBanner: true,
+                    shouldShowList: true,
+                }),
+            });
+        } catch (e) {
+            // Silently ignore
+        }
+    }
+    return Notifications;
+}
 
 // Reminder schema types
 export interface Reminder {
@@ -73,11 +90,14 @@ export function serializeReminderSchema(schema: ReminderSchema): string {
 }
 
 export async function requestPermissions() {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const notifications = await getNotifications();
+    if (!notifications) return false;
+    
+    const { status: existingStatus } = await notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
+        const { status } = await notifications.requestPermissionsAsync();
         finalStatus = status;
     }
 
@@ -88,6 +108,9 @@ export async function requestPermissions() {
 }
 
 export async function scheduleReminder(title: string, body: string, triggerDate: Date) {
+    const notifications = await getNotifications();
+    if (!notifications) return null;
+    
     const hasPermission = await requestPermissions();
     if (!hasPermission) return null;
 
@@ -97,14 +120,14 @@ export async function scheduleReminder(title: string, body: string, triggerDate:
     }
 
     try {
-        const id = await Notifications.scheduleNotificationAsync({
+        const id = await notifications.scheduleNotificationAsync({
             content: {
                 title,
                 body,
                 sound: true,
             },
             trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
+                type: notifications.SchedulableTriggerInputTypes.DATE,
                 date: triggerDate,
             },
         });
@@ -117,8 +140,11 @@ export async function scheduleReminder(title: string, body: string, triggerDate:
 }
 
 export async function cancelReminder(notificationId: string) {
+    const notifications = await getNotifications();
+    if (!notifications) return;
+    
     try {
-        await Notifications.cancelScheduledNotificationAsync(notificationId);
+        await notifications.cancelScheduledNotificationAsync(notificationId);
     } catch (e) {
         console.error('Error canceling notification:', e);
     }
