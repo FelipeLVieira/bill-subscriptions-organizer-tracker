@@ -59,7 +59,7 @@ describe('Notification Utilities', () => {
       expect(reminder.id).toBeDefined();
       expect(reminder.notificationId).toBeNull();
       expect(reminder.daysBefore).toBe(1);
-      expect(reminder.hour).toBe(0);
+      expect(reminder.hour).toBe(9); // Default is 9 AM for practical reminder time
       expect(reminder.minute).toBe(0);
       expect(reminder.enabled).toBe(true);
     });
@@ -274,7 +274,7 @@ describe('Notification Utilities', () => {
       expect(text).toContain('days before');
     });
 
-    it('should format time with leading zeros', () => {
+    it('should format time in 12-hour format with AM/PM', () => {
       const reminder: Reminder = {
         id: 'test',
         notificationId: null,
@@ -285,10 +285,10 @@ describe('Notification Utilities', () => {
       };
 
       const text = getReminderDisplayText(reminder, mockT);
-      expect(text).toContain('09:05');
+      expect(text).toContain('9:05 AM');
     });
 
-    it('should handle midnight correctly', () => {
+    it('should handle midnight correctly (12:00 AM)', () => {
       const reminder: Reminder = {
         id: 'test',
         notificationId: null,
@@ -299,10 +299,10 @@ describe('Notification Utilities', () => {
       };
 
       const text = getReminderDisplayText(reminder, mockT);
-      expect(text).toContain('00:00');
+      expect(text).toContain('12:00 AM');
     });
 
-    it('should handle evening time correctly', () => {
+    it('should handle evening time correctly (11:59 PM)', () => {
       const reminder: Reminder = {
         id: 'test',
         notificationId: null,
@@ -313,7 +313,7 @@ describe('Notification Utilities', () => {
       };
 
       const text = getReminderDisplayText(reminder, mockT);
-      expect(text).toContain('23:59');
+      expect(text).toContain('11:59 PM');
     });
   });
 });
