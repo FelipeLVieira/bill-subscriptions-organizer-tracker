@@ -1,13 +1,24 @@
 # Bills Tracker — App Store Listing
 
 ## App Name (30 chars max)
-Bills Tracker
+Bills & Subscription Tracker
 
 ## Subtitle (30 chars max)
-Subscriptions & Bill Organizer
+Offline Reminders & Analytics
 
 ## Keywords (100 chars max, comma-separated)
-bills,tracker,subscriptions,budget,expenses,reminder,payment,organizer,finance,money,recurring,due
+bill reminder,subscription manager,payment tracker,due dates,spending tracker,budget planner,finance
+
+<!-- ASO Notes (Grok, Jan 2026):
+- Finance apps rank on trust signals — "offline" in subtitle differentiates
+- Don't repeat title/subtitle words in keywords (auto-indexed)
+- Screenshots should show reminders, calendar view, spending charts, offline mode
+- Icon should feel secure/professional (locks, calendars, charts)
+- Localize screenshots with local currencies and date formats
+- Use promotional text for seasonal/new feature highlights
+- Seed in r/personalfinance, YNAB groups
+- Push hotfix fast if any crash reports — Finance users abandon quickly
+-->
 
 ## Promotional Text (170 chars max)
 Never miss a bill again. Track subscriptions, set smart reminders, and visualize your spending — all offline, all private. 40+ languages and currencies supported.
