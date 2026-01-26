@@ -13,6 +13,7 @@ import {
     ActivityIndicator,
     Alert,
     Linking,
+    ScrollView,
     StyleSheet,
     TouchableOpacity,
     View
@@ -128,7 +129,7 @@ export default function PaywallScreen() {
     // We can just render the "Already Premium" state cleanly.
     if (isPro) {
         return (
-            <ThemedView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+            <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
                 <View style={styles.navBar}>
                     <TouchableOpacity
                         style={[styles.closeButton, { backgroundColor: inputBg }]}
@@ -138,7 +139,15 @@ export default function PaywallScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={[styles.alreadyPremiumContainer, tablet && styles.tabletContent]}>
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={[
+                        styles.alreadyPremiumContainer,
+                        tablet && styles.tabletContent,
+                        { paddingBottom: insets.bottom + scale(20) }
+                    ]}
+                    showsVerticalScrollIndicator={false}
+                >
                     <View style={[styles.iconContainer, { backgroundColor: '#4CD964' + '20' }]}>
                         <IconSymbol name="checkmark.circle.fill" size={scale(48)} color="#4CD964" />
                     </View>
@@ -166,13 +175,13 @@ export default function PaywallScreen() {
                     >
                         <ThemedText style={[styles.subscribeText, { color: buttonText }]}>{i18n.t('common.close')}</ThemedText>
                     </TouchableOpacity>
-                </View>
+                </ScrollView>
             </ThemedView>
         );
     }
 
     return (
-        <ThemedView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
             {/* Nav Bar */}
             <View style={styles.navBar}>
                 <TouchableOpacity
@@ -184,7 +193,16 @@ export default function PaywallScreen() {
                 </TouchableOpacity>
             </View>
 
-            <View style={[styles.content, tablet && styles.tabletContent]}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    tablet && styles.tabletContent,
+                    { paddingBottom: insets.bottom + scale(20) }
+                ]}
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+            >
                 {/* Crown icon */}
                 <View style={[styles.iconContainer, { backgroundColor: primaryColor + '20' }]}>
                     <IconSymbol name="sparkles" size={scale(48)} color={primaryColor} />
@@ -322,7 +340,7 @@ export default function PaywallScreen() {
                     </View>
                 )}
 
-                {/* Buttons Container aligned to bottom */}
+                {/* Buttons Container */}
                 <View style={styles.bottomContainer}>
                     {/* Subscribe Button */}
                     <TouchableOpacity
@@ -378,8 +396,7 @@ export default function PaywallScreen() {
                         </TouchableOpacity>
                     </View>
                 </View>
-
-            </View>
+            </ScrollView>
         </ThemedView>
     );
 }
@@ -388,8 +405,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    content: {
+    scrollView: {
         flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
         paddingHorizontal: scale(24),
     },
     tabletContent: {
@@ -517,8 +537,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     bottomContainer: {
-        marginTop: 'auto',
-        marginBottom: scale(10),
+        marginTop: scale(20),
     },
     subscribeButton: {
         paddingVertical: scale(16),
@@ -571,9 +590,10 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     alreadyPremiumContainer: {
-        flex: 1,
+        flexGrow: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: scale(24),
+        paddingHorizontal: scale(24),
+        paddingTop: scale(40),
     }
 });

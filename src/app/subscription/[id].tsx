@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     },
     scroll: {
         padding: 20,
-        paddingBottom: 40,
+        paddingBottom: 60, // Increased for better safe area handling
     },
     tabletScroll: {
         maxWidth: 600,

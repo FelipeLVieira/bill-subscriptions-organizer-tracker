@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     list: {
         paddingHorizontal: 20,
         paddingTop: 8,
-        paddingBottom: 100,
+        paddingBottom: 140, // Increased for safe area + tab bar
         gap: 8,
     },
     card: {

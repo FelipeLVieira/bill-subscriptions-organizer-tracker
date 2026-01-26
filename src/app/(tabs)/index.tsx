@@ -304,7 +304,8 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 20,
-    paddingBottom: 110,
+    paddingBottom: 140, // Increased for safe area + tab bar
+    paddingTop: 8,
     gap: 16,
   },
   subscriptionsHeader: {

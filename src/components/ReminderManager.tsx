@@ -6,7 +6,8 @@ import i18n from '@/i18n';
 import DateTimePicker from '@/components/ui/DateTimePicker';
 import { Picker } from '@/components/ui/Picker';
 import { useState } from 'react';
-import { Alert, Modal, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
     createDefaultReminder,
@@ -24,6 +25,7 @@ interface ReminderManagerProps {
 export function ReminderManager({ schema, onUpdate, isEditing = false }: ReminderManagerProps) {
     const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const primaryColor = useThemeColor({}, 'primary');
     const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
@@ -185,7 +187,12 @@ export function ReminderManager({ schema, onUpdate, isEditing = false }: Reminde
                 onRequestClose={() => setShowEditModal(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: cardColor }]}>
+                    <ScrollView 
+                        style={[styles.modalContent, { backgroundColor: cardColor }]}
+                        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+                        bounces={false}
+                        showsVerticalScrollIndicator={false}
+                    >
                         <View style={styles.modalHeader}>
                             <ThemedText type="subtitle">
                                 {editingReminder && schema.reminders.find(r => r.id === editingReminder.id)
@@ -242,7 +249,7 @@ export function ReminderManager({ schema, onUpdate, isEditing = false }: Reminde
                                 <ThemedText style={{ color: buttonTextColor }}>{i18n.t('save')}</ThemedText>
                             </TouchableOpacity>
                         </View>
-                    </View>
+                    </ScrollView>
                 </View>
             </Modal>
         </View>
@@ -304,7 +311,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
-        paddingBottom: 40,
+        maxHeight: '70%',
     },
     modalHeader: {
         flexDirection: 'row',
