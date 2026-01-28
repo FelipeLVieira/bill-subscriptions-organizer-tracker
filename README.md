@@ -155,13 +155,20 @@ npm test -- currencies.test.ts
 
 | Module | Tests |
 |--------|-------|
-| Currencies | 27 tests |
-| Languages | 25 tests |
-| Company Icons | 20 tests |
-| Categories | 13 tests |
-| Notifications | 13 tests |
-| Date Utils | 5 tests |
-| **Total** | **103 tests** |
+| Date Utils | 28 |
+| Company Icons | 28 |
+| Billing | 27 |
+| Notifications | 23 |
+| Currencies | 22 |
+| Export | 20 |
+| Languages | 19 |
+| Categories | 13 |
+| Shadow Utils | 13 |
+| SF Symbols | 11 |
+| Haptics | 11 |
+| Responsive | 10 |
+| Settings i18n | 2 |
+| **Total** | **234 tests** |
 
 ## Privacy
 
