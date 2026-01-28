@@ -70,7 +70,7 @@ export function AdBanner({ style }: AdBannerProps) {
                     }}
                     onAdLoaded={() => setIsAdLoaded(true)}
                     onAdFailedToLoad={(error: any) => {
-                        console.log('Banner ad failed to load:', error);
+                        if (__DEV__) console.log('Banner ad failed to load:', error);
                         setAdError(true);
                     }}
                 />

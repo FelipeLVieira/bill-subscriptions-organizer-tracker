@@ -174,7 +174,7 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
 
             // Don't throw for user-initiated cancellation
             if (errorMessage === 'CANCELLED') {
-                console.log('[Purchases] User cancelled purchase');
+                if (__DEV__) console.log('[Purchases] User cancelled purchase');
                 return;
             }
 

@@ -37,7 +37,7 @@ export const PACKAGE_TYPES = {
  */
 export const initializePurchases = async (userId?: string): Promise<void> => {
     if (Platform.OS === 'web') {
-        console.log('[Purchases] RevenueCat not available on web');
+        if (__DEV__) console.log('[Purchases] RevenueCat not available on web');
         return;
     }
 
@@ -51,7 +51,7 @@ export const initializePurchases = async (userId?: string): Promise<void> => {
         appUserID: userId || undefined,
     });
 
-    console.log('[Purchases] RevenueCat initialized for Bills & Subscriptions Tracker');
+    if (__DEV__) console.log('[Purchases] RevenueCat initialized for Bills & Subscriptions Tracker');
 };
 
 /**
@@ -64,17 +64,21 @@ export const getOfferings = async (): Promise<PurchasesOffering | null> => {
         const offerings = await Purchases.getOfferings();
 
         // Debug logging to help diagnose issues
-        console.log('[Purchases] All offerings:', JSON.stringify(offerings, null, 2));
-        console.log('[Purchases] Current offering:', offerings.current);
-        console.log('[Purchases] All offering keys:', Object.keys(offerings.all || {}));
+        if (__DEV__) {
+            console.log('[Purchases] All offerings:', JSON.stringify(offerings, null, 2));
+            console.log('[Purchases] Current offering:', offerings.current);
+            console.log('[Purchases] All offering keys:', Object.keys(offerings.all || {}));
+        }
 
         if (offerings.current !== null && offerings.current.availablePackages.length > 0) {
-            console.log('[Purchases] Available packages:', offerings.current.availablePackages.map(p => ({
-                identifier: p.identifier,
-                packageType: p.packageType,
-                productId: p.product.identifier,
-                price: p.product.priceString,
-            })));
+            if (__DEV__) {
+                console.log('[Purchases] Available packages:', offerings.current.availablePackages.map(p => ({
+                    identifier: p.identifier,
+                    packageType: p.packageType,
+                    productId: p.product.identifier,
+                    price: p.product.priceString,
+                })));
+            }
             return offerings.current;
         }
 
@@ -83,17 +87,19 @@ export const getOfferings = async (): Promise<PurchasesOffering | null> => {
         if (allOfferings.length > 0) {
             const firstOffering = allOfferings[0];
             if (firstOffering.availablePackages.length > 0) {
-                console.log('[Purchases] Using fallback offering:', firstOffering.identifier);
+                if (__DEV__) console.log('[Purchases] Using fallback offering:', firstOffering.identifier);
                 return firstOffering;
             }
         }
 
-        console.warn('[Purchases] No offerings available. Check RevenueCat dashboard configuration.');
-        console.warn('[Purchases] Common issues:');
-        console.warn('  1. No "current" offering set in RevenueCat dashboard');
-        console.warn('  2. Product IDs in RevenueCat don\'t match App Store Connect');
-        console.warn('  3. Products not approved or missing metadata in App Store Connect');
-        console.warn('  4. Paid Apps Agreement not accepted in App Store Connect');
+        if (__DEV__) {
+            console.warn('[Purchases] No offerings available. Check RevenueCat dashboard configuration.');
+            console.warn('[Purchases] Common issues:');
+            console.warn('  1. No "current" offering set in RevenueCat dashboard');
+            console.warn('  2. Product IDs in RevenueCat don\'t match App Store Connect');
+            console.warn('  3. Products not approved or missing metadata in App Store Connect');
+            console.warn('  4. Paid Apps Agreement not accepted in App Store Connect');
+        }
         return null;
     } catch (error) {
         console.error('[Purchases] Error fetching offerings:', error);
