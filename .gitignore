@@ -76,3 +76,4 @@ debug/
 
 # Deprecated scripts with sensitive data
 scripts/.deprecated/
+/coverage/

@@ -3,7 +3,7 @@ import { PlatformPressable } from '@react-navigation/elements';
 import * as Haptics from 'expo-haptics';
 
 export function HapticTab(props: BottomTabBarButtonProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const { pointerEvents, style, ...rest } = props;
 
   return (
