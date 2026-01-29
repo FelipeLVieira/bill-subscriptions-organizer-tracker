@@ -1,0 +1,138 @@
+# Bills Tracker - iOS App
+
+You are an expert in React Native, Expo, TypeScript, and iOS app development.
+
+## Project Context
+This is **bills-tracker** (Bill Subscriptions Organizer), a React Native iOS app for tracking recurring expenses and subscriptions.
+
+**Status** (Jan 28, 2026):
+- Version: 4.0.0
+- App Store: 🟡 REJECTED - Design: Preamble
+- Issue: UI content cut off on iPad Air 5th gen + iPhone 17 Pro Max
+- Fix Needed: Responsive layout for larger screens
+- Backlog: `~/clawd/backlogs/ios-apps.md` (unified iOS team)
+
+**Tech Stack:**
+- React Native
+- Expo (SDK 52+)
+- TypeScript
+- Package name: any-image-ocr-translator (legacy name, to be updated)
+
+## Development Rules
+
+### iOS Build CRITICAL
+⚠️ **ALL iOS builds happen on Mac Mini ONLY!**
+- ❌ NEVER run simulator on MacBook
+- ❌ NEVER run `xcodebuild` on MacBook
+- ✅ Use SSH: `ssh felipemacmini@felipes-mac-mini.local`
+- ✅ Use nodes.run for remote execution
+- ✅ Build LOCAL with Xcode, NOT EAS Cloud (avoid quota/cost)
+
+### Build Commands (on Mac Mini)
+```bash
+# Dev build
+cd ~/repos/bill-subscriptions-organizer-tracker
+npx expo run:ios --device "iPhone 17 Pro Max"
+
+# Production archive for App Store
+xcodebuild -workspace ios/BillsTracker.xcworkspace -scheme BillsTracker -configuration Release -archivePath build/BillsTracker.xcarchive archive
+xcodebuild -exportArchive -archivePath build/BillsTracker.xcarchive -exportPath build/AppStore -exportOptionsPlist ios/ExportOptions.plist
+```
+
+### CRITICAL FIX NEEDED (App Store Rejection)
+**Problem**: UI cut off on larger screens (iPad Air 5th gen, iPhone 17 Pro Max)
+
+**Root Cause**: Hardcoded dimensions or missing responsive layout
+- Likely fixed widths/heights instead of flex
+- ScrollViews missing or improperly configured
+- SafeArea not respected
+- Text truncation without overflow handling
+
+**Fix Strategy**:
+1. Use Dimensions API or useWindowDimensions hook
+2. Implement flex layouts (avoid fixed pixel values)
+3. Add ScrollView for content that may overflow
+4. Test on ALL screen sizes (SE, regular, Pro, Pro Max, iPad)
+5. Use SafeAreaView for proper insets
+6. Implement responsive breakpoints for iPad
+
+**Testing Targets**:
+- iPhone SE (small screen)
+- iPhone 17 Pro Max (large screen, reported issue)
+- iPad Air 5th gen (tablet, reported issue)
+- Landscape orientation
+
+### Code Style
+- TypeScript strict mode
+- React Native best practices (functional components, hooks)
+- Responsive layouts (flex, percentages, not fixed pixels)
+- Accessibility: VoiceOver, Dynamic Type
+- Dark mode support
+
+### Testing
+- ⚠️ **Test on iPad Air 5th gen** (reported issue device)
+- ⚠️ **Test on iPhone 17 Pro Max** (reported issue device)
+- Test on multiple iOS screen sizes
+- Test landscape orientation
+- Verify all content visible without scrolling (or scrollable)
+- Test accessibility with VoiceOver
+
+### Security
+- Never commit .env files (pre-commit hook installed)
+- No hardcoded API keys or secrets
+- Validate financial data inputs
+- Handle edge cases (negative amounts, future dates)
+
+### App Store Requirements
+- **CRITICAL**: Fix responsive layout before resubmission
+- High-resolution screenshots (all sizes, including iPad)
+- Privacy policy (subscription tracking may require it)
+- Clear App Store description
+- Age rating (4+ likely for finance/productivity)
+
+## Unified iOS Team
+- **Single agent manages all 3 iOS apps** (BMI, Bills, Translator)
+- **Sequential development**: One app at a time
+- **Shared learnings**: Responsive fixes benefit all apps
+- **Unified backlog**: `~/clawd/backlogs/ios-apps.md`
+
+## Model Usage
+- **Primary**: qwen3-coder:30b (local, FREE) - UI fixes, layouts
+- **Fallback**: Claude Sonnet 4.5 (paid) - Complex responsive logic
+- **Use local first** - Escalate only when needed
+
+## Cost Optimization
+- Check context: `/status` after fixes
+- Compact: `/compact` when >50%
+- Concise responses
+- Learn from BMI/Translator responsive patterns
+
+## Cron Integration
+- **iOS Dev Bot** (:15 past hour): Maintenance, fixes
+- **App Store Manager** (9am/3pm/9pm): Rejection monitoring
+- **Uses Claude Sonnet 4.5** (tool-calling required)
+
+## Backlog
+- Read `~/clawd/backlogs/ios-apps.md` at session start
+- **P0**: Fix responsive layout (blocking App Store)
+- Mark [x] done, add [done: YYYY-MM-DD]
+- Add new tasks discovered
+
+## App Store Resubmission Checklist
+- [ ] Fix UI cut off on iPhone 17 Pro Max
+- [ ] Fix UI cut off on iPad Air 5th gen
+- [ ] Test on ALL screen sizes (SE, Pro, Pro Max, iPad)
+- [ ] Test landscape orientation
+- [ ] Verify ScrollView works properly
+- [ ] Test accessibility (VoiceOver)
+- [ ] Update screenshots (if UI changed)
+- [ ] Submit with release notes explaining fix
+
+## Questions Before Starting
+1. Which screen/component has UI cut off? (Check rejection details)
+2. Is it a ScrollView issue or fixed dimension issue?
+3. Have BMI/Translator solved similar layout problems?
+4. Do we have iPad Air 5th gen simulator available?
+5. Will fix affect existing users negatively?
+
+**Priority**: P0 - App Store blocked, fix responsive layout urgently.
