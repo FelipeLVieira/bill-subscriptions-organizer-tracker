@@ -282,7 +282,7 @@ export default function SubscriptionDetails() {
                 )}
             </View>
 
-            <ScrollView contentContainerStyle={[styles.scroll, tablet && styles.tabletScroll]}>
+            <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom + 60, 100) }, tablet && styles.tabletScroll]}>
                 {isEditing ? (
                     // Edit Mode - Form only, no payment history
                     <View style={styles.form}>

@@ -298,7 +298,7 @@ export default function AddSubscriptionScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scroll,
-            { paddingBottom: insets.bottom + 30 },
+            { paddingBottom: Math.max(insets.bottom + 80, 120) },
             isTablet() && styles.tabletScroll
           ]}
           keyboardShouldPersistTaps="handled"

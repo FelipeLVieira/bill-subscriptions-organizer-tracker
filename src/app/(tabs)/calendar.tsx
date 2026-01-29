@@ -58,8 +58,7 @@ export default function CalendarScreen() {
     return (
         <ThemedView style={styles.container}>
             <ScrollView
-                contentContainerStyle={[styles.scrollContent, tablet && styles.tabletScrollContent]}
-          { paddingBottom: insets.bottom + 100 },
+                contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }, tablet && styles.tabletScrollContent]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
