@@ -10,6 +10,7 @@ import i18n from '@/i18n';
 import { isTablet } from '@/utils/responsive';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function CalendarScreen() {
@@ -17,6 +18,7 @@ export default function CalendarScreen() {
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const { isPro } = usePro();
+  const insets = useSafeAreaInsets();
     const primaryColor = useThemeColor({}, 'primary');
 
     const loadData = useCallback(async () => {
@@ -57,6 +59,7 @@ export default function CalendarScreen() {
         <ThemedView style={styles.container}>
             <ScrollView
                 contentContainerStyle={[styles.scrollContent, tablet && styles.tabletScrollContent]}
+          { paddingBottom: insets.bottom + 100 },
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -96,7 +99,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 140, // Increased for safe area + tab bar
+        // paddingBottom: dynamic via contentContainerStyle
     },
     proBanner: {
         marginHorizontal: 16,

@@ -1,5 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Alert, FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
@@ -44,6 +45,7 @@ export default function MyBillsScreen() {
     const { getCurrencyByCode, formatAmount } = useCurrency();
     const { showSuccess } = useToast();
     const { isPro } = usePro();
+  const insets = useSafeAreaInsets();
 
     useFocusEffect(
         useCallback(() => {
@@ -442,6 +444,7 @@ export default function MyBillsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={[styles.list, tablet && styles.tabletList]}
+          { paddingBottom: insets.bottom + 100 },
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
                     initialNumToRender={8}
@@ -597,7 +600,7 @@ const styles = StyleSheet.create({
     list: {
         paddingHorizontal: 20,
         paddingTop: 8,
-        paddingBottom: 140, // Increased for safe area + tab bar
+        // paddingBottom: dynamic via contentContainerStyle
         gap: 12,
     },
     card: {},
@@ -643,7 +646,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 24,
         paddingHorizontal: 16,
-        paddingBottom: 120,
+        // paddingBottom: dynamic via contentContainerStyle
     },
     emptyTitle: {
         marginTop: 16,

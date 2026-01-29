@@ -20,6 +20,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CopilotStep, walkthroughable } from 'react-native-copilot';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WalkthroughableView = walkthroughable(View);
 
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const dangerColor = useThemeColor({}, 'danger');
   const { locale } = useLanguage();
   const { showSuccess } = useToast();
+  const insets = useSafeAreaInsets();
   const { isPro } = usePro();
 
   useFocusEffect(
@@ -266,6 +268,7 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         contentContainerStyle={[
+          { paddingBottom: insets.bottom + 100 },
           styles.list,
           tablet && styles.tabletList,
         ]}
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 20,
-    paddingBottom: 140, // Increased for safe area + tab bar
+    // paddingBottom moved to dynamic contentContainerStyle above
     paddingTop: 8,
     gap: 16,
   },

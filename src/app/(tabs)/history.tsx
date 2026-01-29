@@ -14,6 +14,7 @@ import { isTablet } from '@/utils/responsive';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
@@ -47,6 +48,7 @@ export default function PaymentHistoryScreen() {
     const { locale } = useLanguage();
     const { formatAmount, defaultCurrency } = useCurrency();
     const { isPro } = usePro();
+  const insets = useSafeAreaInsets();
 
     useFocusEffect(
         useCallback(() => {
@@ -318,6 +320,7 @@ export default function PaymentHistoryScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={[styles.list, tablet && styles.tabletList]}
+          { paddingBottom: insets.bottom + 100 },
                     removeClippedSubviews
                     maxToRenderPerBatch={15}
                     initialNumToRender={10}
@@ -468,7 +471,7 @@ const styles = StyleSheet.create({
     list: {
         paddingHorizontal: 20,
         paddingTop: 8,
-        paddingBottom: 140, // Increased for safe area + tab bar
+        // paddingBottom: dynamic via contentContainerStyle
         gap: 8,
     },
     card: {
