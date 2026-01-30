@@ -10,6 +10,9 @@ interface AnimatedCardProps extends ViewProps {
     onPress?: () => void;
     onLongPress?: () => void;
     disabled?: boolean;
+    accessibilityLabel?: string;
+    accessibilityHint?: string;
+    accessibilityRole?: 'button' | 'link' | 'text' | 'none';
 }
 
 /**
@@ -27,6 +30,9 @@ export function AnimatedCard({
     onPress,
     onLongPress,
     disabled = false,
+    accessibilityLabel,
+    accessibilityHint,
+    accessibilityRole = 'button',
     ...props
 }: AnimatedCardProps) {
     const backgroundColor = useThemeColor({}, 'card');
@@ -99,6 +105,11 @@ export function AnimatedCard({
                     onPressOut={handlePressOut}
                     disabled={disabled}
                     style={styles.pressable}
+                    accessible={true}
+                    accessibilityLabel={accessibilityLabel}
+                    accessibilityHint={accessibilityHint}
+                    accessibilityRole={accessibilityRole}
+                    accessibilityState={{ disabled }}
                 >
                     {children}
                 </Pressable>

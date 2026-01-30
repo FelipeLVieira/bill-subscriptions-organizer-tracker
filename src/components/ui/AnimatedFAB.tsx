@@ -14,6 +14,7 @@ interface AnimatedFABProps {
     onPress: () => void;
     icon?: string;
     accessibilityLabel: string;
+    accessibilityHint?: string;
     style?: ViewStyle;
 }
 
@@ -29,6 +30,7 @@ export function AnimatedFAB({
     onPress,
     icon = 'plus',
     accessibilityLabel,
+    accessibilityHint,
     style,
 }: AnimatedFABProps) {
     const interactiveColor = useThemeColor({}, 'interactive');
@@ -119,6 +121,7 @@ export function AnimatedFAB({
                 onPressOut={handlePressOut}
                 style={[styles.fab, { backgroundColor: interactiveColor }]}
                 accessibilityLabel={accessibilityLabel}
+                accessibilityHint={accessibilityHint}
                 accessibilityRole="button"
             >
                 <IconSymbol name={icon as any} size={28} color="#FFFFFF" />

@@ -147,11 +147,20 @@ export default function HomeScreen() {
     const dateColor = isOverdue ? statusOverdue : statusPaid;
     const companyIcon = getSubscriptionIcon(item);
 
+    // Accessibility: comprehensive label for VoiceOver users
+    const formattedAmount = formatCurrency(item.amount, item.currency);
+    const formattedDate = nextDate.toLocaleDateString(i18n.locale);
+    const accessibilityLabel = `${item.name}, ${formattedAmount}, ${i18n.t(item.billingInterval)}${item.categoryGroup ? `, ${item.categoryGroup}` : ''}${isOverdue ? `, ${i18n.t('overdue')}` : ''}, ${i18n.t('next')}: ${formattedDate}`;
+    const accessibilityHint = i18n.t('tapToViewDetails');
+
     return (
       <AnimatedCard
         index={index}
         onLongPress={() => handleAction(item)}
         onPress={() => router.push(`/subscription/${item.id}`)}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
+        accessibilityRole="button"
       >
         <View style={styles.cardContent}>
           <View style={[styles.cardIcon, { backgroundColor: companyIcon.color + '20' }]}>
