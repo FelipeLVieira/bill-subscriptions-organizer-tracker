@@ -5,7 +5,6 @@ import {
     Modal,
     StyleSheet,
     TouchableOpacity,
-    Platform,
     ActivityIndicator,
     Linking,
     Alert,

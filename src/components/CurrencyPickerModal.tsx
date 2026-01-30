@@ -38,7 +38,6 @@ export function CurrencyPickerModal({
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const primaryColor = useThemeColor({}, 'primary');
-    const interactiveColor = useThemeColor({}, 'interactive');
     const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
     const buttonTextColor = useThemeColor({}, 'buttonText');
     const dangerColor = useThemeColor({}, 'danger');

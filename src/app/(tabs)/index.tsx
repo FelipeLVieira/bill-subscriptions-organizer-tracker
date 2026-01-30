@@ -31,7 +31,6 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('monthly');
   const primaryColor = useThemeColor({}, 'primary');
-  const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
   const addButtonColor = useThemeColor({}, 'buttonSecondary');
   const buttonTextColor = useThemeColor({}, 'buttonText');
   const statusOverdue = useThemeColor({}, 'statusOverdue');

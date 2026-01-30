@@ -35,7 +35,6 @@ export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps)
     const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
 
     // Theme colors
-    const backgroundColor = useThemeColor({}, 'background');
     const cardColor = useThemeColor({}, 'card');
     const textColor = useThemeColor({}, 'text');
     const textSecondaryColor = useThemeColor({}, 'textSecondary');
@@ -43,7 +42,6 @@ export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps)
     const dangerColor = useThemeColor({}, 'danger');
     const successColor = useThemeColor({}, 'success');
     const warningColor = useThemeColor({}, 'warning');
-    const borderColor = useThemeColor({}, 'border');
 
     // Group subscriptions by their next billing date
     const subscriptionsByDate = useMemo(() => {

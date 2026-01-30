@@ -100,11 +100,9 @@ export default function AddSubscriptionScreen() {
   const textSecondaryColor = useThemeColor({}, 'textSecondary');
   const cardColor = useThemeColor({}, 'card');
   const backgroundColor = useThemeColor({}, 'background');
-  const primaryColor = useThemeColor({}, 'primary');
   const buttonPrimaryColor = useThemeColor({}, 'buttonPrimary');
   const buttonTextColor = useThemeColor({}, 'buttonText');
   const borderColor = useThemeColor({}, 'border');
-  const inputBgColor = useThemeColor({}, 'inputBg');
   const successColor = useThemeColor({}, 'success');
 
   const handleClose = () => {

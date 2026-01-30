@@ -5,11 +5,9 @@ import { useNativeDriver } from '@/utils/animation';
 import { Haptic } from '@/utils/haptics';
 import { shadows } from '@/utils/shadow';
 import { useEffect, useRef } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { Animated, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Fallback tab bar height
-const FALLBACK_TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
 const AD_BANNER_HEIGHT = 60; // Approximate banner ad height
 
 interface AnimatedFABProps {

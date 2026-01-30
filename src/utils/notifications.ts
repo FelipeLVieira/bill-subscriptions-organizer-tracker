@@ -20,7 +20,7 @@ async function getNotifications() {
                     shouldShowList: true,
                 }),
             });
-        } catch (e) {
+        } catch {
             // Silently ignore
         }
     }
