@@ -319,8 +319,7 @@ export default function PaymentHistoryScreen() {
                     data={filteredData}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
-          { paddingBottom: insets.bottom + 100 },
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList, { paddingBottom: insets.bottom + 100 }]}
                     removeClippedSubviews
                     maxToRenderPerBatch={15}
                     initialNumToRender={10}

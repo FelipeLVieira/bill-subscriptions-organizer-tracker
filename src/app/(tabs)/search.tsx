@@ -443,8 +443,7 @@ export default function MyBillsScreen() {
                     data={filteredData}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
-          { paddingBottom: insets.bottom + 100 },
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList, { paddingBottom: insets.bottom + 100 }]}
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
                     initialNumToRender={8}
