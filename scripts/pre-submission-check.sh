@@ -3,7 +3,8 @@
 # Pre-Submission Checklist Script
 # Run this before archiving for App Store submission
 
-set -e  # Exit on error
+# Don't exit on error - we want to see all checks
+# set -e
 
 echo "🚀 Bills Tracker - Pre-Submission Checklist"
 echo "=========================================="
