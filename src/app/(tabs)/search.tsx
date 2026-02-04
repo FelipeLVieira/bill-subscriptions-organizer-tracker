@@ -470,7 +470,7 @@ export default function MyBillsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList, { paddingBottom: insets.bottom + 100 }]}
                     stickySectionHeadersEnabled={true}
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
@@ -497,7 +497,7 @@ export default function MyBillsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={[styles.list, tablet && styles.tabletList]}
+                    contentContainerStyle={[styles.list, tablet && styles.tabletList, { paddingBottom: insets.bottom + 100 }]}
                     stickySectionHeadersEnabled={true}
                     removeClippedSubviews
                     maxToRenderPerBatch={10}
