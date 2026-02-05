@@ -92,6 +92,7 @@ export function MainHeader({ title }: { title: string }) {
                     style={styles.button}
                     activeOpacity={0.6}
                     accessibilityLabel={i18n.t('help')}
+                    accessibilityRole="button"
                 >
                     <IconSymbol
                         name="info.circle"
@@ -106,6 +107,7 @@ export function MainHeader({ title }: { title: string }) {
                     style={styles.button}
                     activeOpacity={0.6}
                     accessibilityLabel={i18n.t('changeLanguage')}
+                    accessibilityRole="button"
                 >
                     {currentLang ? (
                         <ThemedText style={styles.flag}>{currentLang.flag}</ThemedText>
@@ -119,6 +121,7 @@ export function MainHeader({ title }: { title: string }) {
                     style={styles.button}
                     activeOpacity={0.6}
                     accessibilityLabel={colorScheme === 'dark' ? i18n.t('switchToLightMode') : i18n.t('switchToDarkMode')}
+                    accessibilityRole="button"
                 >
                     <IconSymbol
                         name={colorScheme === 'dark' ? 'sun.max.fill' : 'moon.fill'}
@@ -131,13 +134,15 @@ export function MainHeader({ title }: { title: string }) {
         </View>
     );
 
+    const borderThemeColor = useThemeColor({}, 'border');
+
     // Use blur effect on iOS for modern look
     if (Platform.OS === 'ios') {
         return (
             <BlurView
                 intensity={80}
                 tint={colorScheme === 'dark' ? 'dark' : 'light'}
-                style={styles.header}
+                style={[styles.header, { borderBottomColor: borderThemeColor }]}
             >
                 {HeaderContent}
                 <LanguagePickerModal
@@ -150,7 +155,7 @@ export function MainHeader({ title }: { title: string }) {
     }
 
     return (
-        <View style={[styles.header, { backgroundColor }]}>
+        <View style={[styles.header, { backgroundColor, borderBottomColor: borderThemeColor }]}>
             {HeaderContent}
             <LanguagePickerModal
                 visible={languageModalVisible}
@@ -165,7 +170,7 @@ const styles = StyleSheet.create({
     header: {
         zIndex: 10,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: 'rgba(0,0,0,0.1)',
+        borderBottomColor: 'transparent', // Overridden by borderColor prop
     },
     container: {
         paddingHorizontal: 20,
