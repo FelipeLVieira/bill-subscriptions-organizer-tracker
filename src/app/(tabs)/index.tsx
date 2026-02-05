@@ -131,7 +131,6 @@ export default function HomeScreen() {
         }
       ]
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subscriptions, showSuccess]);
 
   const formatCurrency = (amount: number, currency: string) => {

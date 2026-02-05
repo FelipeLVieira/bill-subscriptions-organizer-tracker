@@ -215,7 +215,6 @@ export default function MyBillsScreen() {
                 }
             ]
         );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filteredData, showSuccess]);
 
     const formatCurrency = (amount: number, currency: string) => {
