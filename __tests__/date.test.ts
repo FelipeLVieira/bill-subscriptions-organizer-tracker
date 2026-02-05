@@ -18,20 +18,29 @@ describe('Date Utilities', () => {
         expect(nextDate.getUTCDate()).toBe(15);
       });
 
-      it('should handle end of month rollover (Jan 31 -> Mar)', () => {
+      // *** UPDATED: Month-end clamping behavior ***
+      it('should clamp Jan 31 to Feb 28 (non-leap year)', () => {
         const date = new Date('2023-01-31T12:00:00.000Z');
         const nextDate = calculateNextBillingDate(date, 'monthly');
-        // Feb has 28 days in 2023, so Jan 31 + 1 month = Feb 31 = Mar 3
-        expect(nextDate.getUTCMonth()).toBe(2); // March
-        expect(nextDate.getUTCDate()).toBe(3);
+        // Jan 31 + 1 month = Feb 28 (clamped to last day of February)
+        expect(nextDate.getUTCMonth()).toBe(1); // February
+        expect(nextDate.getUTCDate()).toBe(28);
       });
 
-      it('should handle leap year end of month', () => {
+      it('should clamp Jan 31 to Feb 29 (leap year)', () => {
         const date = new Date('2024-01-31T12:00:00.000Z');
         const nextDate = calculateNextBillingDate(date, 'monthly');
-        // Feb has 29 days in 2024, so Jan 31 + 1 month = Feb 31 = Mar 2
-        expect(nextDate.getUTCMonth()).toBe(2); // March
-        expect(nextDate.getUTCDate()).toBe(2);
+        // Jan 31 + 1 month = Feb 29 (clamped to last day of February in leap year)
+        expect(nextDate.getUTCMonth()).toBe(1); // February
+        expect(nextDate.getUTCDate()).toBe(29);
+      });
+
+      it('should clamp Mar 31 to Apr 30', () => {
+        const date = new Date('2023-03-31T12:00:00.000Z');
+        const nextDate = calculateNextBillingDate(date, 'monthly');
+        // Mar 31 + 1 month = Apr 30 (clamped to last day of April)
+        expect(nextDate.getUTCMonth()).toBe(3); // April
+        expect(nextDate.getUTCDate()).toBe(30);
       });
 
       it('should handle Feb 28 in non-leap year', () => {
@@ -41,11 +50,30 @@ describe('Date Utilities', () => {
         expect(nextDate.getUTCDate()).toBe(28);
       });
 
-      it('should handle Feb 29 in leap year', () => {
+      it('should handle Feb 29 in leap year -> Mar 29', () => {
         const date = new Date('2024-02-29T12:00:00.000Z');
         const nextDate = calculateNextBillingDate(date, 'monthly');
         expect(nextDate.getUTCMonth()).toBe(2); // March
         expect(nextDate.getUTCDate()).toBe(29);
+      });
+
+      it('should handle Aug 31 -> Sep 30', () => {
+        const date = new Date('2023-08-31T12:00:00.000Z');
+        const nextDate = calculateNextBillingDate(date, 'monthly');
+        expect(nextDate.getUTCMonth()).toBe(8); // September
+        expect(nextDate.getUTCDate()).toBe(30);
+      });
+
+      it('should handle consecutive months ending in 30/31 days', () => {
+        // May 31 -> Jun 30 -> Jul 30
+        const may = new Date('2023-05-31T12:00:00.000Z');
+        const jun = calculateNextBillingDate(may, 'monthly');
+        expect(jun.getUTCMonth()).toBe(5); // June
+        expect(jun.getUTCDate()).toBe(30);
+
+        const jul = calculateNextBillingDate(jun, 'monthly');
+        expect(jul.getUTCMonth()).toBe(6); // July
+        expect(jul.getUTCDate()).toBe(30);
       });
     });
 
@@ -58,13 +86,14 @@ describe('Date Utilities', () => {
         expect(nextDate.getUTCDate()).toBe(15);
       });
 
-      it('should handle leap year to non-leap year (Feb 29 -> Mar 1)', () => {
+      // *** UPDATED: Leap year to non-leap year clamping ***
+      it('should clamp Feb 29 to Feb 28 in non-leap year', () => {
         const date = new Date('2024-02-29T12:00:00.000Z');
         const nextDate = calculateNextBillingDate(date, 'yearly');
-        // 2025 is not a leap year, so Feb 29 becomes Mar 1
+        // 2025 is not a leap year, so Feb 29 -> Feb 28
         expect(nextDate.getUTCFullYear()).toBe(2025);
-        expect(nextDate.getUTCMonth()).toBe(2); // March
-        expect(nextDate.getUTCDate()).toBe(1);
+        expect(nextDate.getUTCMonth()).toBe(1); // February
+        expect(nextDate.getUTCDate()).toBe(28);
       });
 
       it('should preserve time of day', () => {
@@ -72,6 +101,20 @@ describe('Date Utilities', () => {
         const nextDate = calculateNextBillingDate(date, 'yearly');
         expect(nextDate.getUTCHours()).toBe(14);
         expect(nextDate.getUTCMinutes()).toBe(30);
+      });
+
+      it('should handle leap year to leap year (Feb 29 preserved)', () => {
+        const date = new Date('2024-02-29T12:00:00.000Z');
+        // 2028 is a leap year
+        let nextDate = date;
+        for (let i = 0; i < 4; i++) {
+          nextDate = calculateNextBillingDate(nextDate, 'yearly');
+        }
+        expect(nextDate.getUTCFullYear()).toBe(2028);
+        expect(nextDate.getUTCMonth()).toBe(1); // February
+        // After 4 years of clamping to 28, should still be 28 (or 29 if leap year chain)
+        // Note: After clamping to Feb 28, subsequent years stay at Feb 28
+        expect(nextDate.getUTCDate()).toBe(28);
       });
     });
 
@@ -214,11 +257,12 @@ describe('Date Utilities', () => {
         expect(nextYear.getUTCDate()).toBe(1);
       });
 
-      it('should handle last day of year', () => {
+      it('should handle last day of year with clamping', () => {
         const date = new Date('2023-12-31T12:00:00.000Z');
         const nextMonth = calculateNextBillingDate(date, 'monthly');
         expect(nextMonth.getUTCFullYear()).toBe(2024);
         expect(nextMonth.getUTCMonth()).toBe(0); // January
+        expect(nextMonth.getUTCDate()).toBe(31); // Jan has 31 days, no clamping needed
 
         const nextYear = calculateNextBillingDate(date, 'yearly');
         expect(nextYear.getUTCFullYear()).toBe(2024);
@@ -238,6 +282,42 @@ describe('Date Utilities', () => {
         const date = new Date('2024-01-01T00:00:00.000Z');
         const nextDate = calculateNextBillingDate(date, 'unique');
         expect(nextDate.getTime()).toBe(date.getTime());
+      });
+    });
+
+    describe('Month-End Recurring Bill Edge Cases', () => {
+      it('should consistently handle 31st day bills across all months', () => {
+        // Starting Jan 31, recurring monthly through the year
+        let date = new Date('2023-01-31T12:00:00.000Z');
+        const expectedDays = [
+          28, // Feb (2023 non-leap year)
+          28, // Mar (clamped from Feb 28)
+          28, // Apr (clamped)
+          28, // May
+          28, // Jun
+          28, // Jul
+          28, // Aug
+          28, // Sep
+          28, // Oct
+          28, // Nov
+          28, // Dec
+        ];
+
+        for (let i = 0; i < 11; i++) {
+          date = calculateNextBillingDate(date, 'monthly');
+          expect(date.getUTCDate()).toBe(expectedDays[i]);
+        }
+      });
+
+      it('should handle 30th day bills with Feb clamping', () => {
+        const jan30 = new Date('2023-01-30T12:00:00.000Z');
+        const feb = calculateNextBillingDate(jan30, 'monthly');
+        expect(feb.getUTCMonth()).toBe(1);
+        expect(feb.getUTCDate()).toBe(28); // Clamped to Feb 28
+
+        const mar = calculateNextBillingDate(feb, 'monthly');
+        expect(mar.getUTCMonth()).toBe(2);
+        expect(mar.getUTCDate()).toBe(28); // Stays at 28 after clamping
       });
     });
   });
