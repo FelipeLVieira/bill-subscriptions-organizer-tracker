@@ -172,12 +172,15 @@ describe('Date Utilities', () => {
     describe('BillingInterval Type', () => {
       it('should accept all valid billing intervals', () => {
         const date = new Date('2023-01-15T12:00:00.000Z');
-        const intervals: BillingInterval[] = ['daily', 'weekly', 'monthly', 'yearly'];
+        const intervals: BillingInterval[] = ['daily', 'weekly', 'monthly', 'yearly', 'unique'];
 
         intervals.forEach((interval) => {
           const nextDate = calculateNextBillingDate(date, interval);
           expect(nextDate).toBeInstanceOf(Date);
-          expect(nextDate.getTime()).toBeGreaterThan(date.getTime());
+          // unique interval returns the same date, all others advance
+          if (interval !== 'unique') {
+            expect(nextDate.getTime()).toBeGreaterThan(date.getTime());
+          }
         });
       });
     });
@@ -221,6 +224,20 @@ describe('Date Utilities', () => {
         expect(nextYear.getUTCFullYear()).toBe(2024);
         expect(nextYear.getUTCMonth()).toBe(11); // December
         expect(nextYear.getUTCDate()).toBe(31);
+      });
+    });
+
+    describe('Unique (One-time) Billing', () => {
+      it('should return the same date for unique billing interval', () => {
+        const date = new Date('2023-06-15T12:00:00.000Z');
+        const nextDate = calculateNextBillingDate(date, 'unique');
+        expect(nextDate.toISOString()).toBe('2023-06-15T12:00:00.000Z');
+      });
+
+      it('should not modify the date for one-time bills', () => {
+        const date = new Date('2024-01-01T00:00:00.000Z');
+        const nextDate = calculateNextBillingDate(date, 'unique');
+        expect(nextDate.getTime()).toBe(date.getTime());
       });
     });
   });

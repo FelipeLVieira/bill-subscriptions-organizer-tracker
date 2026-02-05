@@ -106,7 +106,7 @@ export default function HomeScreen() {
     return subscriptions.filter(s => new Date(s.nextBillingDate) < now).length;
   }, [subscriptions]);
 
-  const handleMarkAllPaid = async () => {
+  const handleMarkAllPaid = useCallback(async () => {
     const now = new Date();
     const overdueBills = subscriptions.filter(s => new Date(s.nextBillingDate) < now);
 
@@ -131,7 +131,8 @@ export default function HomeScreen() {
         }
       ]
     );
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subscriptions, showSuccess]);
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat(i18n.locale, {

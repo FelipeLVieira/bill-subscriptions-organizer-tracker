@@ -370,7 +370,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
                         </Text>
                         <View style={styles.legalLinks}>
                             <TouchableOpacity
-                                onPress={() => Linking.openURL('https://privacy-policy-app-flax.vercel.app/bills-tracker/terms.html')}
+                                onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
                             >
                                 <Text style={[styles.legalLink, { color: primaryColor }]}>
                                     {i18n.t('premium.termsOfUse')}

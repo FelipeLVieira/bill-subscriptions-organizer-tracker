@@ -190,7 +190,7 @@ export default function MyBillsScreen() {
         return filteredData.filter(s => new Date(s.nextBillingDate) < now).length;
     }, [filteredData]);
 
-    const handleMarkAllPaid = async () => {
+    const handleMarkAllPaid = useCallback(async () => {
         const now = new Date();
         const overdueBills = filteredData.filter(s => new Date(s.nextBillingDate) < now);
 
@@ -215,7 +215,8 @@ export default function MyBillsScreen() {
                 }
             ]
         );
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filteredData, showSuccess]);
 
     const formatCurrency = (amount: number, currency: string) => {
         return new Intl.NumberFormat(i18n.locale, {
@@ -292,7 +293,11 @@ export default function MyBillsScreen() {
                                 containerStyle={styles.input}
                             />
                             {query.length > 0 && (
-                                <TouchableOpacity onPress={() => setQuery('')}>
+                                <TouchableOpacity
+                                    onPress={() => setQuery('')}
+                                    accessibilityLabel={i18n.t('cancel')}
+                                    accessibilityRole="button"
+                                >
                                     <IconSymbol name="xmark.circle.fill" size={20} color={textColor} style={{ opacity: 0.5 }} />
                                 </TouchableOpacity>
                             )}

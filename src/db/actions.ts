@@ -106,6 +106,8 @@ export const deleteSubscription = async (id: number) => {
         const schema = parseReminderSchema(sub.reminderSchema);
         await cancelAllReminders(schema);
     }
+    // Delete related billing history first, then the subscription
+    await db.delete(billingHistory).where(eq(billingHistory.subscriptionId, id));
     return await db.delete(subscriptions).where(eq(subscriptions.id, id));
 };
 

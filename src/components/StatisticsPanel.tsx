@@ -163,6 +163,10 @@ export function StatisticsPanel({ subscriptions, paidThisMonth, period = 'monthl
             case 'yearly':
                 yearlyAmount = sub.amount;
                 break;
+            case 'unique':
+                // One-time bills are not recurring - show full amount in any period
+                yearlyAmount = sub.amount;
+                break;
             default:
                 yearlyAmount = sub.amount * 12; // assume monthly
         }
