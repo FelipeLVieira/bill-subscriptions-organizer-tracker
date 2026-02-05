@@ -263,6 +263,8 @@ export default function AddSubscriptionScreen() {
           onPress={handleClose}
           style={[styles.headerButton, { backgroundColor: cardColor }]}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel={i18n.t('cancel')}
+          accessibilityRole="button"
         >
           <IconSymbol name="xmark" size={16} color={textColor} weight="semibold" />
         </TouchableOpacity>
@@ -280,6 +282,9 @@ export default function AddSubscriptionScreen() {
             styles.headerSaveButton,
             { backgroundColor: buttonPrimaryColor, opacity: loading ? 0.6 : 1 }
           ]}
+          accessibilityLabel={loading ? i18n.t('saving') : i18n.t('save')}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: loading }}
         >
           <IconSymbol name="checkmark.circle.fill" size={18} color={buttonTextColor} />
           <ThemedText style={[styles.headerSaveText, { color: buttonTextColor }]}>
@@ -314,6 +319,8 @@ export default function AddSubscriptionScreen() {
                   style={[styles.currencySelector, { backgroundColor: buttonPrimaryColor + '15' }]}
                   onPress={() => setShowCurrencyPicker(true)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityLabel={`${i18n.t('currency')}: ${currentCurrency?.code || 'USD'}`}
+                  accessibilityRole="button"
                 >
                   <ThemedText style={[styles.currencySymbol, { color: buttonPrimaryColor }]}>
                     {currentCurrency?.symbol || '$'}
@@ -371,7 +378,12 @@ export default function AddSubscriptionScreen() {
 
           {/* Icon Card */}
           <View style={[styles.card, { backgroundColor: cardColor }]}>
-            <Pressable style={styles.cardRow} onPress={() => setShowIconPicker(true)}>
+            <Pressable 
+              style={styles.cardRow} 
+              onPress={() => setShowIconPicker(true)}
+              accessibilityLabel={`${i18n.t('icon')}: ${customIcon ? i18n.t('customIcon') : i18n.t('autoDetected')}`}
+              accessibilityRole="button"
+            >
               <View style={[styles.iconContainer, { backgroundColor: getDisplayIcon().color + '15' }]}>
                 <IconSymbol name={getDisplayIcon().icon as any} size={18} color={getDisplayIcon().color} />
               </View>
@@ -390,7 +402,12 @@ export default function AddSubscriptionScreen() {
           {/* Billing & Category Card */}
           <View style={[styles.card, { backgroundColor: cardColor }]}>
             {/* Billing Interval Row */}
-            <Pressable style={styles.cardRow} onPress={showIntervalPicker}>
+            <Pressable 
+              style={styles.cardRow} 
+              onPress={showIntervalPicker}
+              accessibilityLabel={`${i18n.t('billingInterval')}: ${getIntervalLabel()}`}
+              accessibilityRole="button"
+            >
               <View style={[styles.iconContainer, { backgroundColor: successColor + '15' }]}>
                 <IconSymbol name={getIntervalIcon()} size={18} color={successColor} />
               </View>
@@ -406,7 +423,12 @@ export default function AddSubscriptionScreen() {
             <View style={[styles.divider, { backgroundColor: borderColor }]} />
 
             {/* Category Row */}
-            <Pressable style={styles.cardRow} onPress={showCategoryPicker}>
+            <Pressable 
+              style={styles.cardRow} 
+              onPress={showCategoryPicker}
+              accessibilityLabel={`${i18n.t('category')}: ${getCategoryLabel()}`}
+              accessibilityRole="button"
+            >
               <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '15' }]}>
                 <IconSymbol name={getCategoryIcon() as any} size={18} color="#FF9500" />
               </View>
@@ -450,7 +472,12 @@ export default function AddSubscriptionScreen() {
           {/* Notes Card */}
           <View style={[styles.card, { backgroundColor: cardColor }]}>
             {!showNotes ? (
-              <Pressable style={styles.cardRow} onPress={() => setShowNotes(true)}>
+              <Pressable 
+              style={styles.cardRow} 
+              onPress={() => setShowNotes(true)}
+              accessibilityLabel={`${i18n.t('notes')}: ${i18n.t('notesPlaceholder')}`}
+              accessibilityRole="button"
+            >
                 <View style={[styles.iconContainer, { backgroundColor: '#5856D6' + '15' }]}>
                   <IconSymbol name="note.text" size={18} color="#5856D6" />
                 </View>
