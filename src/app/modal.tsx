@@ -104,6 +104,7 @@ export default function AddSubscriptionScreen() {
   const buttonTextColor = useThemeColor({}, 'buttonText');
   const borderColor = useThemeColor({}, 'border');
   const successColor = useThemeColor({}, 'success');
+  const dangerColor = useThemeColor({}, 'danger');
 
   const handleClose = () => {
     router.dismiss();
@@ -346,7 +347,7 @@ export default function AddSubscriptionScreen() {
               </View>
             </View>
             {touched.amount && errors.amount && (
-              <ThemedText style={styles.errorText}>{errors.amount}</ThemedText>
+              <ThemedText style={[styles.errorText, { color: dangerColor }]}>{errors.amount}</ThemedText>
             )}
           </View>
 
@@ -372,7 +373,7 @@ export default function AddSubscriptionScreen() {
               </View>
             </View>
             {touched.name && errors.name && (
-              <ThemedText style={[styles.errorText, { marginLeft: 52 }]}>{errors.name}</ThemedText>
+              <ThemedText style={[styles.errorText, { color: dangerColor, marginLeft: 52 }]}>{errors.name}</ThemedText>
             )}
           </View>
 
@@ -790,7 +791,6 @@ const styles = StyleSheet.create({
   },
   // Error
   errorText: {
-    color: '#FF3B30',
     fontSize: 12,
     fontWeight: '500',
     marginTop: 4,
