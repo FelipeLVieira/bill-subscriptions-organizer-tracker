@@ -21,10 +21,17 @@ interface DaySubscriptions {
     [date: string]: Subscription[];
 }
 
-// Get today's date string in YYYY-MM-DD format
+// Get a date's local YYYY-MM-DD string (avoids timezone drift from toISOString)
+function toLocalDateString(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Get today's date string in YYYY-MM-DD format (local timezone)
 const getTodayString = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
+    return toLocalDateString(new Date());
 };
 
 export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps) {
@@ -51,7 +58,7 @@ export function BillsCalendar({ subscriptions, onDayPress }: BillsCalendarProps)
 
         subscriptions.forEach(sub => {
             const date = new Date(sub.nextBillingDate);
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = toLocalDateString(date);
 
             if (!grouped[dateStr]) {
                 grouped[dateStr] = [];

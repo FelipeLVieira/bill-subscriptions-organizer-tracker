@@ -316,4 +316,108 @@ describe('Notification Utilities', () => {
       expect(text).toContain('11:59 PM');
     });
   });
+
+  describe('getReminderDisplayText edge cases', () => {
+    const mockT = (key: string) => {
+      const translations: Record<string, string> = {
+        'onDueDate': 'On due date',
+        'dayBefore': '1 day before',
+        'daysBefore': 'days before',
+        'at': 'at',
+      };
+      return translations[key] || key;
+    };
+
+    it('should handle noon correctly (12:00 PM)', () => {
+      const reminder: Reminder = {
+        id: 'test',
+        notificationId: null,
+        daysBefore: 1,
+        hour: 12,
+        minute: 0,
+        enabled: true,
+      };
+
+      const text = getReminderDisplayText(reminder, mockT);
+      expect(text).toContain('12:00 PM');
+    });
+
+    it('should handle 1 PM correctly', () => {
+      const reminder: Reminder = {
+        id: 'test',
+        notificationId: null,
+        daysBefore: 1,
+        hour: 13,
+        minute: 30,
+        enabled: true,
+      };
+
+      const text = getReminderDisplayText(reminder, mockT);
+      expect(text).toContain('1:30 PM');
+    });
+
+    it('should handle large daysBefore values', () => {
+      const reminder: Reminder = {
+        id: 'test',
+        notificationId: null,
+        daysBefore: 30,
+        hour: 9,
+        minute: 0,
+        enabled: true,
+      };
+
+      const text = getReminderDisplayText(reminder, mockT);
+      expect(text).toContain('30');
+      expect(text).toContain('days before');
+    });
+  });
+
+  describe('parseReminderSchema edge cases', () => {
+    it('should handle schema with empty reminders array', () => {
+      const schema = parseReminderSchema(JSON.stringify({ reminders: [] }));
+      expect(schema.reminders).toBeDefined();
+      expect(schema.reminders.length).toBe(0);
+    });
+
+    it('should handle legacy format with null notificationId', () => {
+      const legacyFormat = { notificationId: null };
+      // This has notificationId key but null value — no reminders property
+      // The check is `parsed.notificationId && !parsed.reminders`
+      // null is falsy, so it falls through to `return parsed as ReminderSchema`
+      const parsed = parseReminderSchema(JSON.stringify(legacyFormat));
+      // Should still return something valid even if it's oddly shaped
+      expect(parsed).toBeDefined();
+    });
+
+    it('should handle numeric JSON (edge case)', () => {
+      const schema = parseReminderSchema('42');
+      // JSON.parse('42') = 42, which has no .reminders
+      // Should not throw, returns the parsed value as-is
+      expect(schema).toBeDefined();
+    });
+  });
+
+  describe('serializeReminderSchema with empty data', () => {
+    it('should handle schema with no reminders', () => {
+      const schema: ReminderSchema = { reminders: [] };
+      const serialized = serializeReminderSchema(schema);
+      const parsed = JSON.parse(serialized);
+      expect(parsed.reminders).toEqual([]);
+    });
+
+    it('should handle schema with multiple reminders', () => {
+      const schema: ReminderSchema = {
+        reminders: [
+          { id: 'r1', notificationId: null, daysBefore: 0, hour: 9, minute: 0, enabled: true },
+          { id: 'r2', notificationId: null, daysBefore: 1, hour: 9, minute: 0, enabled: true },
+          { id: 'r3', notificationId: null, daysBefore: 7, hour: 18, minute: 0, enabled: false },
+        ],
+      };
+      const serialized = serializeReminderSchema(schema);
+      const parsed = JSON.parse(serialized);
+      expect(parsed.reminders.length).toBe(3);
+      expect(parsed.reminders[2].enabled).toBe(false);
+    });
+  });
+
 });
