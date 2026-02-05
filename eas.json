@@ -16,6 +16,15 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "felipe.lv.90@gmail.com",
+        "ascAppId": "6757454017",
+        "appleTeamId": "824F44HKCD",
+        "ascApiKeyId": "BBHK46JC4Q",
+        "ascApiKeyIssuerId": "8a28190c-9b9f-47ad-9bc5-33bf71b64f3b",
+        "ascApiKeyPath": "/Users/felipemacmini/.appstoreconnect/private_keys/AuthKey_BBHK46JC4Q.p8"
+      }
+    }
   }
 }
