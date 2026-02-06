@@ -78,3 +78,7 @@ debug/
 scripts/.deprecated/
 /coverage/
 .clawd/
+
+# Security - block all env backups
+.env.backup*
+*.env.backup
