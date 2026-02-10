@@ -535,6 +535,7 @@ const styles = StyleSheet.create({
     // iPad-specific styles for better readability
     tabletHeader: {
         maxWidth: 600,
+        maxHeight: 350,
         alignSelf: 'center',
         width: '100%',
     },

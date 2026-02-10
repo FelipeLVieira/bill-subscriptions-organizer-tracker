@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Alert, FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, SectionList, StyleSheet, TouchableOpacity, View, ScrollView } from 'react-native';
 import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 import { GoProButton } from '@/components/GoProButton';
@@ -309,7 +309,7 @@ export default function MyBillsScreen() {
                     {/* Category Filter */}
                     <CopilotStep text={i18n.t('copilotBillsFilter')} order={12} name="bills-filter">
                         <WalkthroughableView>
-                            <View style={styles.filterContainer}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer} contentContainerStyle={styles.filterContentContainer}>
                                 <TouchableOpacity
                                     style={[
                                         styles.filterChip,
@@ -353,7 +353,7 @@ export default function MyBillsScreen() {
                                         </ThemedText>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </ScrollView>
                         </WalkthroughableView>
                     </CopilotStep>
 
@@ -551,9 +551,12 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     filterContainer: {
+        maxHeight: 60,
+    },
+    filterContentContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
         gap: 10,
+        paddingRight: 10,
     },
     filterChip: {
         paddingHorizontal: 16,
@@ -669,6 +672,7 @@ const styles = StyleSheet.create({
     // iPad-specific styles for better readability
     tabletHeader: {
         maxWidth: 600,
+        maxHeight: 300,
         alignSelf: 'center',
         width: '100%',
     },
