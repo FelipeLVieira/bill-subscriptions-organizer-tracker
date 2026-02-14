@@ -61,8 +61,8 @@ Take control of your recurring expenses with Bills Tracker - the simple, private
 
 🔒 Privacy First
 • All data stored locally using SQLite
-• No cloud sync, no tracking, no ads (in basic version)
-• Open source friendly
+• No cloud sync, no tracking, no account required
+• Ad-free experience with Pro subscription
 • Complies with iOS 17+ privacy requirements
 
 **BILLS TRACKER PRO**
@@ -94,11 +94,13 @@ Unlock premium features:
 
 Have questions or feedback? Email us at felipe.lv.90@gmail.com
 
-**NO ADS. NO TRACKING. YOUR DATA STAYS ON YOUR DEVICE.**
+**YOUR DATA STAYS ON YOUR DEVICE. NO TRACKING. NO CLOUD. 100% PRIVATE.**
+
+Upgrade to Pro for an ad-free experience and unlimited subscriptions!
 
 Download Bills Tracker today and take control of your recurring expenses!
 
-(2478 chars) ✅
+(2530 chars) ✅
 
 ## Keywords (100 chars max, comma-separated)
 
@@ -204,39 +206,13 @@ Thank you!
 
 ## Privacy Policy
 
-Since this app is 100% offline and doesn't collect any data, a simple privacy policy can be:
+**URL:** `https://felipelvieira.github.io/bill-subscriptions-organizer-tracker/privacy-policy.html`
 
-**URL:** [Create a simple GitHub Pages site or use privacy policy generator]
+**Setup:** Enable GitHub Pages for the `docs/` folder on the `main` branch in repo settings.
 
-**Content:**
-```
-Privacy Policy for Bills Tracker
-
-Last Updated: January 27, 2026
-
-Bills Tracker ("we", "us", "our") is committed to protecting your privacy.
-
-DATA COLLECTION
-Bills Tracker does not collect, store, or share any personal information. All your subscription data is stored locally on your device using SQLite database.
-
-DATA STORAGE
-- All data is stored locally on your device
-- No cloud sync or backup
-- No data is ever transmitted to our servers
-- No analytics or tracking
-
-THIRD-PARTY SERVICES
-- RevenueCat: Used for subscription management (Pro version). See their privacy policy: https://www.revenuecat.com/privacy
-- AdMob: May show ads in free version. See Google's privacy policy: https://policies.google.com/privacy
-
-YOUR RIGHTS
-You can delete all app data by deleting the app from your device.
-
-CHANGES
-We may update this policy. Continued use of the app constitutes acceptance of changes.
-
-CONTACT
-felipe.lv.90@gmail.com
-
-This app does not require a privacy policy by law since it doesn't collect any personal data, but we provide this for transparency.
-```
+The full privacy policy is hosted at `docs/privacy-policy.html` in this repository. It covers:
+- Local-only data storage (SQLite, no cloud)
+- Device permissions (camera, photo library, notifications)
+- Third-party services (Google AdMob non-personalized ads, RevenueCat subscriptions)
+- Data deletion instructions
+- Contact information
