@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const https = require("https");
 
-const GEMINI_API_KEY = "AIzaSyCS8rBCCRI0cRSX5a9byHnmp2aI1yPI44Q";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 
 async function generateImage(prompt, outputPath) {
   // Use Gemini 2.0 Flash experimental with image generation capability
