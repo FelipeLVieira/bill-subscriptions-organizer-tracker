@@ -64,6 +64,8 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
 
     // Initialize RevenueCat and load pro status on mount
     useEffect(() => {
+        let unsubscribeListener: (() => void) | null = null;
+
         const init = async () => {
             try {
                 // Load cached pro status first for quick UI
@@ -102,7 +104,7 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
                     await AsyncStorage.setItem(PRO_STATUS_KEY, hasPremium.toString());
 
                     // Listen for customer info updates
-                    addCustomerInfoUpdateListener((customerInfo) => {
+                    unsubscribeListener = addCustomerInfoUpdateListener((customerInfo) => {
                         const isActive = isPremiumActive(customerInfo);
                         setIsPro(isActive);
                         AsyncStorage.setItem(PRO_STATUS_KEY, isActive.toString());
@@ -116,6 +118,12 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         };
 
         init();
+
+        return () => {
+            if (unsubscribeListener) {
+                unsubscribeListener();
+            }
+        };
     }, []);
 
     const loadOfferings = useCallback(async () => {

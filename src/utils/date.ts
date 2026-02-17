@@ -12,7 +12,6 @@ export type BillingInterval = 'monthly' | 'yearly' | 'weekly' | 'daily' | 'uniqu
  */
 export function calculateNextBillingDate(currentDate: string | Date, interval: BillingInterval): Date {
     const date = new Date(currentDate);
-    const originalDay = date.getDate();
 
     if (interval === 'monthly') {
         // Move to next month

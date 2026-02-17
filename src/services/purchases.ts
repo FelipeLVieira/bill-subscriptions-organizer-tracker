@@ -233,9 +233,8 @@ export const addCustomerInfoUpdateListener = (
         return () => { };
     }
 
-    Purchases.addCustomerInfoUpdateListener(callback);
-    // Return a no-op cleanup function for compatibility
-    return () => { };
+    const unsubscribe = Purchases.addCustomerInfoUpdateListener(callback);
+    return unsubscribe;
 };
 
 /**
