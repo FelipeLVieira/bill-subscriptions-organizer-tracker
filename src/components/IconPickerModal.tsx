@@ -441,11 +441,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 10,
+        padding: 12,
         borderRadius: 8,
         borderWidth: 1,
         marginBottom: 12,
-        gap: 6,
+        gap: 8,
     },
     autoDetectText: {
         fontSize: 14,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     categoryTab: {
-        paddingHorizontal: 14,
+        paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 8,
         borderWidth: 1,
@@ -492,11 +492,11 @@ const styles = StyleSheet.create({
     sectionLabel: {
         fontSize: 13,
         fontWeight: '600',
-        marginBottom: 10,
+        marginBottom: 12,
         opacity: 0.7,
     },
     colorList: {
-        gap: 10,
+        gap: 12,
     },
     colorItem: {
         width: 36,
@@ -517,9 +517,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 12,
-        padding: 10,
+        padding: 12,
         borderRadius: 10,
-        gap: 10,
+        gap: 12,
     },
     customColorInput: {
         flex: 1,

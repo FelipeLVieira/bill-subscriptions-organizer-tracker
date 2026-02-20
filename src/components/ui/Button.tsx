@@ -56,7 +56,7 @@ export function Button({ title, type = 'primary', style, disabled, ...props }: P
 
 const styles = StyleSheet.create({
     button: {
-        paddingVertical: 14,
+        paddingVertical: 16,
         paddingHorizontal: 24,
         borderRadius: 12, // iOS standard
         alignItems: 'center',

@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     labelContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 8,
     },
     iconButton: {
         marginLeft: 4,

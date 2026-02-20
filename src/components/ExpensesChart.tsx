@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     },
     viewModeTab: {
         flex: 1,
-        paddingVertical: 10,
+        paddingVertical: 12,
         paddingHorizontal: 12,
         borderRadius: 8,
         alignItems: 'center',
@@ -289,10 +289,10 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     currencyTabsContent: {
-        gap: 10,
+        gap: 12,
     },
     currencyTab: {
-        paddingHorizontal: 18,
+        paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 22,
         backgroundColor: 'rgba(128,128,128,0.15)',

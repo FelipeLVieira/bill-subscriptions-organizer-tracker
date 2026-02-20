@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     toast: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
+        paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 12,
         marginBottom: 8,

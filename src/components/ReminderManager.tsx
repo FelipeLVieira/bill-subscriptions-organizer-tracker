@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     },
     modalButton: {
         flex: 1,
-        paddingVertical: 14,
+        paddingVertical: 16,
         borderRadius: 8,
         alignItems: 'center',
     },

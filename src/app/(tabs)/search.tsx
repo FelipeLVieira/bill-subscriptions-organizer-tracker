@@ -555,12 +555,12 @@ const styles = StyleSheet.create({
     },
     filterContentContainer: {
         flexDirection: 'row',
-        gap: 10,
-        paddingRight: 10,
+        gap: 12,
+        paddingRight: 12,
     },
     filterChip: {
         paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderRadius: 20,
         minHeight: 44, // iOS HIG minimum touch target
         justifyContent: 'center',
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     },
     viewToggleBtn: {
         paddingHorizontal: 16,
-        paddingVertical: 14,
+        paddingVertical: 12,
         borderRadius: 10,
         minWidth: 52,
         minHeight: 50,
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        paddingHorizontal: 14,
+        paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 10,
         minHeight: 44, // iOS HIG minimum touch target

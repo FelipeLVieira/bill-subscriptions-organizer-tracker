@@ -289,15 +289,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         flexWrap: 'wrap',
         gap: 8,
-        marginBottom: 14,
-        paddingHorizontal: 16,
+        marginBottom: 12,
+        paddingHorizontal: 20,
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        gap: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
         borderRadius: 12,
     },
     legendDot: {
@@ -310,25 +310,25 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     calendarCard: {
-        marginHorizontal: 16,
-        padding: 8,
+        marginHorizontal: 20,
+        padding: 12,
         borderRadius: 16,
         overflow: 'hidden',
     },
     selectedDateSection: {
-        marginTop: 20,
-        paddingHorizontal: 16,
+        marginTop: 24,
+        paddingHorizontal: 20,
     },
     selectedDateTitle: {
-        marginBottom: 14,
+        marginBottom: 12,
         fontSize: 17,
         fontWeight: '600',
     },
     selectedDateBills: {
-        gap: 10,
+        gap: 12,
     },
     billCard: {
-        padding: 14,
+        padding: 16,
         position: 'relative',
         overflow: 'hidden',
     },
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
         width: 4,
         height: 36,
         borderRadius: 2,
-        marginRight: 14,
+        marginRight: 12,
     },
     billInfo: {
         flex: 1,
@@ -358,23 +358,23 @@ const styles = StyleSheet.create({
     billCategory: {
         fontSize: 12,
         opacity: 0.6,
-        marginTop: 3,
+        marginTop: 4,
     },
     billAmount: {
         fontSize: 17,
         fontWeight: '700',
     },
     noBillsCard: {
-        marginTop: 4,
+        marginTop: 8,
     },
     noBillsContainer: {
         alignItems: 'center',
-        paddingVertical: 36,
+        paddingVertical: 40,
         paddingHorizontal: 16,
         gap: 8,
     },
     noBillsTitle: {
-        marginTop: 10,
+        marginTop: 12,
         fontSize: 17,
     },
     noBillsText: {

@@ -436,13 +436,13 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
+        padding: 12,
         borderRadius: 10,
         marginBottom: 16,
     },
     input: {
         flex: 1,
-        marginLeft: 10,
+        marginLeft: 12,
         fontSize: 16,
     },
     list: {
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 14,
+        paddingVertical: 16,
         borderBottomWidth: StyleSheet.hairlineWidth,
     },
     currencyInfo: {
@@ -490,8 +490,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     defaultBadge: {
-        padding: 6,
-        borderRadius: 6,
+        padding: 8,
+        borderRadius: 8,
     },
     addBadge: {
         padding: 8,
@@ -515,12 +515,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 10,
+        gap: 12,
     },
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
+        padding: 12,
         borderRadius: 10,
         gap: 4,
     },
@@ -530,9 +530,9 @@ const styles = StyleSheet.create({
     customToggle: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
+        padding: 12,
         borderRadius: 10,
-        gap: 6,
+        gap: 8,
     },
     customToggleText: {
         fontWeight: '500',
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         marginBottom: 16,
-        gap: 10,
+        gap: 12,
     },
     customInput: {
         borderWidth: 1,
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     },
     customFormActions: {
         flexDirection: 'row',
-        gap: 10,
+        gap: 12,
         marginTop: 4,
     },
     customFormBtn: {

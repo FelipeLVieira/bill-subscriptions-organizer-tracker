@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   cardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    padding: 16,
     gap: 12,
   },
   iconContainer: {
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
   },
   // Notes
   notesContainer: {
-    padding: 14,
+    padding: 16,
   },
   notesHeader: {
     flexDirection: 'row',
@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     marginTop: 4,
-    marginLeft: 14,
+    marginLeft: 16,
   },
   // Save Button
   saveButton: {
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   modalSaveButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
   },

@@ -98,10 +98,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
+        paddingTop: 8,
         // paddingBottom: dynamic via contentContainerStyle
     },
     proBanner: {
-        marginHorizontal: 16,
+        marginHorizontal: 20,
         marginTop: 8,
         marginBottom: 16,
     },

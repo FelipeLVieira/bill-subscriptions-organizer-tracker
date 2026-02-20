@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     },
     viewToggleBtn: {
         paddingHorizontal: 16,
-        paddingVertical: 14,
+        paddingVertical: 12,
         borderRadius: 10,
         minWidth: 52,
         minHeight: 50,
@@ -457,8 +457,8 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     groupByBtn: {
-        paddingHorizontal: 18,
-        paddingVertical: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderRadius: 10,
         minHeight: 50,
         justifyContent: 'center',

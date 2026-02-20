@@ -188,13 +188,13 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
+        padding: 12,
         borderRadius: 10,
         marginBottom: 16,
     },
     input: {
         flex: 1,
-        marginLeft: 10,
+        marginLeft: 12,
         fontSize: 16,
     },
     list: {

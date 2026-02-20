@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     cardContent: {
-        padding: 14,
+        padding: 16,
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
         borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 10,
+        marginBottom: 12,
     },
     statValue: {
         fontSize: 20,
