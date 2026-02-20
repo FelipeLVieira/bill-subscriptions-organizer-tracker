@@ -1,0 +1,14 @@
+app_identifier "com.fullstackdev1.bill-subscriptions-organizer-tracker"
+team_id "824F44HKCD"
+
+# API Key authentication
+api_key_path "/tmp/asc-api-key.json"
+
+# Only upload screenshots, skip everything else
+skip_metadata true
+skip_binary_upload true
+overwrite_screenshots true
+force true
+
+# Screenshot path
+screenshots_path "./fastlane/screenshots"

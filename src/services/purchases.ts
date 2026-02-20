@@ -233,8 +233,10 @@ export const addCustomerInfoUpdateListener = (
         return () => { };
     }
 
-    const unsubscribe = Purchases.addCustomerInfoUpdateListener(callback);
-    return unsubscribe;
+    Purchases.addCustomerInfoUpdateListener(callback);
+    return () => {
+        Purchases.removeCustomerInfoUpdateListener(callback);
+    };
 };
 
 /**
